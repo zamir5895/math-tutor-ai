@@ -22,7 +22,6 @@ public class User implements UserDetails {
     @Column(name = "role", nullable = false)
     private Rol role;
 
-
     @Column(name = "first_name", nullable = false)
     private String firstName;
 

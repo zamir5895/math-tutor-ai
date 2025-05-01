@@ -14,5 +14,9 @@ import lombok.Setter;
 public class Student extends User {
     @Column(name="dni", unique = true, nullable = false)
     private Long dni;
+    @Column(name="grado", nullable = false)
+    private Integer grado;
 
+    @Column(name ="seccion", nullable = false)
+    private String seccion;
 }
