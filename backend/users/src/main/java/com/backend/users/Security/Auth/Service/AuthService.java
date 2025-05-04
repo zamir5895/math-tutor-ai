@@ -6,6 +6,8 @@ import com.backend.users.Kafka.UserFinishedEvent;
 import com.backend.users.Kafka.UserRegisteredEvent;
 import com.backend.users.Profesor.Domain.Professor;
 import com.backend.users.Profesor.Infrastructure.ProfessorRepository;
+import com.backend.users.Salon.Domain.Salon;
+import com.backend.users.Salon.Infrastructure.SalonRepository;
 import com.backend.users.Security.Auth.DTOs.*;
 import com.backend.users.Security.JWT.JwtService;
 import com.backend.users.Student.Domain.Student;
@@ -14,6 +16,7 @@ import com.backend.users.User.Domain.Rol;
 import com.backend.users.User.Domain.User;
 import com.backend.users.User.Infrastructure.UserRepository;
 import com.opencsv.CSVWriter;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.RequestEntity;
@@ -26,9 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class AuthService {
@@ -39,38 +40,66 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final KafkaProducer kafkaProducer;
+    private final SalonRepository salonRepository;
 
 
-    public AuthService(StudentRepository studentRepository, PasswordEncoder passwordEncoder, ProfessorRepository professorRepository, @Qualifier("userRepository") UserRepository userRepository, JwtService jwtService, KafkaProducer kafkaProducer) {
+    public AuthService(StudentRepository studentRepository, PasswordEncoder passwordEncoder, ProfessorRepository professorRepository, @Qualifier("userRepository") UserRepository userRepository, JwtService jwtService, KafkaProducer kafkaProducer, SalonRepository salonRepository) {
         this.studentRepository = studentRepository;
         this.passwordEncoder = passwordEncoder;
         this.professorRepository = professorRepository;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.kafkaProducer = kafkaProducer;
+        this.salonRepository = salonRepository;
     }
 
-    public ByteArrayResource processRegisterForStuedents(MultipartFile file) throws Exception{
+    public ByteArrayResource processRegisterForStuedents(MultipartFile file, Long professorId) throws Exception {
         List<String[]> result = new ArrayList<>();
-        result.add(new String[]{"Nombre", "Apellido", "Usename", "Contraseña", "DNI", "Status", "Message"});
-        try(CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))){
-            String [] line;
-            reader.readNext();
-            while((line=reader.readNext()) != null){
+        result.add(new String[]{"Nombre", "Apellido", "Usename", "Contraseña", "DNI", "Grado", "Seccion", "Status", "Message"});
+        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
+            String[] line;
+            reader.readNext(); // Saltar la cabecera del archivo CSV
+            Optional<Professor> optionalProfessor = professorRepository.findById(professorId);
+            if (optionalProfessor.isEmpty()) {
+                throw new RuntimeException("El profesor no existe");
+            }
+            List<Salon> salones = salonRepository.findByProfesorId(professorId);
+            if (salones.isEmpty()) {
+                throw new RuntimeException("El profesor no tiene salones");
+            }
+
+            Map<String, Salon> salonCache = new HashMap<>();
+
+            while ((line = reader.readNext()) != null) {
+                String grado = line[3].trim();
+                String seccion = line[4].trim();
+                String salonKey = grado + "-" + seccion;
+
+                Salon salon = salonCache.computeIfAbsent(salonKey, key ->
+                        salones.stream()
+                                .filter(s -> s.getGrado().equals(grado) && s.getSeccion().equals(seccion))
+                                .findFirst()
+                                .orElseThrow(() -> new RuntimeException("El salon no existe"))
+                );
+
+                if (salon.getProfesor().getId() != professorId) {
+                    throw new RuntimeException("El profesor no tiene acceso a este salon");
+                }
+
                 String nombre = line[0].trim();
                 String apellido = line[1].trim();
                 String dni = line[2].trim();
-                String grado = line[3].trim();
-                String seccion = line[4].trim();
-                if(studentRepository.existsStudentByDni(Long.valueOf(dni))) {
-                    result.add(new String[]{nombre, apellido, dni, grado, seccion, "Error", "El DNI ya existe, no puede repetirse los dnis"});
+
+                if (studentRepository.existsStudentByDni(Long.valueOf(dni))) {
+                    result.add(new String[]{nombre, apellido, generateUsername(nombre, apellido, seccion), dni, dni, grado, seccion, "Error", "El DNI ya existe, no puede repetirse los dnis"});
+                    continue;
                 }
-                String userName = generateUsername(nombre,apellido, dni);
+
+                String userName = generateUsername(nombre, apellido, dni);
                 String password = passwordEncoder.encode(dni);
                 Student student = new Student();
                 student.setDni(Long.valueOf(dni));
-                student.setGrado(Integer.valueOf(grado));
-                student.setSeccion(seccion);
+                student.setSalon(salon);
                 student.setEmail(userName);
                 student.setFirstName(nombre);
                 student.setLastName(apellido);
@@ -78,21 +107,18 @@ public class AuthService {
                 student.setPassword(password);
                 student.setCreatedAt(ZonedDateTime.now());
                 studentRepository.save(student);
-                result.add(new String[]{nombre, apellido, userName, password, dni, "Success", "El usuario se ha creado correctamente"});
+                result.add(new String[]{nombre, apellido, userName, password, dni, grado, seccion, "Success", "El usuario se ha creado correctamente"});
             }
-
         }
+
         ByteArrayOutputStream b = new ByteArrayOutputStream();
         try (CSVWriter writer = new CSVWriter(new OutputStreamWriter(b))) {
             writer.writeAll(result);
         }
-        ByteArrayResource resource = new ByteArrayResource(b.toByteArray());
-        return resource;
+        return new ByteArrayResource(b.toByteArray());
     }
-
-
     public void registerProfessor(DtoRegister professor){
-        Optional<User> optionalProfessor = professorRepository.findByEmail(professor.getCorreo());
+        Optional<Professor> optionalProfessor = professorRepository.findByEmail(professor.getCorreo());
         if(optionalProfessor.isPresent()){
             throw new RuntimeException("El profesor ya existe");
         }
@@ -120,6 +146,7 @@ public class AuthService {
         adminSave.setRole(Rol.ADMIN);
         adminSave.setFirstName(register.getNombre());
         adminSave.setLastName(register.getApellido());
+        adminSave.setPassword(password);
         userRepository.save(adminSave);
     }
 
@@ -147,20 +174,20 @@ public class AuthService {
         return login;
     }
 
-    public void changePassword(String email, String password){
-        Optional<User> optionalUser = userRepository.findByEmail(email);
+    public void changePassword(DTOChangePassword dto){
+        Optional<User> optionalUser = userRepository.findByEmail(dto.getUsername());
         if(optionalUser.isEmpty()){
             throw new RuntimeException("El usuario no existe");
         }
         User user = optionalUser.get();
-        String passwordEncode = passwordEncoder.encode(password);
+        String passwordEncode = passwordEncoder.encode(dto.getNewPassword());
         user.setPassword(passwordEncode);
         userRepository.save(user);
     }
 
 
 
-    private String generateUsername(String name, String apellido, String dni){
+    public String generateUsername(String name, String apellido, String dni){
         return name+apellido+dni.substring(0,3);
     }
 
@@ -183,48 +210,21 @@ public class AuthService {
         jwtService.invalidateToken();
     }
 
-    private Rol obtenerROlByToken(String token){
-        String role = jwtService.extractRole(token);
-        if(role.equals("STUDENT")){
-            return Rol.STUDENT;
-        }else if(role.equals("TEACHER")){
-            return Rol.TEACHER;
-        }else if(role.equals("ADMIN")){
-            return Rol.ADMIN;
-        }
-        return null;
-    }
+
     public String getEmailByToken(String token){
         return jwtService.extractUsername(token);
     }
 
 
-    public StudentDTO registerOneStudent(StudentRegister register){
-        Optional<User> optionalStudent = studentRepository.findByEmail(generateUsername(register.getNombre(), register.getApellido(), register.getDni()));
-        if(optionalStudent.isPresent()){
-            throw new RuntimeException("El estudiante ya existe");
+    public String refreshToken(String token){
+        String email = jwtService.extractUsername(token);
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if(optionalUser.isEmpty()){
+            throw new RuntimeException("El usuario no existe");
         }
-
-        Student studentSave = new Student();
-        studentSave.setCreatedAt(ZonedDateTime.now());
-        studentSave.setEmail(generateUsername(register.getNombre(), register.getApellido(), register.getDni()));
-        studentSave.setUpdatedAt(ZonedDateTime.now());
-        studentSave.setRole(Rol.STUDENT);
-        studentSave.setFirstName(register.getNombre());
-        studentSave.setLastName(register.getApellido());
-        studentSave.setPassword(passwordEncoder.encode(register.getDni()));
-        studentRepository.save(studentSave);
-        return convertToStudentDTO(studentSave);
+        User user = optionalUser.get();
+        return jwtService.generatetoken(user);
     }
-    private StudentDTO convertToStudentDTO(Student student) {
-        StudentDTO studentDTO = new StudentDTO();
-        studentDTO.setNombre(student.getFirstName());
-        studentDTO.setApellido(student.getLastName());
-        studentDTO.setGrado(student.getGrado());
-        studentDTO.setSeccion(student.getSeccion());
-        return studentDTO;
-    }
-
 
 
 }

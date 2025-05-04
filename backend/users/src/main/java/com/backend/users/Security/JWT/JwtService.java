@@ -1,10 +1,12 @@
 package com.backend.users.Security.JWT;
 
 
+import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.backend.users.User.Domain.UserService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,18 +22,38 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    @Value("${JWT_SECRET_KEY")
+    @Value("${JWT_SECRET_KEY}")
     private String secretKey;
+
+    private Algorithm algorithm;
 
     private final UserService userService;
 
-    @Autowired
-    JwtService(UserService userService){
+
+    public JwtService(UserService userService){
         this.userService = userService;
     }
 
+    @PostConstruct
+    public void init(){
+        this.algorithm = Algorithm.HMAC256(secretKey);
+    }
+
+
     public String extractUsername(String token) {
-        return JWT.decode(token).getSubject();
+        try {
+            return JWT.decode(token).getSubject();
+        } catch (JWTDecodeException e) {
+            return null;
+        }
+    }
+
+    public String extractRole(String token) {
+        try {
+            return JWT.decode(token).getClaim("role").asString();
+        } catch (JWTDecodeException e) {
+            return null;
+        }
     }
 
 
@@ -48,9 +70,8 @@ public class JwtService {
                 .sign(algorithm);
     }
     public void validateToken(String token, String userEmail) throws AuthenticationException {
-
-        JWT.require(Algorithm.HMAC256(secretKey)).build().verify(token);
-
+        Algorithm algorithm = Algorithm.HMAC256(secretKey);
+        JWT.require(algorithm).build().verify(token);
         UserDetails userDetails = userService.userDetailsService().loadUserByUsername(userEmail);
 
         SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -65,17 +86,7 @@ public class JwtService {
         SecurityContextHolder.setContext(context);
     }
 
-    public boolean validar(String token, String userEmail) {
-        try {
-            JWT.require(Algorithm.HMAC256(secretKey)).build().verify(token);
 
-            String username = extractUsername(token);
-
-            return username.equals(userEmail);
-        } catch (Exception e) {
-            return false;
-        }
-    }
     public void invalidateToken() {
         SecurityContextHolder.clearContext();
     }
@@ -87,8 +98,5 @@ public class JwtService {
         }
     }
 
-    public String extractRole(String token) {
-        return JWT.decode(token).getClaim("role").asString();
-    }
 
 }
