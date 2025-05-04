@@ -1,11 +1,12 @@
 package com.backend.users.Security.Auth.Service;
 
 
+import com.backend.users.Kafka.KafkaProducer;
+import com.backend.users.Kafka.UserFinishedEvent;
+import com.backend.users.Kafka.UserRegisteredEvent;
 import com.backend.users.Profesor.Domain.Professor;
 import com.backend.users.Profesor.Infrastructure.ProfessorRepository;
-import com.backend.users.Security.Auth.DTOs.DtoRegister;
-import com.backend.users.Security.Auth.DTOs.LoginRequest;
-import com.backend.users.Security.Auth.DTOs.ResponseLogin;
+import com.backend.users.Security.Auth.DTOs.*;
 import com.backend.users.Security.JWT.JwtService;
 import com.backend.users.Student.Domain.Student;
 import com.backend.users.Student.Infrastructure.StudentRepository;
@@ -37,14 +38,16 @@ public class AuthService {
     private final ProfessorRepository professorRepository;
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final KafkaProducer kafkaProducer;
 
 
-    public AuthService(StudentRepository studentRepository, PasswordEncoder passwordEncoder, ProfessorRepository professorRepository, @Qualifier("userRepository") UserRepository userRepository, JwtService jwtService) {
+    public AuthService(StudentRepository studentRepository, PasswordEncoder passwordEncoder, ProfessorRepository professorRepository, @Qualifier("userRepository") UserRepository userRepository, JwtService jwtService, KafkaProducer kafkaProducer) {
         this.studentRepository = studentRepository;
         this.passwordEncoder = passwordEncoder;
         this.professorRepository = professorRepository;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
+        this.kafkaProducer = kafkaProducer;
     }
 
     public ByteArrayResource processRegisterForStuedents(MultipartFile file) throws Exception{
@@ -132,6 +135,15 @@ public class AuthService {
         ResponseLogin login = new ResponseLogin();
         login.setToken(jwtService.generatetoken(user));
         login.setRol(String.valueOf(user.getRole()));
+        UserRegisteredEvent userRegisteredEvent = new UserRegisteredEvent();
+        userRegisteredEvent.setId(user.getId());
+        userRegisteredEvent.setNombre(user.getFirstName());
+        userRegisteredEvent.setApellido(user.getLastName());
+        userRegisteredEvent.setGrado(String.valueOf(user.getRole()));
+        userRegisteredEvent.setSeccion(user.getEmail());
+        userRegisteredEvent.setEdad(user.getEdad());
+        userRegisteredEvent.setFechaRegistro(ZonedDateTime.now());
+        kafkaProducer.timeStartUsingTheApp(userRegisteredEvent);
         return login;
     }
 
@@ -151,6 +163,68 @@ public class AuthService {
     private String generateUsername(String name, String apellido, String dni){
         return name+apellido+dni.substring(0,3);
     }
+
+    public void logout(String email){
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if(optionalUser.isEmpty()){
+            throw new RuntimeException("El usuario no existe");
+        }
+        User user = optionalUser.get();
+        UserFinishedEvent userFinishedEvent = new UserFinishedEvent();
+        userFinishedEvent.setId(user.getId());
+        userFinishedEvent.setNombre(user.getFirstName());
+        userFinishedEvent.setApellido(user.getLastName());
+        userFinishedEvent.setGrado(String.valueOf(user.getRole()));
+        userFinishedEvent.setSeccion(user.getEmail());
+        userFinishedEvent.setEdad(user.getEdad());
+        userFinishedEvent.setFechaSalida(ZonedDateTime.now());
+        kafkaProducer.timeEndUsingTheApp(userFinishedEvent);
+
+        jwtService.invalidateToken();
+    }
+
+    private Rol obtenerROlByToken(String token){
+        String role = jwtService.extractRole(token);
+        if(role.equals("STUDENT")){
+            return Rol.STUDENT;
+        }else if(role.equals("TEACHER")){
+            return Rol.TEACHER;
+        }else if(role.equals("ADMIN")){
+            return Rol.ADMIN;
+        }
+        return null;
+    }
+    public String getEmailByToken(String token){
+        return jwtService.extractUsername(token);
+    }
+
+
+    public StudentDTO registerOneStudent(StudentRegister register){
+        Optional<User> optionalStudent = studentRepository.findByEmail(generateUsername(register.getNombre(), register.getApellido(), register.getDni()));
+        if(optionalStudent.isPresent()){
+            throw new RuntimeException("El estudiante ya existe");
+        }
+
+        Student studentSave = new Student();
+        studentSave.setCreatedAt(ZonedDateTime.now());
+        studentSave.setEmail(generateUsername(register.getNombre(), register.getApellido(), register.getDni()));
+        studentSave.setUpdatedAt(ZonedDateTime.now());
+        studentSave.setRole(Rol.STUDENT);
+        studentSave.setFirstName(register.getNombre());
+        studentSave.setLastName(register.getApellido());
+        studentSave.setPassword(passwordEncoder.encode(register.getDni()));
+        studentRepository.save(studentSave);
+        return convertToStudentDTO(studentSave);
+    }
+    private StudentDTO convertToStudentDTO(Student student) {
+        StudentDTO studentDTO = new StudentDTO();
+        studentDTO.setNombre(student.getFirstName());
+        studentDTO.setApellido(student.getLastName());
+        studentDTO.setGrado(student.getGrado());
+        studentDTO.setSeccion(student.getSeccion());
+        return studentDTO;
+    }
+
 
 
 }

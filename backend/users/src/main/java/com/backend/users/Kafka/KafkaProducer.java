@@ -10,5 +10,13 @@ import org.springframework.stereotype.Component;
 public class KafkaProducer {
 
     @Autowired
-    private KafkaTemplate<>
+    private KafkaTemplate<String, Object> kafkaTemplate;
+
+    public void timeStartUsingTheApp(UserRegisteredEvent userRegisteredEvent) {
+        kafkaTemplate.send("start-time", userRegisteredEvent);
+    }
+
+    public void timeEndUsingTheApp(UserFinishedEvent userFinishedEvent) {
+        kafkaTemplate.send("end-time", userFinishedEvent);
+    }
 }
