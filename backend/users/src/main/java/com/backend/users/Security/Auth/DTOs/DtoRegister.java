@@ -3,7 +3,7 @@ package com.backend.users.Security.Auth.DTOs;
 import lombok.Data;
 
 @Data
-public class DtoProfessor {
+public class DtoRegister {
     private String nombre;
     private String apellido;
     private String contraseña;

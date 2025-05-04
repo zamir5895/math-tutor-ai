@@ -1,9 +1,11 @@
 package com.backend.users.Security.JWT;
 
 
+import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.backend.users.User.Domain.UserService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -61,6 +63,32 @@ public class JwtService {
 
         context.setAuthentication(authToken);
         SecurityContextHolder.setContext(context);
+    }
+
+    public boolean validar(String token, String userEmail) {
+        try {
+            JWT.require(Algorithm.HMAC256(secretKey)).build().verify(token);
+
+            String username = extractUsername(token);
+
+            return username.equals(userEmail);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    public void invalidateToken() {
+        SecurityContextHolder.clearContext();
+    }
+    public Date getExpirationTime(String token) {
+        try {
+            return JWT.decode(token).getExpiresAt();
+        } catch (JWTDecodeException e) {
+            throw new EntityNotFoundException("Invalid or malformed token");
+        }
+    }
+
+    public String extractRole(String token) {
+        return JWT.decode(token).getClaim("role").asString();
     }
 
 }
