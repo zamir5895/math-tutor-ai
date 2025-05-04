@@ -1,15 +1,16 @@
 package com.backend.users.Profesor.Domain;
 
 
+import com.backend.users.Salon.Domain.Salon;
 import com.backend.users.User.Domain.User;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -17,4 +18,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Professor extends User {
 
+    @OneToMany(mappedBy = "profesor")
+    private List<Salon> salons = new ArrayList<>();
 }

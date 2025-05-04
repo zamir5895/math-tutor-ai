@@ -7,8 +7,7 @@ public class StudentRegister {
 
     private String nombre;
     private String apellido;
-    private String grado;
-    private String seccion;
+    private Long salonId;
     private Integer edad;
     private String phoneNumber;
     private String dni;
