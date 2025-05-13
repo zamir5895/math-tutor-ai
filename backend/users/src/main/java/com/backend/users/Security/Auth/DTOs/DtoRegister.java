@@ -8,4 +8,5 @@ public class DtoRegister {
     private String apellido;
     private String contraseña;
     private String correo;
+    private Integer edad;
 }
