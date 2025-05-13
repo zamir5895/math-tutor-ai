@@ -24,18 +24,22 @@ const LoginComponent = () => {
             <CardTitle>Iniciar Sesión</CardTitle>
             <CardDescription>Selecciona tu tipo de usuario e ingresa tus credenciales</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex items-center">
             <Tabs defaultValue="estudiante" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="estudiante" className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4" />
-                  <span>Estudiante</span>
-                </TabsTrigger>
-                <TabsTrigger value="profesor" className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  <span>Profesor</span>
-                </TabsTrigger>
-              </TabsList>
+                <TabsList className="flex justify-center mb-4 bg-gray-50">
+                    <TabsTrigger 
+                      value="estudiante" 
+                      className="flex items-center gap-2 w-40 data-[state=active]:text-black data-[state=active]:bg-white rounded-md px-3 py-1">
+                      <GraduationCap className="h-4 w-4" />
+                      <span>Estudiante</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="profesor" 
+                      className="flex items-center gap-2 w-40 data-[state=active]:text-black data-[state=active]:bg-white rounded-md px-3 py-1">
+                      <BookOpen className="h-4 w-4" />
+                      <span>Profesor</span>
+                    </TabsTrigger>
+                </TabsList>
 
               <TabsContent value="estudiante">
                 <form>
