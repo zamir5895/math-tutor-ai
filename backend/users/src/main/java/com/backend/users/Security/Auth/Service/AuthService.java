@@ -122,15 +122,23 @@ public class AuthService {
         if(optionalProfessor.isPresent()){
             throw new RuntimeException("El profesor ya existe");
         }
-        String password = passwordEncoder.encode(professor.getContraseña());
-        Professor professorSave = new Professor();
-        professorSave.setCreatedAt(ZonedDateTime.now());
-        professorSave.setEmail(professor.getCorreo());
-        professorSave.setUpdatedAt(ZonedDateTime.now());
-        professorSave.setRole(Rol.TEACHER);
-        professorSave.setFirstName(professor.getNombre());
-        professorSave.setLastName(professor.getApellido());
-        professorRepository.save(professorSave);
+        try{
+            String password = passwordEncoder.encode(professor.getContraseña());
+            Professor professorSave = new Professor();
+            professorSave.setCreatedAt(ZonedDateTime.now());
+            professorSave.setEmail(professor.getCorreo());
+            professorSave.setUpdatedAt(ZonedDateTime.now());
+            professorSave.setRole(Rol.TEACHER);
+            professorSave.setFirstName(professor.getNombre());
+            professorSave.setLastName(professor.getApellido());
+            professorSave.setPassword(password);
+            professorSave.setCreatedAt(ZonedDateTime.now());
+            professorSave.setUpdatedAt(ZonedDateTime.now());
+            professorSave.setEdad(professor.getEdad());
+            professorRepository.save(professorSave);
+        }catch (Exception e){
+            throw new RuntimeException("El profesor no se pudo registrar " +e.getMessage());
+        }
     }
 
     public void registerAdmin(DtoRegister register){
@@ -147,6 +155,9 @@ public class AuthService {
         adminSave.setFirstName(register.getNombre());
         adminSave.setLastName(register.getApellido());
         adminSave.setPassword(password);
+        adminSave.setCreatedAt(ZonedDateTime.now());
+        adminSave.setUpdatedAt(ZonedDateTime.now());
+        adminSave.setEdad(register.getEdad());
         userRepository.save(adminSave);
     }
 
@@ -162,15 +173,18 @@ public class AuthService {
         ResponseLogin login = new ResponseLogin();
         login.setToken(jwtService.generatetoken(user));
         login.setRol(String.valueOf(user.getRole()));
-        UserRegisteredEvent userRegisteredEvent = new UserRegisteredEvent();
-        userRegisteredEvent.setId(user.getId());
-        userRegisteredEvent.setNombre(user.getFirstName());
-        userRegisteredEvent.setApellido(user.getLastName());
-        userRegisteredEvent.setGrado(String.valueOf(user.getRole()));
-        userRegisteredEvent.setSeccion(user.getEmail());
-        userRegisteredEvent.setEdad(user.getEdad());
-        userRegisteredEvent.setFechaRegistro(ZonedDateTime.now());
-        kafkaProducer.timeStartUsingTheApp(userRegisteredEvent);
+
+        if(user.getRole() ==Rol.STUDENT){
+            UserRegisteredEvent userRegisteredEvent = new UserRegisteredEvent();
+            userRegisteredEvent.setId(user.getId());
+            userRegisteredEvent.setNombre(user.getFirstName());
+            userRegisteredEvent.setApellido(user.getLastName());
+            userRegisteredEvent.setGrado(String.valueOf(user.getRole()));
+            userRegisteredEvent.setSeccion(user.getEmail());
+            userRegisteredEvent.setEdad(user.getEdad());
+            userRegisteredEvent.setFechaRegistro(ZonedDateTime.now());
+            kafkaProducer.timeStartUsingTheApp(userRegisteredEvent);
+        }
         return login;
     }
 

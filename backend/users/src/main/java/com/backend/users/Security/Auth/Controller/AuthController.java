@@ -41,7 +41,7 @@ public class AuthController {
 
     }
 
-    @PostMapping(value = "/register/profesor", consumes =MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/register/professor", consumes =MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> registerProfesor(@RequestBody DtoRegister dtoRegister) throws Exception{
         try{
             authService.registerProfessor(dtoRegister);
