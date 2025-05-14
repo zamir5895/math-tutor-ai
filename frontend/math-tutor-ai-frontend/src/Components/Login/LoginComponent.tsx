@@ -1,15 +1,39 @@
 import { BookOpen, GraduationCap, School } from 'lucide-react'
-import React from 'react'
+import React, { useState } from 'react'
 import { Button } from '../UI/Buttom'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../UI/Card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@radix-ui/react-tabs'
 import { Input } from '../UI/Input'
 import { Label } from '../UI/label'
 import {  Link } from 'react-router-dom'
+import { login } from '../../Service/Auth/AuthService'
 
 
 const LoginComponent = () => {
-  return (
+    const [loginData, setLoginData] = useState({email:"", password:""});
+    const [showPassword, setShowPassword] = useState(false);
+    
+    const handleLoginChange = (e:React.ChangeEvent<HTMLInputElement>)=>{
+        const {name, value } = e.target;
+        setLoginData((prev)=>({...prev, [name]:value}));
+    }
+    const HandleLoginSubmit = async(e: React.FormEvent<HTMLFormElement>)=> {
+        e.preventDefault();
+        console.log("iniciando sesison ", loginData);
+        try{
+            console.log("Inicianso")
+            const response = await login(loginData);
+            console.log(response);
+            if(response.status === 200){
+                console.log("Exito")
+            }
+        }catch(error){
+            console.log("error " , error)
+        }
+    }
+    
+  
+return (
     <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-blue-100 p-4">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
@@ -42,20 +66,30 @@ const LoginComponent = () => {
                 </TabsList>
 
               <TabsContent value="estudiante">
-                <form>
+                <form onSubmit={HandleLoginSubmit}>
                   <div className="grid gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="email-estudiante">Correo electrónico</Label>
-                      <Input id="email-estudiante" type="email" placeholder="estudiante@ejemplo.com" />
+                      <Input id="email" type="email" name="email" placeholder="estudiante@ejemplo.com" onChange={handleLoginChange}/>
                     </div>
-                    <div className="grid gap-2">
+                    <div className="grid gap-2 relative">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="password-estudiante">Contraseña</Label>
                         <Link to="#" className="text-sm text-blue-600 hover:underline">
                           ¿Olvidaste tu contraseña?
                         </Link>
                       </div>
-                      <Input id="password-estudiante" type="password" />
+                      <Input id="password" 
+                      type={showPassword ? "text" : "password"}
+                      name="password" 
+                      onChange={handleLoginChange}/>
+                        <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3  items-center text-sm "
+                    >
+                        {showPassword ? "Ocultar" : "Mostrar"}
+                    </button>
                     </div>
                     <Button variant="submit" className="w-full">
                       Iniciar sesión
@@ -65,20 +99,30 @@ const LoginComponent = () => {
               </TabsContent>
 
               <TabsContent value="profesor">
-                <form>
+                <form onSubmit={HandleLoginSubmit}>
                   <div className="grid gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="email-profesor">Correo electrónico</Label>
-                      <Input id="email-profesor" type="email" placeholder="profesor@ejemplo.com" />
+                      <Input id="email" 
+                      type="email" 
+                      name="email"
+                      placeholder="profesor@ejemplo.com" onChange={handleLoginChange}/>
                     </div>
-                    <div className="grid gap-2">
+                    <div className="grid gap-2 relative" >
                       <div className="flex items-center justify-between">
                         <Label htmlFor="password-profesor">Contraseña</Label>
                         <Link to="#" className="text-sm text-blue-600 hover:underline">
                           ¿Olvidaste tu contraseña?
                         </Link>
                       </div>
-                      <Input id="password-profesor" type="password" />
+                      <Input id="contraseña" name="password" type={showPassword ? "text" : "password"} onChange={handleLoginChange}/>
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3  items-center text-sm "
+                    >
+                        {showPassword ? "Ocultar" : "Mostrar"}
+                    </button>
                     </div>
                     <Button variant="submit" className="w-full">
                       Iniciar sesión
