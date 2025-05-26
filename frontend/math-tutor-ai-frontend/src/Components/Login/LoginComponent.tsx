@@ -7,7 +7,7 @@ import { Input } from '../UI/Input'
 import { Label } from '../UI/label'
 import {  Link } from 'react-router-dom'
 import { login } from '../../Service/Auth/AuthService'
-import LogoMatemix from '../../assets/Vector.svg'
+import LogoMatemix from '../../assets/MateMix_Logo.png'
 
 const LoginComponent = () => {
     const [loginData, setLoginData] = useState({email:"", password:""});
