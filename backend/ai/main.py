@@ -17,7 +17,7 @@ from reporte import Reporte, ReporteCreate
 from service import GPTService
 from solucionarioService import SolucionarioService
 from db import alumnos_collection, temas_collection, progresos_collection, reportes_collection
-
+from request import LoginAlumnoRequest
 load_dotenv()
 
 app = FastAPI(title="Plataforma de Aprendizaje", version="1.0.0")
@@ -43,6 +43,7 @@ solucionario_service = SolucionarioService()
 async def registrar_usuario(alumno: AlumnoCreate):
     """Registra un nuevo usuario en la plataforma"""
     # Verificar si el email ya existe
+    print(f"Datos de registro recibidos: {alumno}")
     usuario_existente = await alumnos_collection.find_one({"email": alumno.email})
     if usuario_existente:
         raise HTTPException(
@@ -62,6 +63,20 @@ async def registrar_usuario(alumno: AlumnoCreate):
         "status": "Usuario registrado exitosamente",
         "usuario": usuario_creado
     }
+
+@app.post("/usuarios/login", response_model=Dict[str, Any])
+async def login_usuario(alumno: LoginAlumnoRequest):
+    """Inicia sesión de usuario"""
+    print(f"Datos de inicio de sesión recibidos: {alumno}")
+    usuario = await alumnos_collection.find_one({"email": alumno.email})
+    if not usuario or usuario.get("password") != alumno.password:
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+    usuario["_id"] = str(usuario["_id"])
+    return {
+        "status": "Inicio de sesión exitoso",
+        "usuario": usuario
+    }
+
 
 @app.get("/usuarios/{usuario_id}", response_model=Dict[str, Any])
 async def obtener_usuario(usuario_id: str):

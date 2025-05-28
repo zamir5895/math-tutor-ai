@@ -43,3 +43,7 @@ class EjerciciosAdicionalesRequest(BaseModel):
 class AnalisisPatronesRequest(BaseModel):
     alumno_id: str
     tema_id: Optional[str] = None
+
+class LoginAlumnoRequest(BaseModel):
+    email: str
+    password: str

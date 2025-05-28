@@ -25,6 +25,7 @@ class AlumnoBase(BaseModel):
     nombre: str
     email: EmailStr
     fecha_registro: datetime = Field(default_factory=datetime.utcnow)
+    password: str
 
 class AlumnoCreate(AlumnoBase):
     pass
