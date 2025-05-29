@@ -12,8 +12,8 @@ export const Button = ({ className, variant = "default", isLoading, icon, childr
     const baseStyle = "px-4 py-2 rounded font-semibold transition-colors flex items-center justify-center gap-2";
     const variants = {
         default: "bg-gray-800 text-white hover:bg-blue-700", 
-        outline: "border border-gray-600 text-blue-600 hover:bg-blue-100", 
-        ghost: "text-blue-600 hover:bg-blue-50",
+        outline: "border border-gray-600 text-blue-500 hover:bg-blue-100", 
+        ghost: "text-blue-500 hover:bg-blue-50",
         submit: "bg-black text-white hover:bg-gray-900" 
     };
 

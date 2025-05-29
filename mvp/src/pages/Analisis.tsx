@@ -86,7 +86,7 @@ export default function AnalisisPage() {
       <div className="container mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 flex items-center">
-            <Brain className="h-8 w-8 mr-3 text-purple-600" />
+            <Brain className="h-8 w-8 mr-3 text-violet-500" />
             Análisis con Inteligencia Artificial
           </h1>
           <p className="text-gray-600">Insights personalizados sobre tu aprendizaje</p>
@@ -99,7 +99,7 @@ export default function AnalisisPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Nivel de Aprendizaje</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600 mb-1">{analisisIA.nivelAprendizaje}</div>
+              <div className="text-2xl font-bold text-violet-500 mb-1">{analisisIA.nivelAprendizaje}</div>
               <p className="text-sm text-gray-500">Basado en rendimiento general</p>
             </CardContent>
           </Card>
@@ -109,7 +109,7 @@ export default function AnalisisPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Estilo de Aprendizaje</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600 mb-1">{analisisIA.estiloAprendizaje}</div>
+              <div className="text-2xl font-bold text-blue-500 mb-1">{analisisIA.estiloAprendizaje}</div>
               <p className="text-sm text-gray-500">Detectado por IA</p>
             </CardContent>
           </Card>
@@ -119,7 +119,7 @@ export default function AnalisisPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Velocidad de Progreso</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold text-green-600 mb-1">{analisisIA.velocidadProgreso}</div>
+              <div className="text-lg font-bold text-emerald-500 mb-1">{analisisIA.velocidadProgreso}</div>
               <p className="text-sm text-gray-500">vs otros estudiantes</p>
             </CardContent>
           </Card>
@@ -129,7 +129,7 @@ export default function AnalisisPage() {
           {/* Fortalezas */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center text-green-600">
+              <CardTitle className="flex items-center text-emerald-500">
                 <TrendingUp className="h-5 w-5 mr-2" />
                 Fortalezas Identificadas
               </CardTitle>
@@ -140,7 +140,7 @@ export default function AnalisisPage() {
                 <div key={index} className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-medium">{fortaleza.area}</span>
-                    <Badge className="bg-green-600">{fortaleza.nivel}%</Badge>
+                    <Badge className="bg-emerald-500">{fortaleza.nivel}%</Badge>
                   </div>
                   <Progress value={fortaleza.nivel} className="h-2" />
                   <p className="text-sm text-gray-600">{fortaleza.descripcion}</p>
@@ -179,7 +179,7 @@ export default function AnalisisPage() {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Lightbulb className="h-5 w-5 mr-2 text-yellow-600" />
+              <Lightbulb className="h-5 w-5 mr-2 text-amber-500" />
               Recomendaciones Personalizadas de IA
             </CardTitle>
             <CardDescription>Sugerencias basadas en tu patrón único de aprendizaje</CardDescription>
@@ -194,10 +194,10 @@ export default function AnalisisPage() {
                       <Badge
                         className={
                           rec.prioridad === "Alta"
-                            ? "bg-red-600"
+                            ? "bg-pink-600"
                             : rec.prioridad === "Media"
-                              ? "bg-yellow-600"
-                              : "bg-green-600"
+                              ? "bg-amber-500"
+                              : "bg-emerald-500"
                         }
                       >
                         {rec.prioridad}
@@ -221,7 +221,7 @@ export default function AnalisisPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Target className="h-5 w-5 mr-2 text-blue-600" />
+              <Target className="h-5 w-5 mr-2 text-blue-500" />
               Predicciones de Progreso
             </CardTitle>
             <CardDescription>Proyecciones basadas en tu ritmo actual de aprendizaje</CardDescription>

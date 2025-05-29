@@ -15,7 +15,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Ejercicios Completados</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">127</div>
+              <div className="text-2xl font-bold text-blue-500">127</div>
               <p className="text-xs text-gray-500">+12 esta semana</p>
             </CardContent>
           </Card>
@@ -25,7 +25,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Precisión Promedio</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">85%</div>
+              <div className="text-2xl font-bold text-emerald-500">85%</div>
               <p className="text-xs text-gray-500">+5% vs mes anterior</p>
             </CardContent>
           </Card>
@@ -35,7 +35,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Temas Dominados</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">3</div>
+              <div className="text-2xl font-bold text-violet-500">3</div>
               <p className="text-xs text-gray-500">de 8 temas</p>
             </CardContent>
           </Card>
@@ -45,7 +45,7 @@ export default function DashboardPage() {
               <CardTitle className="text-sm font-medium text-gray-600">Racha Actual</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">7</div>
+              <div className="text-2xl font-bold text-amber-500">7</div>
               <p className="text-xs text-gray-500">días consecutivos</p>
             </CardContent>
           </Card>
@@ -95,7 +95,7 @@ export default function DashboardPage() {
                       <p className="font-medium">Fracciones - Nivel Intermedio</p>
                       <p className="text-sm text-gray-600">8/10 ejercicios correctos</p>
                     </div>
-                    <div className="text-green-600 font-bold">80%</div>
+                    <div className="text-emerald-500 font-bold">80%</div>
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
@@ -103,7 +103,7 @@ export default function DashboardPage() {
                       <p className="font-medium">Álgebra Básica - Nivel Fácil</p>
                       <p className="text-sm text-gray-600">9/10 ejercicios correctos</p>
                     </div>
-                    <div className="text-blue-600 font-bold">90%</div>
+                    <div className="text-blue-500 font-bold">90%</div>
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
@@ -111,7 +111,7 @@ export default function DashboardPage() {
                       <p className="font-medium">Geometría - Nivel Intermedio</p>
                       <p className="text-sm text-gray-600">6/10 ejercicios correctos</p>
                     </div>
-                    <div className="text-yellow-600 font-bold">60%</div>
+                    <div className="text-amber-500 font-bold">60%</div>
                   </div>
                 </div>
               </CardContent>
@@ -132,7 +132,7 @@ export default function DashboardPage() {
                     <span>85%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: "85%" }}></div>
+                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: "85%" }}></div>
                   </div>
                 </div>
 
@@ -142,7 +142,7 @@ export default function DashboardPage() {
                     <span>72%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full" style={{ width: "72%" }}></div>
+                    <div className="bg-emerald-500 h-2 rounded-full" style={{ width: "72%" }}></div>
                   </div>
                 </div>
 
@@ -152,7 +152,7 @@ export default function DashboardPage() {
                     <span>45%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-yellow-600 h-2 rounded-full" style={{ width: "45%" }}></div>
+                    <div className="bg-amber-500 h-2 rounded-full" style={{ width: "45%" }}></div>
                   </div>
                 </div>
 
@@ -162,7 +162,7 @@ export default function DashboardPage() {
                     <span>30%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-red-600 h-2 rounded-full" style={{ width: "30%" }}></div>
+                    <div className="bg-pink-600 h-2 rounded-full" style={{ width: "30%" }}></div>
                   </div>
                 </div>
               </CardContent>
@@ -176,17 +176,17 @@ export default function DashboardPage() {
               <CardContent className="space-y-3">
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm font-medium text-blue-800">Practica más geometría</p>
-                  <p className="text-xs text-blue-600">Tu rendimiento ha bajado en este tema</p>
+                  <p className="text-xs text-blue-500">Tu rendimiento ha bajado en este tema</p>
                 </div>
 
                 <div className="p-3 bg-green-50 rounded-lg">
                   <p className="text-sm font-medium text-green-800">¡Excelente en fracciones!</p>
-                  <p className="text-xs text-green-600">Considera avanzar al siguiente nivel</p>
+                  <p className="text-xs text-emerald-500">Considera avanzar al siguiente nivel</p>
                 </div>
 
                 <div className="p-3 bg-purple-50 rounded-lg">
                   <p className="text-sm font-medium text-purple-800">Sesión de repaso</p>
-                  <p className="text-xs text-purple-600">Revisa conceptos de álgebra básica</p>
+                  <p className="text-xs text-violet-500">Revisa conceptos de álgebra básica</p>
                 </div>
               </CardContent>
             </Card>

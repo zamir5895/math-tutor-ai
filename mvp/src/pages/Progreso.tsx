@@ -102,7 +102,7 @@ export default function ProgresoPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-blue-600 mb-2">{progresoGeneral.ejerciciosCompletados}</div>
+                  <div className="text-3xl font-bold text-blue-500 mb-2">{progresoGeneral.ejerciciosCompletados}</div>
                   <p className="text-sm text-gray-500">+12 esta semana</p>
                 </CardContent>
               </Card>
@@ -115,7 +115,7 @@ export default function ProgresoPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-green-600 mb-2">{progresoGeneral.horasEstudio}h</div>
+                  <div className="text-3xl font-bold text-emerald-500 mb-2">{progresoGeneral.horasEstudio}h</div>
                   <p className="text-sm text-gray-500">+8h esta semana</p>
                 </CardContent>
               </Card>
@@ -128,7 +128,7 @@ export default function ProgresoPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-purple-600 mb-2">{progresoGeneral.precisionPromedio}%</div>
+                  <div className="text-3xl font-bold text-violet-500 mb-2">{progresoGeneral.precisionPromedio}%</div>
                   <p className="text-sm text-gray-500">+5% vs mes anterior</p>
                 </CardContent>
               </Card>
@@ -158,7 +158,7 @@ export default function ProgresoPage() {
                       <p className="text-sm text-gray-600">Días consecutivos</p>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">{progresoGeneral.temasCompletados}</div>
+                      <div className="text-2xl font-bold text-blue-500">{progresoGeneral.temasCompletados}</div>
                       <p className="text-sm text-gray-600">Temas dominados</p>
                     </div>
                   </div>
@@ -227,7 +227,7 @@ export default function ProgresoPage() {
                       </div>
 
                       <div className="flex justify-between items-center">
-                        <span className="text-2xl font-bold text-blue-600">{tema.progreso}%</span>
+                        <span className="text-2xl font-bold text-blue-500">{tema.progreso}%</span>
                         <Button className="text-sm">Continuar Practicando</Button>
                       </div>
                     </div>
@@ -252,7 +252,7 @@ export default function ProgresoPage() {
                     <div key={index} className="text-center">
                       <div className="text-sm font-medium text-gray-600 mb-2">{dia.dia}</div>
                       <div className="bg-blue-100 rounded-lg p-3 mb-2">
-                        <div className="text-lg font-bold text-blue-600">{dia.ejercicios}</div>
+                        <div className="text-lg font-bold text-blue-500">{dia.ejercicios}</div>
                         <div className="text-xs text-gray-600">ejercicios</div>
                       </div>
                       <div className="text-xs text-gray-500">{dia.tiempo}min</div>
@@ -294,15 +294,15 @@ export default function ProgresoPage() {
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                     <span className="text-green-800">Precisión</span>
-                    <span className="text-green-600 font-medium">↗ +5%</span>
+                    <span className="text-emerald-500 font-medium">↗ +5%</span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                     <span className="text-blue-800">Velocidad</span>
-                    <span className="text-blue-600 font-medium">↗ +12%</span>
+                    <span className="text-blue-500 font-medium">↗ +12%</span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                     <span className="text-purple-800">Constancia</span>
-                    <span className="text-purple-600 font-medium">↗ +8%</span>
+                    <span className="text-violet-500 font-medium">↗ +8%</span>
                   </div>
                 </CardContent>
               </Card>
@@ -316,10 +316,10 @@ export default function ProgresoPage() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center">
-                        <Award className={`h-5 w-5 mr-2 ${logro.obtenido ? "text-green-600" : "text-gray-400"}`} />
+                        <Award className={`h-5 w-5 mr-2 ${logro.obtenido ? "text-emerald-500" : "text-gray-400"}`} />
                         {logro.nombre}
                       </CardTitle>
-                      {logro.obtenido && <Badge className="bg-green-600">Obtenido</Badge>}
+                      {logro.obtenido && <Badge className="bg-emerald-500">Obtenido</Badge>}
                     </div>
                     <CardDescription>{logro.descripcion}</CardDescription>
                   </CardHeader>
