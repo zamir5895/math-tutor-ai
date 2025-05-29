@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from bson import ObjectId
 
 
@@ -23,7 +23,7 @@ class PyObjectId(ObjectId):
 
 class AlumnoBase(BaseModel):
     nombre: str
-    email: EmailStr
+    username: str
     fecha_registro: datetime = Field(default_factory=datetime.utcnow)
     password: str
 

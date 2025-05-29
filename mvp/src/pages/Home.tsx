@@ -8,27 +8,72 @@ import { Label } from "../components/ui/Label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/Tabs"
 import { BookOpen, Calculator, TrendingUp, Users } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { authService } from "../Service/api"
 
 export default function HomePage() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
+  const [loginData, setLoginData] = useState({
+    username: "",
+    password: "",})
+    const [registerData, setRegisterData] = useState({
+    nombre: "",
+    username: "",
+    password: "",
+    })
+
+  const handleLoginData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLoginData({ ...loginData, [e.target.id]: e.target.value })
+  }
+
+  const handleRegisterData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.id === "nombre") {
+      setRegisterData({ ...registerData, nombre: e.target.value })
+    } else if (e.target.id === "username-reg") {
+        setRegisterData({ ...registerData, username: e.target.value })
+        }
+    else if (e.target.id === "password-reg") {
+      setRegisterData({ ...registerData, password: e.target.value })
+    }
+  }
 
   const handleLogin = async () => {
     setIsLoading(true)
-    // Simular llamada a API
-    setTimeout(() => {
-      setIsLoading(false)
-      navigate("/dashboard")
-    }, 1000)
+    try{
+        const response = await authService.login({
+            username: loginData.username,
+            password: loginData.password
+        })
+        if (response){
+            navigate("/dashboard")
+        }else{
+            alert("Credenciales incorrectas")
+        }
+    }catch {
+        alert("Error en la autenticación")
+    }finally {
+        setIsLoading(false)
+    }
   }
 
   const handleRegister = async () => {
     setIsLoading(true)
-    // Simular llamada a API
-    setTimeout(() => {
-      setIsLoading(false)
-      navigate("/dashboard")
-    }, 1000)
+    try{
+        const response = await authService.signup({
+            nombre: registerData.nombre,
+            username: registerData.username,
+            password: registerData.password
+        })
+        if (response){
+            navigate("/dashboard")
+        }else{
+            alert("Error en el registro")
+        }
+    }catch {
+        alert("Error en el registro")
+    }finally {
+        setIsLoading(false)
+    }
   }
 
   return (
@@ -125,12 +170,12 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="tu@email.com" />
+                    <Label htmlFor="username">Username</Label>
+                    <Input id="username" type="text" placeholder="MYUSER" onChange={handleLoginData} />
                   </div>
                   <div>
                     <Label htmlFor="password">Contraseña</Label>
-                    <Input id="password" type="password" />
+                    <Input id="password" type="password" onChange={handleLoginData} />
                   </div>
                   <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
                     {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
@@ -148,15 +193,15 @@ export default function HomePage() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="nombre">Nombre Completo</Label>
-                    <Input id="nombre" placeholder="Juan Pérez" />
+                    <Input id="nombre" placeholder="Juan Pérez" onChange={handleRegisterData} />
                   </div>
                   <div>
-                    <Label htmlFor="email-reg">Email</Label>
-                    <Input id="email-reg" type="email" placeholder="juan.perez@email.com" />
+                    <Label htmlFor="text-reg">Username</Label>
+                    <Input id="username-reg" type="text" placeholder="MYUSERNAME" onChange={handleRegisterData}/>
                   </div>
                   <div>
                     <Label htmlFor="password-reg">Contraseña</Label>
-                    <Input id="password-reg" type="password" />
+                    <Input id="password-reg" type="password" onChange={handleRegisterData} />
                   </div>
                   <Button className="w-full" onClick={handleRegister} disabled={isLoading}>
                     {isLoading ? "Creando cuenta..." : "Crear Cuenta"}

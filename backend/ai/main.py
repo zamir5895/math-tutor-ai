@@ -42,13 +42,13 @@ solucionario_service = SolucionarioService()
 @app.post("/usuarios/registrar", response_model=Dict[str, Any])
 async def registrar_usuario(alumno: AlumnoCreate):
     """Registra un nuevo usuario en la plataforma"""
-    # Verificar si el email ya existe
+    # Verificar si el username ya existe
     print(f"Datos de registro recibidos: {alumno}")
-    usuario_existente = await alumnos_collection.find_one({"email": alumno.email})
+    usuario_existente = await alumnos_collection.find_one({"username": alumno.username})
     if usuario_existente:
         raise HTTPException(
             status_code=400,
-            detail="Ya existe un usuario registrado con este email"
+            detail="Ya existe un usuario registrado con este username"
         )
     
     # Crear nuevo usuario
@@ -68,7 +68,7 @@ async def registrar_usuario(alumno: AlumnoCreate):
 async def login_usuario(alumno: LoginAlumnoRequest):
     """Inicia sesión de usuario"""
     print(f"Datos de inicio de sesión recibidos: {alumno}")
-    usuario = await alumnos_collection.find_one({"email": alumno.email})
+    usuario = await alumnos_collection.find_one({"username": alumno.username})
     if not usuario or usuario.get("password") != alumno.password:
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
     usuario["_id"] = str(usuario["_id"])

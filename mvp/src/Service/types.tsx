@@ -1,10 +1,17 @@
 export type User = {
     id: string;
-    name: string;
-    email: string;
+    nombre: string;
+    username: string;
+    fecha_registro: string;
 };
 
 export type UserLogin = {
-    email: string;
+    username: string;
     password: string;
 }
+
+export type UserRegister = {
+    nombre: string;
+    username: string;
+    password: string;
+};

@@ -45,5 +45,5 @@ class AnalisisPatronesRequest(BaseModel):
     tema_id: Optional[str] = None
 
 class LoginAlumnoRequest(BaseModel):
-    email: str
+    username: str
     password: str
