@@ -9,10 +9,10 @@ interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function Progress({ value, color = "blue", className, ...props }: ProgressProps) {
   const bgMap: Record<string, string> = {
-    green: "bg-green-600",
+    green: "bg-emerald-500",
     orange: "bg-orange-600",
-    red: "bg-red-600",
-    blue: "bg-blue-600",
+    red: "bg-pink-600",
+    blue: "bg-blue-500",
     gray: "bg-gray-600",
   }
 

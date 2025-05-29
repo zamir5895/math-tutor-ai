@@ -91,7 +91,7 @@ return (
                       <div className="grid gap-2 relative">
                         <div className="flex items-center justify-between">
                           <Label htmlFor="password-estudiante">Contraseña</Label>
-                          <Link to="#" className="text-sm text-blue-600 hover:underline">
+                          <Link to="#" className="text-sm text-blue-500 hover:underline">
                             ¿Olvidaste tu contraseña?
                           </Link>
                         </div>
@@ -103,7 +103,7 @@ return (
                           <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute top-2/3 right-3 w-16 -translate-y-1/2 flex items-center justify-center text-sm text-blue-600 hover:underline"
+                          className="absolute top-2/3 right-3 w-16 -translate-y-1/2 flex items-center justify-center text-sm text-blue-500 hover:underline"
                       >
                           {showPassword ? "Ocultar" : "Mostrar"}
                       </button>
@@ -128,7 +128,7 @@ return (
                       <div className="grid gap-2 relative" >
                         <div className="flex items-center justify-between">
                           <Label htmlFor="password-profesor">Contraseña</Label>
-                          <Link to="#" className="text-sm text-blue-600 hover:underline">
+                          <Link to="#" className="text-sm text-blue-500 hover:underline">
                             ¿Olvidaste tu contraseña?
                           </Link>
                         </div>
@@ -136,7 +136,7 @@ return (
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute top-2/3 right-3 w-16 -translate-y-1/2 flex items-center justify-center text-sm text-blue-600 hover:underline"
+                          className="absolute top-2/3 right-3 w-16 -translate-y-1/2 flex items-center justify-center text-sm text-blue-500 hover:underline"
                       >
                           {showPassword ? "Ocultar" : "Mostrar"}
                         </button>
@@ -152,17 +152,17 @@ return (
             <CardFooter className="flex flex-col gap-4">
               <div className="text-center text-sm text-gray-600">
                 ¿No tienes una cuenta?{" "}
-                <Link to="#" className="text-blue-600 hover:underline">
+                <Link to="#" className="text-blue-500 hover:underline">
                   Regístrate aquí
                 </Link>
               </div>
               <div className="text-center text-xs text-gray-500">
                 Al iniciar sesión, aceptas nuestros{" "}
-                <Link to="#" className="text-blue-600 hover:underline">
+                <Link to="#" className="text-blue-500 hover:underline">
                   Términos de servicio
                 </Link>{" "}
                 y{" "}
-                <Link to="#" className="text-blue-600 hover:underline">
+                <Link to="#" className="text-blue-500 hover:underline">
                   Política de privacidad
                 </Link>
               </div>

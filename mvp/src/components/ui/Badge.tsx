@@ -21,17 +21,17 @@ export function Badge({
     Record<NonNullable<BadgeProps["color"]>, string>
   > = {
     solid: {
-      green: "bg-green-600 text-white",
-      orange: "bg-orange-600 text-white",
-      red: "bg-red-600 text-white",
-      blue: "bg-blue-600 text-white",
+      green: "bg-emerald-500 text-white",
+      orange: "bg-amber-500 text-white",
+      red: "bg-pink-600 text-white",
+      blue: "bg-blue-500 text-white",
       gray: "bg-gray-600 text-white",
     },
     outline: {
-      green: "border border-green-600 text-green-600 bg-transparent",
-      orange: "border border-orange-600 text-orange-600 bg-transparent",
-      red: "border border-red-600 text-red-600 bg-transparent",
-      blue: "border border-blue-600 text-blue-600 bg-transparent",
+      green: "border border-emerald-500 text-emerald-500 bg-transparent",
+      orange: "border border-amber-500 text-amber-500 bg-transparent",
+      red: "border border-pink-600 text-pink-600 bg-transparent",
+      blue: "border border-blue-500 text-blue-500 bg-transparent",
       gray: "border border-gray-600 text-gray-600 bg-transparent",
     },
     secondary: {
