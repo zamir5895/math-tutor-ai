@@ -89,7 +89,7 @@ export default function EjerciciosPage() {
           <div className="container mx-auto max-w-2xl">
             <Card>
               <CardHeader className="text-center">
-                <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                <CheckCircle className="h-16 w-16 text-emerald-500 mx-auto mb-4" />
                 <CardTitle>¡Felicitaciones!</CardTitle>
                 <CardDescription>Has completado todos los ejercicios de este nivel</CardDescription>
               </CardHeader>
@@ -284,7 +284,7 @@ export default function EjerciciosPage() {
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
-                          className="bg-blue-600 h-2 rounded-full"
+                          className="bg-blue-500 h-2 rounded-full"
                           style={{ width: `${(tema.completados / tema.ejercicios) * 100}%` }}
                         ></div>
                       </div>

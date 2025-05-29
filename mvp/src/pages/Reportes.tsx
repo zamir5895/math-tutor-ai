@@ -119,7 +119,7 @@ export default function ReportesPage() {
                   <CardTitle className="text-sm font-medium text-gray-600">Ejercicios Completados</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">{reporteGeneral.ejerciciosCompletados}</div>
+                  <div className="text-2xl font-bold text-blue-500">{reporteGeneral.ejerciciosCompletados}</div>
                 </CardContent>
               </Card>
 
@@ -128,7 +128,7 @@ export default function ReportesPage() {
                   <CardTitle className="text-sm font-medium text-gray-600">Precisión Promedio</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{reporteGeneral.precisionPromedio}%</div>
+                  <div className="text-2xl font-bold text-emerald-500">{reporteGeneral.precisionPromedio}%</div>
                 </CardContent>
               </Card>
 
@@ -137,7 +137,7 @@ export default function ReportesPage() {
                   <CardTitle className="text-sm font-medium text-gray-600">Tiempo de Estudio</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-purple-600">{reporteGeneral.tiempoEstudio}</div>
+                  <div className="text-2xl font-bold text-violet-500">{reporteGeneral.tiempoEstudio}</div>
                 </CardContent>
               </Card>
 
@@ -155,7 +155,7 @@ export default function ReportesPage() {
             <div className="grid lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center text-green-600">
+                  <CardTitle className="flex items-center text-emerald-500">
                     <CheckCircle className="h-5 w-5 mr-2" />
                     Fortalezas Identificadas
                   </CardTitle>
@@ -165,7 +165,7 @@ export default function ReportesPage() {
                     {reporteGeneral.fortalezas.map((fortaleza, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                         <span className="font-medium text-green-800">{fortaleza}</span>
-                        <Badge className="bg-green-600">Dominado</Badge>
+                        <Badge className="bg-emerald-500">Dominado</Badge>
                       </div>
                     ))}
                   </div>
@@ -207,7 +207,7 @@ export default function ReportesPage() {
                 <div className="space-y-3">
                   {reporteGeneral.recomendaciones.map((recomendacion, index) => (
                     <div key={index} className="flex items-start p-4 bg-blue-50 rounded-lg">
-                      <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
+                      <div className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
                         {index + 1}
                       </div>
                       <p className="text-blue-800">{recomendacion}</p>
@@ -240,7 +240,7 @@ export default function ReportesPage() {
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm font-medium text-gray-600 mb-1">Impacto</p>
-                        <p className="text-lg font-semibold text-blue-600">{patron.impacto}</p>
+                        <p className="text-lg font-semibold text-blue-500">{patron.impacto}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-600 mb-1">Recomendación</p>
@@ -261,7 +261,7 @@ export default function ReportesPage() {
                 <div className="space-y-3">
                   {analisisPatrones.predicciones.map((prediccion, index) => (
                     <div key={index} className="flex items-center p-3 bg-purple-50 rounded-lg">
-                      <div className="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-violet-500 text-white rounded-full flex items-center justify-center text-sm font-medium mr-3">
                         {index + 1}
                       </div>
                       <p className="text-purple-800">{prediccion}</p>
@@ -395,7 +395,7 @@ export default function ReportesPage() {
                       <p className="font-medium">Reporte Semanal</p>
                       <p className="text-sm text-gray-600">Cada lunes a las 9:00 AM</p>
                     </div>
-                    <Badge className="bg-green-600">Activo</Badge>
+                    <Badge className="bg-emerald-500">Activo</Badge>
                   </div>
 
                   <div className="flex items-center justify-between p-4 border rounded-lg">

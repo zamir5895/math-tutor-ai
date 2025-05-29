@@ -6,9 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Input } from "../components/ui/Input"
 import { Label } from "../components/ui/Label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/Tabs"
-import { BookOpen, Calculator, TrendingUp, Users } from "lucide-react"
+import { BookOpen, TrendingUp, Users } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+<<<<<<< HEAD
 import { authService } from "../Service/api"
+=======
+import logotipo from "../assets/Group 11 (1).svg"
+>>>>>>> e5d365901ae3b5466c3d3bae4eb6b21afabfcaef
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -82,8 +86,8 @@ export default function HomePage() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">
-            <Calculator className="h-12 w-12 text-blue-600 mr-3" />
-            <h1 className="text-4xl font-bold text-gray-900">MathLearn</h1>
+            <img src={logotipo} alt="MathLearn Logo" className="h-8 w-8 mr-2" />
+            <h1 className="text-4xl font-bold text-black">Matemix</h1>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Plataforma inteligente para aprender y reforzar matemáticas de forma personalizada

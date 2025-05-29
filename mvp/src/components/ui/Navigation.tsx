@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { Button } from "../ui/Button"
-import { Calculator, BookOpen, TrendingUp, FileText, Brain, Home, Menu, X } from "lucide-react"
+import { BookOpen, TrendingUp, FileText, Brain, Home, Menu, X } from "lucide-react"
 import { cn } from "../../utils"
 import { useNavigate, useLocation, Link } from "react-router-dom"
+import Matemixlogo from "../../assets/Vector (2).svg"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -36,12 +37,11 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center">
-            <Calculator className="h-8 w-8 text-blue-600 mr-3" />
-            <span className="text-xl font-bold">MathLearn</span>
+            <img src={Matemixlogo} alt="MathLearn Logo" className="h-50 w-50 mr-3" />
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center space-x-3">
             {navigation.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
@@ -50,7 +50,7 @@ export function Navigation() {
                 <Link key={item.name} to={item.href}>
                   <Button
                     variant={isActive ? "default" : "ghost"}
-                    className={cn("flex items-center space-x-2", isActive && "bg-blue-600 text-white")}
+                    className={cn("flex items-center gap-2", isActive && "bg-blue-500 text-white")}
                   >
                     <Icon className="h-4 w-4" />
                     <span>{item.name}</span>
@@ -62,10 +62,10 @@ export function Navigation() {
 
           {/* User Menu */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/perfil" className="text-gray-600 hover:text-blue-600">
+            <Link to="/perfil" className="text-gray-600 hover:text-blue-500">
               ¡Hola, Juan!
             </Link>
-            <Button variant="outline" className="text-sm" onClick={handleLogout}>
+            <Button variant="ghost" className="text-sm" onClick={handleLogout}>
               Cerrar Sesión
             </Button>
           </div>
@@ -92,7 +92,7 @@ export function Navigation() {
                       variant={isActive ? "default" : "ghost"}
                       className={cn(
                         "w-full justify-start flex items-center space-x-2",
-                        isActive && "bg-blue-600 text-white",
+                        isActive && "bg-blue-500 text-white",
                       )}
                       onClick={() => setIsOpen(false)}
                     >
@@ -103,7 +103,7 @@ export function Navigation() {
                 )
               })}
               <div className="pt-4 border-t">
-                <Button variant="outline" className="sm-text w-full" onClick={handleLogout}>
+                <Button variant="ghost" className="sm-text w-full" onClick={handleLogout}>
                   Cerrar Sesión
                 </Button>
               </div>

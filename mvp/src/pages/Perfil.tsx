@@ -80,7 +80,7 @@ export default function PerfilPage() {
                   <div>
                     <Label>Nivel Actual</Label>
                     <div className="flex items-center space-x-2 mt-2">
-                      <Badge className="bg-blue-600">{userData.nivelActual}</Badge>
+                      <Badge className="bg-blue-500">{userData.nivelActual}</Badge>
                     </div>
                   </div>
                 </div>
@@ -100,7 +100,7 @@ export default function PerfilPage() {
                   <CardTitle className="text-sm font-medium text-gray-600">Ejercicios Resueltos</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-blue-600">{userData.ejerciciosResueltos}</div>
+                  <div className="text-3xl font-bold text-blue-500">{userData.ejerciciosResueltos}</div>
                   <p className="text-sm text-gray-500">Total acumulado</p>
                 </CardContent>
               </Card>
@@ -110,7 +110,7 @@ export default function PerfilPage() {
                   <CardTitle className="text-sm font-medium text-gray-600">Horas de Estudio</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-green-600">{userData.horasEstudio}h</div>
+                  <div className="text-3xl font-bold text-emerald-500">{userData.horasEstudio}h</div>
                   <p className="text-sm text-gray-500">Tiempo invertido</p>
                 </CardContent>
               </Card>
@@ -120,7 +120,7 @@ export default function PerfilPage() {
                   <CardTitle className="text-sm font-medium text-gray-600">Temas Completados</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-purple-600">{userData.temasCompletados}</div>
+                  <div className="text-3xl font-bold text-violet-500">{userData.temasCompletados}</div>
                   <p className="text-sm text-gray-500">de 8 disponibles</p>
                 </CardContent>
               </Card>
@@ -148,7 +148,7 @@ export default function PerfilPage() {
                     <span>85% - Dominado</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-green-600 h-3 rounded-full" style={{ width: "85%" }}></div>
+                    <div className="bg-emerald-500 h-3 rounded-full" style={{ width: "85%" }}></div>
                   </div>
                 </div>
 
@@ -158,7 +158,7 @@ export default function PerfilPage() {
                     <span>72% - En progreso</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-blue-600 h-3 rounded-full" style={{ width: "72%" }}></div>
+                    <div className="bg-blue-500 h-3 rounded-full" style={{ width: "72%" }}></div>
                   </div>
                 </div>
 
@@ -168,7 +168,7 @@ export default function PerfilPage() {
                     <span>45% - Iniciando</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-yellow-600 h-3 rounded-full" style={{ width: "45%" }}></div>
+                    <div className="bg-amber-500 h-3 rounded-full" style={{ width: "45%" }}></div>
                   </div>
                 </div>
 
@@ -178,7 +178,7 @@ export default function PerfilPage() {
                     <span>30% - Iniciando</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-red-600 h-3 rounded-full" style={{ width: "30%" }}></div>
+                    <div className="bg-pink-600 h-3 rounded-full" style={{ width: "30%" }}></div>
                   </div>
                 </div>
               </CardContent>
@@ -230,7 +230,7 @@ export default function PerfilPage() {
                     <div className="text-right">
                       <p className="text-sm font-medium">85% / 90%</p>
                       <div className="w-20 bg-gray-200 rounded-full h-2 mt-1">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: "94%" }}></div>
+                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: "94%" }}></div>
                       </div>
                     </div>
                   </div>
@@ -246,7 +246,7 @@ export default function PerfilPage() {
                     <div className="text-right">
                       <p className="text-sm font-medium">7 / 30 días</p>
                       <div className="w-20 bg-gray-200 rounded-full h-2 mt-1">
-                        <div className="bg-green-600 h-2 rounded-full" style={{ width: "23%" }}></div>
+                        <div className="bg-emerald-500 h-2 rounded-full" style={{ width: "23%" }}></div>
                       </div>
                     </div>
                   </div>
@@ -288,7 +288,7 @@ export default function PerfilPage() {
                   <Label>Temas de Interés</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     <Badge variant="outline">Fracciones</Badge>
-                    <Badge className="bg-blue-600">Álgebra</Badge>
+                    <Badge className="bg-blue-500">Álgebra</Badge>
                     <Badge variant="outline">Geometría</Badge>
                     <Badge variant="outline">Estadística</Badge>
                     <Badge variant="outline">Trigonometría</Badge>
