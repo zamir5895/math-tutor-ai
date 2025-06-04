@@ -8,11 +8,8 @@ import { Label } from "../components/ui/Label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/Tabs"
 import { BookOpen, TrendingUp, Users } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-<<<<<<< HEAD
 import { authService } from "../Service/api"
-=======
 import logotipo from "../assets/Group 11 (1).svg"
->>>>>>> e5d365901ae3b5466c3d3bae4eb6b21afabfcaef
 
 export default function HomePage() {
   const navigate = useNavigate()
