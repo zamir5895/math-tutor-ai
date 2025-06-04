@@ -1,12 +1,14 @@
 package org.example.usuarios.User.Application;
 
 import org.example.usuarios.Auth.ApiResponseDTO;
+import org.example.usuarios.Auth.JwtTokenProvider;
 import org.example.usuarios.User.Domain.User;
 import org.example.usuarios.User.Domain.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
 
 @RestController
@@ -17,9 +19,22 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     @GetMapping("/profile")
-    public ResponseEntity<?> getUserProfile(@RequestParam("userId") UUID userId) {
+    public ResponseEntity<?> getUserProfile(HttpServletRequest request) {
         try {
+            // Extraer el token del header
+            String token = request.getHeader("Authorization");
+            if (token == null || !token.startsWith("Bearer ")) {
+                return ResponseEntity.status(401)
+                        .body(new ApiResponseDTO("Token de autorización requerido"));
+            }
+
+            String jwt = token.substring(7);
+            UUID userId = jwtTokenProvider.extractUserId(jwt);
+
             User user = userService.getUserById(userId).orElse(null);
 
             if (user == null) {

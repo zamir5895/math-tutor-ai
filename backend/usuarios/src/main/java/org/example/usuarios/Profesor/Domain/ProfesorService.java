@@ -48,4 +48,8 @@ public class ProfesorService {
         }
         return null;
     }
+
+    public boolean existsByUsername(String username) {
+        return profesorRepository.existsByUsername(username);
+    }
 }

@@ -1,6 +1,7 @@
 package org.example.usuarios.Auth;
 
 public class LoginRequestDTO {
+
     private String username;
     private String password;
 

@@ -9,4 +9,5 @@ import java.util.UUID;
 @Repository
 public interface ProfesorRepository extends JpaRepository<Profesor, UUID> {
 
+    boolean existsByUsername(String username);
 }

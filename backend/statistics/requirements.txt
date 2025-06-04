@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+motor
+databases[asyncpg]
+python-dotenv
+pydantic
+bson
