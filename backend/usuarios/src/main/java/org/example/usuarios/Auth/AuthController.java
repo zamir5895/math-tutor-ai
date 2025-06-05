@@ -14,6 +14,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.BadCredentialsException;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*")
@@ -96,6 +98,37 @@ public class AuthController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponseDTO("Error interno del servidor"));
+        }
+    }
+
+    @GetMapping("/verify-token")
+    public ResponseEntity<?> verifyToken(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            // Obtener el token de la cabecera "Authorization"
+            String token = authorizationHeader.substring(7); // "Bearer " es el prefijo, por lo que eliminamos los primeros 7 caracteres
+
+            // Verificar si el token es válido
+            if (jwtTokenProvider.isTokenExpired(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponseDTO("El token ha expirado"));
+            }
+
+            // Extraer la información del token (username, role, uuid)
+            String username = jwtTokenProvider.extractUsername(token);
+            String role = jwtTokenProvider.extractRole(token);
+            UUID userId = jwtTokenProvider.extractUserId(token);
+
+            // Crear la respuesta con la información extraída del token
+            TokenVerificationResponseDTO response = new TokenVerificationResponseDTO();
+            response.setUsername(username);
+            response.setRole(role);
+            response.setUserId(userId.toString());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error al verificar el token"));
         }
     }
 }

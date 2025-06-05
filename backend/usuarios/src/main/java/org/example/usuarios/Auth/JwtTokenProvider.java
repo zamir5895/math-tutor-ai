@@ -66,9 +66,10 @@ public class JwtTokenProvider {
         return (username.equals(extractUsername(token)) && !isTokenExpired(token));
     }
 
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
+
 
     private Date extractExpiration(String token) {
         return Jwts.parser()
@@ -77,6 +78,7 @@ public class JwtTokenProvider {
                 .getBody()
                 .getExpiration();
     }
+
 
 
 

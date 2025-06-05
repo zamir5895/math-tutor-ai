@@ -45,20 +45,40 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/auth/**").permitAll()
+                        // Rutas públicas
+                        auth.requestMatchers("/auth/login").permitAll()
                                 .requestMatchers("/profesor/register").permitAll()
-                                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")  // Usar hasAuthority en lugar de hasRole
-                                .requestMatchers("/profesor/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")  // Usar hasAnyAuthority
-                                .requestMatchers("/alumno/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_STUDENT")  // Usar hasAnyAuthority
+                                .requestMatchers("/alumno/register").permitAll()
+
+                                // Rutas solo para ADMIN
+                                .requestMatchers("/salon/admin_only/**").hasAuthority("ROLE_ADMIN")
+                                .requestMatchers("/profesor/admin_only/**").hasAuthority("ROLE_ADMIN")
+                                .requestMatchers("/alumno/admin_only/**").hasAnyAuthority("ROLE_ADMIN")
+                                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+
+                                // Rutas solo para TEACHER
+                                .requestMatchers("/salon/profesor/**").hasAuthority("ROLE_TEACHER")
+                                .requestMatchers("/profesor/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
+
+                                // Rutas accesibles para ADMIN y TEACHER
+                                .requestMatchers("/salon/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
+                                .requestMatchers("/seccion/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
+                                .requestMatchers("/alumno/student/**").hasAnyAuthority("ROLE_STUDENT")
+                                .requestMatchers("/alumno/salon/").hasAnyAuthority("ROLE_ADMIN", "ROLE_STUDENT", "ROLE_TEACHER")
+                                .requestMatchers("/alumno/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_STUDENT")
+
+
+                                // Cualquier otra solicitud debe estar autenticada
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Configuración sin estado (sin sesión)
                 );
 
         // Añadir el filtro JWT antes de otros filtros
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
+
 
 }

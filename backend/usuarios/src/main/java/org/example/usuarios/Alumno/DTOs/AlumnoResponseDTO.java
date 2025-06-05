@@ -1,10 +1,12 @@
 package org.example.usuarios.Alumno.DTOs;
 
+import java.util.UUID;
+
 public class AlumnoResponseDTO {
     private String id;
     private String username;
     private String dni;
-    private String seccion;
+    private UUID salon;
     private String role;
     private String createdAt;
 
@@ -15,8 +17,8 @@ public class AlumnoResponseDTO {
     public void setUsername(String username) { this.username = username; }
     public String getDni() { return dni; }
     public void setDni(String dni) { this.dni = dni; }
-    public String getSeccion() { return seccion; }
-    public void setSeccion(String seccion) { this.seccion = seccion; }
+    public UUID getSalon() { return salon; }
+    public void setSalon(UUID seccion) { this.salon = seccion; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
     public String getCreatedAt() { return createdAt; }

@@ -36,7 +36,7 @@ public class SeccionController {
                         dto.setUsername(alumno.getUsername());
                         dto.setDni(alumno.getDni());
                         if (alumno.getSalon() != null) {
-                            dto.setSeccion(alumno.getSalon().getSeccion());
+                            dto.setSalon(alumno.getSalon().getId());
                         }
                         return dto;
                     })

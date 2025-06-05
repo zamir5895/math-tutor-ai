@@ -52,4 +52,8 @@ public class ProfesorService {
     public boolean existsByUsername(String username) {
         return profesorRepository.existsByUsername(username);
     }
+
+    public boolean existsById(UUID profesorId) {
+        return profesorRepository.existsById(profesorId);
+    }
 }

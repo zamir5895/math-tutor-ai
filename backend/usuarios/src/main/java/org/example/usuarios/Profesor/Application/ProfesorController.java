@@ -59,7 +59,7 @@ public class ProfesorController {
         }
     }
 
-    @GetMapping("/all")
+    @GetMapping("/admin_only/all")
     public ResponseEntity<?> getAllProfesores() {
         logger.debug("Invocando endpoint getAllProfesores");
 
@@ -73,7 +73,7 @@ public class ProfesorController {
         }
     }
 
-    @GetMapping("/a/{id}")
+    @GetMapping("/admin_only/{id}")
     public ResponseEntity<?> getProfesorById(@PathVariable UUID id) {
         logger.debug("Invocando endpoint getProfesorById con ID: {}", id);
 
@@ -125,7 +125,7 @@ public class ProfesorController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin_only/{id}")
     public ResponseEntity<?> updateProfesor(@PathVariable UUID id, @RequestBody ProfesorRegisterRequestDTO request) {
         logger.debug("Invocando endpoint updateProfesor con ID: {} y username: {}", id, request.getUsername());
 
@@ -194,7 +194,8 @@ public class ProfesorController {
         }
     }
 
-    @DeleteMapping("/{id}")
+
+    @DeleteMapping("/admin_only/{id}")
     public ResponseEntity<?> deleteProfesor(@PathVariable UUID id) {
         logger.debug("Invocando endpoint deleteProfesor con ID: {}", id);
 
