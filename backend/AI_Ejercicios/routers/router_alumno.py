@@ -1,0 +1,139 @@
+# routers/usuarios.py
+from fastapi import APIRouter, HTTPException, Body, Depends
+from typing import Dict, Any
+from uuid import UUID
+from bson import Binary
+import httpx
+import logging
+from bson import Binary, ObjectId
+from utils.authorization import verify_teacher_or_admin_token
+
+
+from db import alumnos_collection, temas_collection
+
+
+# Configurar logger
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+router = APIRouter(
+    prefix="/alumnos",
+    tags=["Alumnos"]
+)
+
+
+# Endpoint refactorizado
+@router.post("/enroll_alumno_tema", response_model=Dict[str, Any])
+async def enroll_alumno_tema(
+    tema_id: str = Body(...),
+    token: str = Body(...),
+    alumno_id: str = Body(...)
+):
+    try:
+        # Verificar si es TEACHER o ADMIN
+        auth_data = await verify_teacher_or_admin_token(token)
+        
+        # Validar y convertir alumno_id
+        try:
+            student_uuid = UUID(alumno_id)
+            student_id_binary = Binary.from_uuid(student_uuid)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de alumno inválido")
+        
+        # Buscar el alumno
+        alumno = await alumnos_collection.find_one({"_id": student_id_binary})
+        if not alumno:
+            raise HTTPException(status_code=404, detail="Alumno no encontrado")
+        
+        
+        print(f"DEBUG: Recibido tema_id: '{tema_id}' (tipo: {type(tema_id)}, longitud: {len(tema_id)})")
+        tema_id_clean = tema_id.strip()
+        print(f"DEBUG: tema_id limpio: '{tema_id_clean}'")
+        tema_uuid = UUID(tema_id_clean)
+        print(f"DEBUG: UUID convertido: {tema_uuid}")
+
+        
+        # Buscar directamente con el UUID (MongoDB maneja automáticamente la conversión)
+        tema = await temas_collection.find_one({"_id": tema_uuid})
+        print(f"DEBUG: Resultado de búsqueda: {tema is not None}")
+        
+        if not tema:
+            # Vamos a buscar todos los temas para ver qué IDs existen
+            print("DEBUG: Buscando todos los temas para diagnosticar...")
+            all_temas = await temas_collection.find({}, {"_id": 1, "nombre": 1}).to_list(length=10)
+            print(f"DEBUG: Temas existentes: {[(str(t.get('_id')), t.get('nombre')) for t in all_temas]}")
+            raise HTTPException(status_code=404, detail="Tema no encontrado")
+        
+        # Verificar si el alumno ya está inscrito
+        if "temas" not in alumno:
+            alumno["temas"] = []
+        
+        # Comparar IDs como strings para verificar inscripción
+        temas_inscritos = [str(t.get("id")) for t in alumno["temas"]]
+        if tema_id in temas_inscritos:
+            return {
+                "status": "Ya inscrito",
+                "message": f"El alumno ya está inscrito en el tema '{tema['nombre']}'",
+                "alumno_id": alumno_id,
+                "tema": tema["nombre"],
+                "enrolled_by": auth_data.get("username"),
+                "enrolled_by_role": auth_data.get("role")
+            }
+        
+        # Inscribir al alumno en el tema
+        alumno["temas"].append({
+            "id": tema_id,
+            "nombre": tema["nombre"]
+        })
+        
+        # Actualizar en la base de datos
+        await alumnos_collection.update_one(
+            {"_id": student_id_binary},
+            {"$set": {"temas": alumno["temas"]}}
+        )
+        
+        return {
+            "status": "Inscrito",
+            "message": f"Alumno inscrito exitosamente en el tema '{tema['nombre']}'",
+            "alumno_id": alumno_id,
+            "tema": tema["nombre"],
+            "enrolled_by": auth_data.get("username"),
+            "enrolled_by_role": auth_data.get("role")
+        }
+        
+    except HTTPException as http_exc:
+        # Permitir que FastAPI maneje HTTPException correctamente
+        raise http_exc
+    except ValueError as ve:
+        logger.error(f"Error de UUID: {str(ve)}")
+        raise HTTPException(status_code=400, detail="ID inválido")
+    except Exception as e:
+        logger.error(f"Error en enroll_alumno_tema: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
+    
+
+
+@router.get("/{usuario_id}", response_model=Dict[str, Any])
+async def obtener_usuario_v2(usuario_id: str):
+    """Obtiene información de un usuario por ID - Versión simplificada"""
+    try:
+        # ✅ SIMPLIFICADO: Solo convertir string a UUID
+        user_uuid = UUID(usuario_id)
+        
+        # ✅ MongoDB ahora maneja automáticamente la conversión UUID ↔ Binary
+        usuario = await alumnos_collection.find_one({"_id": user_uuid})
+        
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        # ✅ Ya no necesitas serialize_binary - MongoDB devuelve UUIDs como objetos UUID
+        # Pero FastAPI necesita serializar UUIDs, así que convertimos a string
+        if "_id" in usuario:
+            usuario["_id"] = str(usuario["_id"])
+        
+        return {"usuario": usuario}
+        
+    except ValueError:
+        raise HTTPException(status_code=400, detail="ID de usuario inválido")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")

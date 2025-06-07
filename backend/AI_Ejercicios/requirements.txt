@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pydantic
+motor
+python-dotenv
+pymongo
+azure-ai-inference
+httpx
