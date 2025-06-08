@@ -169,7 +169,8 @@
 									"    pm.expect(jsonData.nombre).to.eql('Matemáticas Avanzadas');",
 									"});"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {}
 							}
 						}
 					],
@@ -183,7 +184,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"nombre\": \"Matemáticas Avanzadas\",\n  \"descripcion\": \"Conceptos avanzados de matemáticas para estudiantes de nivel superior\"\n}"
+							"raw": "{\n  \"nombre\": \"resta3\",\n  \"descripcion\": \"Conceptos avanzados de matemáticas para estudiantes de nivel superior\",\n  \"cantidad_problemas\": \"2\",\n  \"puntos\": \"30\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/temas/{{tema_id}}",
@@ -625,7 +626,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"alumno_id\": \"783be8ad-fa5a-4605-b614-c9ca5339be92\",\n    \"tema_id\": \"c7407929-4808-49f1-968b-a1db643a8766\",\n    \"pregunta_id\": \"782e8c0c-4b4e-4bd6-a346-1107800a917d\",\n    \"respuesta\": \"7\",\n    \"token\": \"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJKb3JnZSBNZWxnYXJlam8iLCJyb2xlIjoiU1RVREVOVCIsInVzZXJJZCI6Ijc4M2JlOGFkLWZhNWEtNDYwNS1iNjE0LWM5Y2E1MzM5YmU5MiIsImlhdCI6MTc0OTMzNDgzMywiZXhwIjoxNzQ5NDIxMjMzfQ.MDOLy_IF0jwXe_lcP7SB-RDIP0TI_iXACeWune9YnM2FarHJUaofH02LDbgkjOScoSF6OKAEwA4NhMMGSy2b3A\"\n}\n",
+							"raw": "{\n    \"alumno_id\": \"783be8ad-fa5a-4605-b614-c9ca5339be92\",\n    \"tema_id\": \"c7407929-4808-49f1-968b-a1db643a8766\",\n    \"pregunta_id\": \"f27a9a0b-de93-4fbb-a125-86baf4d6cc78\",\n    \"respuesta\": \"132\",\n    \"token\": \"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJKb3JnZSBNZWxnYXJlam8iLCJyb2xlIjoiU1RVREVOVCIsInVzZXJJZCI6Ijc4M2JlOGFkLWZhNWEtNDYwNS1iNjE0LWM5Y2E1MzM5YmU5MiIsImlhdCI6MTc0OTMzNDgzMywiZXhwIjoxNzQ5NDIxMjMzfQ.MDOLy_IF0jwXe_lcP7SB-RDIP0TI_iXACeWune9YnM2FarHJUaofH02LDbgkjOScoSF6OKAEwA4NhMMGSy2b3A\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -680,13 +681,51 @@
 					"response": []
 				},
 				{
+					"name": "Respuestas Correctas",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"alumno_id\": \"783be8ad-fa5a-4605-b614-c9ca5339be92\",\n    \"pregunta_id\": \"782e8c0c-4b4e-4bd6-a346-1107800a917d\",\n    \"token\": \"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJKb3JnZSBNZWxnYXJlam8iLCJyb2xlIjoiU1RVREVOVCIsInVzZXJJZCI6Ijc4M2JlOGFkLWZhNWEtNDYwNS1iNjE0LWM5Y2E1MzM5YmU5MiIsImlhdCI6MTc0OTMzNDgzMywiZXhwIjoxNzQ5NDIxMjMzfQ.MDOLy_IF0jwXe_lcP7SB-RDIP0TI_iXACeWune9YnM2FarHJUaofH02LDbgkjOScoSF6OKAEwA4NhMMGSy2b3A\"\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8000/respuestas/respuestas_correctas?tema_id=c7407929-4808-49f1-968b-a1db643a8766",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"respuestas",
+								"respuestas_correctas"
+							],
+							"query": [
+								{
+									"key": "tema_id",
+									"value": "c7407929-4808-49f1-968b-a1db643a8766"
+								},
+								{
+									"key": "nivel",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Respuesta",
 					"request": {
 						"method": "PUT",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"alumno_id\": \"783be8ad-fa5a-4605-b614-c9ca5339be92\",\n    \"pregunta_id\": \"782e8c0c-4b4e-4bd6-a346-1107800a917d\",\n    \"nueva_respuesta\": \"234\",\n    \"token\": \"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJKb3JnZSBNZWxnYXJlam8iLCJyb2xlIjoiU1RVREVOVCIsInVzZXJJZCI6Ijc4M2JlOGFkLWZhNWEtNDYwNS1iNjE0LWM5Y2E1MzM5YmU5MiIsImlhdCI6MTc0OTMzNDgzMywiZXhwIjoxNzQ5NDIxMjMzfQ.MDOLy_IF0jwXe_lcP7SB-RDIP0TI_iXACeWune9YnM2FarHJUaofH02LDbgkjOScoSF6OKAEwA4NhMMGSy2b3A\"\n}",
+							"raw": "{\n    \"alumno_id\": \"783be8ad-fa5a-4605-b614-c9ca5339be92\",\n    \"pregunta_id\": \"d65926a6-6772-47a8-9634-ce556372acb0\",\n    \"nueva_respuesta\": \"28\",\n    \"token\": \"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJKb3JnZSBNZWxnYXJlam8iLCJyb2xlIjoiU1RVREVOVCIsInVzZXJJZCI6Ijc4M2JlOGFkLWZhNWEtNDYwNS1iNjE0LWM5Y2E1MzM5YmU5MiIsImlhdCI6MTc0OTMzNDgzMywiZXhwIjoxNzQ5NDIxMjMzfQ.MDOLy_IF0jwXe_lcP7SB-RDIP0TI_iXACeWune9YnM2FarHJUaofH02LDbgkjOScoSF6OKAEwA4NhMMGSy2b3A\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -854,10 +893,49 @@
 			"response": []
 		},
 		{
-			"name": "getuser",
+			"name": "UnEnroll_Alumnos_Temas",
 			"request": {
 				"auth": {
 					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"alumno_id\": \"783be8ad-fa5a-4605-b614-c9ca5339be92\",\n  \"tema_id\": \"c7407929-4808-49f1-968b-a1db643a8766\",\n  \"token\": \"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJtdmEiLCJyb2xlIjoiQURNSU4iLCJ1c2VySWQiOiIyNGY3Y2NlMi05MDM4LTQ0YTYtYWYwYy0wOGQwODIxYzIyMmQiLCJpYXQiOjE3NDkzMjcwMjUsImV4cCI6MTc0OTQxMzQyNX0.OOSRhJy_J4AI-zEVkWoHm0N7E99vKeR9WRStr9QT3QnL2RoDWS8FKOIs82CCXzu89QwJZOCg-tYW-4Jwwv38dQ\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/alumnos/unenroll_alumno_tema",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"alumnos",
+						"unenroll_alumno_tema"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getuser",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{Token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
 				"header": [],

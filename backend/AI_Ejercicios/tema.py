@@ -1,8 +1,9 @@
+# En tema.py
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
-from enum import Enum
+from typing import List, Optional
 from uuid import UUID, uuid4
 from datetime import datetime
+from enum import Enum
 
 class NivelEnum(str, Enum):
     facil = "facil"
@@ -10,7 +11,7 @@ class NivelEnum(str, Enum):
     dificil = "dificil"
 
 class Pregunta(BaseModel):
-    id: UUID = Field(default_factory=uuid4)  # Agregar ID único a cada pregunta
+    id: UUID = Field(default_factory=uuid4)
     pregunta: str
     respuesta_correcta: str
     es_multiple_choice: bool = False
@@ -21,11 +22,14 @@ class Nivel(BaseModel):
     nivel: NivelEnum
     preguntas: List[Pregunta]
 
+# Modelo base de Tema con los campos nuevos
 class TemaBase(BaseModel):
     nombre: str
     descripcion: Optional[str] = None
     niveles: List[Nivel] = []
     fecha_creacion: datetime = Field(default_factory=datetime.utcnow)
+    puntos: Optional[int] = 0  # Campo para puntos
+    cantidad_problemas: Optional[int] = 0  # Campo para cantidad de problemas
 
 class Tema(TemaBase):
     id: UUID = Field(default_factory=uuid4, alias="_id")
@@ -44,6 +48,8 @@ class TemaUpdate(BaseModel):
     nombre: Optional[str] = None
     descripcion: Optional[str] = None
     niveles: Optional[List[Nivel]] = None
+    puntos: Optional[int] = None  # Permitir actualizar puntos
+    cantidad_problemas: Optional[int] = None  # Permitir actualizar cantidad de problemas
 
 class TemaResponse(TemaBase):
     id: str

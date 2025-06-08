@@ -36,13 +36,14 @@ async def crear_tema(tema_data: TemaCreate):
         tema_dict = nuevo_tema.dict(by_alias=True)
         
         # Convertir _id a Binary para la base de datos
-        tema_dict["_id"] = Binary.from_uuid(nuevo_tema.id)  # Asegúrate de que nuevo_tema.id es UUID
+        tema_dict["_id"] = Binary.from_uuid(nuevo_tema.id)
         
         # Convertir IDs de preguntas a Binary también
         for nivel in tema_dict.get("niveles", []):
             for pregunta in nivel.get("preguntas", []):
+
+                # Solo convertir si es string, si ya es UUID o Binary, dejarlo
                 if "id" in pregunta:
-                    # Solo convertir si es string, si ya es UUID o Binary, dejarlo
                     if isinstance(pregunta["id"], str):
                         pregunta["id"] = Binary.from_uuid(UUID(pregunta["id"]))
                     elif isinstance(pregunta["id"], UUID):
@@ -64,6 +65,7 @@ async def crear_tema(tema_data: TemaCreate):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al crear tema: {str(e)}")
+
 
 
 # 2. OBTENER TODOS LOS TEMAS
@@ -219,6 +221,10 @@ async def actualizar_tema(tema_id: str, tema_data: TemaUpdate):
         raise HTTPException(status_code=400, detail="ID de tema inválido")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al actualizar tema: {str(e)}")
+
+
+
+
 
 # 5. ELIMINAR UN TEMA
 @router.delete("/temas/{tema_id}")

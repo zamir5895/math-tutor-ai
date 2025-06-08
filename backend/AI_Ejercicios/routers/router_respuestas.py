@@ -1,11 +1,12 @@
-from fastapi import APIRouter, HTTPException, Body
-from typing import Dict, Any
+from fastapi import APIRouter, HTTPException, Body, Query
+from typing import Dict, Any, List
 from uuid import UUID
 import logging
 from db import respuestas_collection, alumnos_collection, temas_collection
 from utils.authorization import verify_student_token_and_id
 from datetime import datetime, timezone
 from bson import ObjectId
+from uuid import UUID as UUIDType
 
 # Configurar logger
 logger = logging.getLogger(__name__)
@@ -251,3 +252,52 @@ async def eliminar_respuesta(
     except Exception as e:
         logger.error(f"Error en eliminar_respuesta: {str(e)}")
         raise HTTPException(status_code=500, detail="Error interno del servidor")
+    
+
+ # **GET**: Obtener todas las respuestas correctas de un tema o nivel
+@router.get("/respuestas_correctas", response_model=List[Dict[str, Any]])
+async def obtener_respuestas_correctas(
+        tema_id: UUID = Query(..., description="ID del tema para filtrar las respuestas"),
+        nivel: str = Query(None, description="Nivel para filtrar las respuestas (facil, medio, dificil)")
+    ):
+        try:
+            # Buscar el tema en la colección de temas
+            tema = await temas_collection.find_one({"_id": tema_id})
+            if not tema:
+                raise HTTPException(status_code=404, detail="Tema no encontrado")
+
+            # Si se proporciona un nivel, filtramos por él
+            if nivel:
+                if nivel not in ["facil", "medio", "dificil"]:
+                    raise HTTPException(status_code=400, detail="Nivel inválido, debe ser 'facil', 'medio' o 'dificil'")
+                # Filtrar los niveles del tema
+                niveles = [niv for niv in tema["niveles"] if niv["nivel"] == nivel]
+            else:
+                niveles = tema["niveles"]  # Si no se especifica un nivel, tomamos todos
+
+            # Obtener todos los IDs de las preguntas de los niveles seleccionados
+            pregunta_ids = [pregunta["id"] for nivel in niveles for pregunta in nivel["preguntas"]]
+
+            # Buscar todas las respuestas correctas para esas preguntas
+            respuestas_correctas = await respuestas_collection.find({
+                "pregunta_id": {"$in": pregunta_ids},
+                "respuesta_correcta": True  # Filtrar solo las respuestas correctas
+            }).to_list(length=None)
+
+            # Si no hay respuestas correctas
+            if not respuestas_correctas:
+                raise HTTPException(status_code=404, detail="No se encontraron respuestas correctas para este tema o nivel")
+
+            # Serializar ObjectId y UUIDs a string para cada respuesta
+            def serialize_item(item):
+                item = {k: (str(v) if isinstance(v, (ObjectId, UUIDType)) else v) for k, v in item.items()}
+                if "_id" in item:
+                    item["id"] = item.pop("_id")
+                return item
+
+            return [serialize_item(resp) for resp in respuestas_correctas]
+
+        except HTTPException as http_exc:
+            raise http_exc
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error al obtener las respuestas correctas: {str(e)}")
