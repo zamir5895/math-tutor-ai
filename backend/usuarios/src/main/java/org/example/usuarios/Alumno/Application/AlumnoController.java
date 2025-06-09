@@ -184,30 +184,33 @@ public class AlumnoController {
     }
 
     @GetMapping("/salon/{id}")
-    public ResponseEntity<?> getAlumnosBySeccion(@PathVariable UUID id) {
+    public ResponseEntity<?> getAlumnosBySalonId(@PathVariable UUID id) {
         try {
-            List<Alumno> alumnos = alumnoService.getAlumnosBySalonId(id);
+            // Obtener el salón por su ID
+            Salon salon = salonService.getSalonById(id).orElse(null);
 
-            List<AlumnoResponseDTO> response = alumnos.stream()
-                    .map(alumno -> {
-                        AlumnoResponseDTO dto = new AlumnoResponseDTO();
-                        dto.setId(alumno.getId().toString());
-                        dto.setUsername(alumno.getUsername());
-                        dto.setDni(alumno.getDni());
-                        if (alumno.getSalon() != null) {
-                            dto.setSalon(alumno.getSalon().getId());
-                        }
-                        return dto;
-                    })
-                    .collect(Collectors.toList());
+            if (salon == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponseDTO("Salón no encontrado"));
+            }
 
-            return ResponseEntity.ok(response);
+            // Obtener la lista de alumnoIds del salón
+            List<UUID> alumnoIds = salon.getAlumnoIds();
+
+            // Si el salón no tiene alumnos asignados, devolver una lista vacía
+            if (alumnoIds == null || alumnoIds.isEmpty()) {
+                return ResponseEntity.ok(new ApiResponseDTO("No hay alumnos asignados a este salón"));
+            }
+
+            // Crear la respuesta con los alumnoIds
+            return ResponseEntity.ok(alumnoIds);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponseDTO("Error obteniendo alumnos"));
         }
     }
+
 
     @PutMapping("/admin_only/{id}")
     public ResponseEntity<?> updateAlumno(@PathVariable UUID id, @RequestBody Alumno alumnoDetails) {

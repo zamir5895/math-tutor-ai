@@ -1,6 +1,8 @@
 package org.example.usuarios.Salon.Application;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.example.usuarios.Alumno.Domain.Alumno;
+import org.example.usuarios.Alumno.Domain.AlumnoService;
 import org.example.usuarios.Auth.ApiResponseDTO;
 import org.example.usuarios.Auth.JwtTokenProvider;
 import org.example.usuarios.Profesor.Domain.ProfesorService;
@@ -12,7 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -28,6 +32,9 @@ public class SalonController {
 
     @Autowired
     private ProfesorService profesorService;
+
+    @Autowired
+    private AlumnoService alumnoService;
 
 
     @PostMapping
@@ -142,7 +149,10 @@ public class SalonController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateSalon(@PathVariable UUID id, @RequestBody SalonRequestDTO request, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> updateSalon(
+            @PathVariable UUID id,
+            @RequestBody SalonRequestDTO request,
+            HttpServletRequest httpRequest) {
         try {
             // Extraer el token Bearer de la cabecera Authorization
             String token = httpRequest.getHeader("Authorization");
@@ -176,11 +186,16 @@ public class SalonController {
 
             // Verificar si el profesor es ADMIN o el dueño del salón
             if (role.equals("ADMIN") || salon.getProfesorId().equals(profesorId)) {
-                // Si el rol es ADMIN o el salón es del profesor, actualizar
+                // Actualizar los campos básicos
                 salon.setSeccion(request.getSeccion());
                 salon.setGrado(request.getGrado());
                 salon.setTurno(request.getTurno());
                 salon.setProfesorId(request.getProfesorId());
+
+                // Actualizar los IDs de los alumnos si se proporcionan
+                if (request.getAlumnoIds() != null && !request.getAlumnoIds().isEmpty()) {
+                    salon.setAlumnoIds(request.getAlumnoIds());  // Actualizamos solo los IDs de los alumnos
+                }
 
                 Salon updatedSalon = salonService.updateSalon(id, salon);
                 return ResponseEntity.ok(new ApiResponseDTO("Salón actualizado exitosamente", updatedSalon));
@@ -193,6 +208,11 @@ public class SalonController {
                     .body(new ApiResponseDTO("Error actualizando salón"));
         }
     }
+
+
+
+
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteSalon(@PathVariable UUID id, HttpServletRequest httpRequest) {

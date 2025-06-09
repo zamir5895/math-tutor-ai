@@ -29,6 +29,9 @@ public class Salon {
     @OneToMany(mappedBy = "salon", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Alumno> alumnos;
 
+    @ElementCollection
+    private List<UUID> alumnoIds = new ArrayList<>();
+
     // Constructors
     public Salon() {}
 
@@ -57,6 +60,9 @@ public class Salon {
 
     public List<Alumno> getAlumnos() { return alumnos; }
     public void setAlumnos(List<Alumno> alumnos) { this.alumnos = alumnos; }
+
+    public List<UUID> getAlumnoIds() { return alumnoIds; }
+    public void setAlumnoIds(List<UUID> alumnoIds) { this.alumnoIds = alumnoIds; }
 
 
 }
