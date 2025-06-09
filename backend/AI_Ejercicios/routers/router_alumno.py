@@ -7,7 +7,7 @@ import httpx
 import logging
 from bson import Binary, ObjectId
 from utils.authorization import verify_teacher_or_admin_token, verify_student_token_and_id
-
+from pydantic import BaseModel
 
 from db import alumnos_collection, temas_collection
 from fastapi import Header
@@ -245,3 +245,66 @@ async def obtener_usuario_v2(
         raise HTTPException(status_code=400, detail="ID de usuario inválido")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+    
+
+
+class TemaUpdate(BaseModel):
+    nombre: str
+    nivel: str  # aquí podrías también usar Literal["facil","medio","dificil"] si quieres validar valores.
+
+@router.put("/{usuario_id}/temas/{tema_id}", response_model=Dict[str, Any])
+async def actualizar_tema_de_usuario(
+    usuario_id: str,
+    tema_id: str,
+    tema_data: TemaUpdate,
+    authorization: str = Header(...)
+):
+    """Actualiza un tema (por tema_id) dentro del array `temas` de un usuario."""
+    # 1) Validación Authorization header
+    if not isinstance(authorization, str) or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Formato de autorización inválido")
+    token = authorization.removeprefix("Bearer ").strip()
+
+    # 2) Verificar permisos: mismo estudiante o profesor/admin
+    permitido = False
+    try:
+        if await verify_student_token_and_id(token, usuario_id):
+            permitido = True
+    except:
+        pass
+    if not permitido:
+        try:
+            if await verify_teacher_or_admin_token(token):
+                permitido = True
+        except:
+            pass
+    if not permitido:
+        raise HTTPException(status_code=403, detail="No autorizado")
+
+    # 3) Validar UUID de usuario (lanza ValueError si inválido)
+    try:
+        user_uuid = UUID(usuario_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="ID de usuario inválido")
+
+    # 4) Ejecución update: filtramos por _id de usuario y existencia del tema en el array
+    result = await alumnos_collection.update_one(
+        {"_id": user_uuid, "temas.id": tema_id},
+        {"$set": {
+            "temas.$.nombre": tema_data.nombre,
+            "temas.$.nivel": tema_data.nivel
+        }}
+    )
+    # 5) Interpretar resultado
+    if result.matched_count == 0:
+        # Puede ser que el usuario no exista o que el tema no esté en su array
+        existe_usuario = await alumnos_collection.find_one({"_id": user_uuid})
+        if not existe_usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        else:
+            raise HTTPException(status_code=404, detail="Tema no encontrado para este usuario")
+
+    # 6) Recuperar el documento actualizado
+    usuario = await alumnos_collection.find_one({"_id": user_uuid})
+    usuario["_id"] = str(usuario["_id"])
+    return {"usuario": usuario}

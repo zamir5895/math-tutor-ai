@@ -953,6 +953,47 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Actualizar Tema nivel de user",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{Token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nombre\": \"me equivoque y no deberia estar este atributo\",\n    \"nivel\": \"medio\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/alumnos/783be8ad-fa5a-4605-b614-c9ca5339be92/temas/c7407929-4808-49f1-968b-a1db643a8766",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"alumnos",
+						"783be8ad-fa5a-4605-b614-c9ca5339be92",
+						"temas",
+						"c7407929-4808-49f1-968b-a1db643a8766"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [
