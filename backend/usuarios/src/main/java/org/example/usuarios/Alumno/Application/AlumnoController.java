@@ -154,6 +154,33 @@ public class AlumnoController {
         }
     }
 
+    @GetMapping("/studentbyId/{id}")
+    public ResponseEntity<?> getStudentById(@PathVariable UUID id) {
+        try {
+            // Buscar el alumno por su ID
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
+            if (optionalAlumno.isPresent()) {
+                Alumno alumno = optionalAlumno.get();
+
+                // Crear un objeto de respuesta con los detalles del alumno
+                AlumnoProfileResponseDTO response = new AlumnoProfileResponseDTO();
+                response.setId(alumno.getId().toString()); // Convertimos el UUID a String
+                response.setUsername(alumno.getUsername());
+
+
+
+                return ResponseEntity.ok(response);  // Devuelves la respuesta con el perfil del alumno
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponseDTO("Alumno no encontrado"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error obteniendo el perfil del alumno"));
+        }
+    }
+
+
     @GetMapping("/student/salon")
     public ResponseEntity<?> getSalonByToken(@RequestHeader("Authorization") String authorizationHeader) {
         try {

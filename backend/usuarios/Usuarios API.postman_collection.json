@@ -13,17 +13,26 @@
 				{
 					"name": "Listar Admins",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/api/admin",
+							"raw": "http://localhost:8080/admin",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8080",
 							"path": [
-								"api",
 								"admin"
 							]
 						}
@@ -52,7 +61,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"username\": \"admin2\",\n  \"password\": \"securepassword123\"\n}\n"
+							"raw": "{\n  \"username\": \"admin37\",\n  \"password\": \"securepassword123\",\n  \"role\": \"ADMIN\"\n}\n"
 						},
 						"url": {
 							"raw": "http://localhost:8080/admin/register",
@@ -151,6 +160,37 @@
 					"response": []
 				},
 				{
+					"name": "byId as Admin o TEACHER",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/alumno/student/profile",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"student",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Obtener Alumno Salon",
 					"request": {
 						"auth": {
@@ -197,7 +237,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/alumno/salon/cdfc80e1-410c-439d-b9c7-2654797db6bf",
+							"raw": "http://localhost:8080/alumno/salon/039687d4-6bf1-4dd5-bb76-d516b4c3547f",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -206,7 +246,7 @@
 							"path": [
 								"alumno",
 								"salon",
-								"cdfc80e1-410c-439d-b9c7-2654797db6bf"
+								"039687d4-6bf1-4dd5-bb76-d516b4c3547f"
 							]
 						}
 					},
@@ -336,7 +376,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"johndoew3\",\n    \"password\": \"password123\",\n    \"telefono\": \"123456789\"\n}\n"
+							"raw": "{\n    \"username\": \"johndoew7\",\n    \"password\": \"password123\",\n    \"telefono\": \"123456789\"\n}\n"
 						},
 						"url": {
 							"raw": "http://localhost:8080/profesor/register",
@@ -470,7 +510,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"johndoew4\",\n    \"password\": \"password123\",\n    \"telefono\": \"123456783\"\n}",
+							"raw": "{\n    \"username\": \"johndoewgod\",\n    \"password\": \"password124\",\n    \"telefono\": \"123456783\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -478,7 +518,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8080/profesor/admin_only/profile",
+							"raw": "http://localhost:8080/profesor/admin_only/0b904dcc-1ad4-4f29-9379-ea746e89cbbc",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -487,7 +527,7 @@
 							"path": [
 								"profesor",
 								"admin_only",
-								"profile"
+								"0b904dcc-1ad4-4f29-9379-ea746e89cbbc"
 							]
 						}
 					},
@@ -551,7 +591,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"seccion\": \"A\",\n  \"grado\": \"5\",\n  \"turno\": \"Mañana\",\n  \"profesorId\": {\"id\": \"0343f28e-c980-43ca-86dd-873406b6e0de\"}\n}"
+							"raw": "{\n  \"seccion\": \"A\",\n  \"grado\": \"5\",\n  \"turno\": \"Mañana\",\n  \"profesorId\": \"0343f28e-c980-43ca-86dd-873406b6e0de\"\n}"
 						},
 						"url": {
 							"raw": "http://localhost:8080/salon",
@@ -684,7 +724,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n        \"seccion\": \"A\",\n        \"grado\": \"5\",\n        \"turno\": \"Tarde\",\n        \"profesorId\": \"0343f28e-c980-43ca-86dd-873406b6e0de\",\n        \"alumnos\": []\n}",
+							"raw": "{\n        \"seccion\": \"A\",\n        \"grado\": \"5\",\n        \"turno\": \"Tarde\",\n        \"profesorId\": \"090da07e-03e3-42c2-949e-f9784018376d\",\n        \"alumnos\": [\"783be8ad-fa5a-4605-b614-c9ca5339be92\"]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -692,7 +732,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8080/salon/c3a68f74-e840-4a5e-9f06-b6fd761661c8",
+							"raw": "http://localhost:8080/salon/fa7a19ff-00ff-4307-8106-1f3e631bcd04",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -700,7 +740,7 @@
 							"port": "8080",
 							"path": [
 								"salon",
-								"c3a68f74-e840-4a5e-9f06-b6fd761661c8"
+								"fa7a19ff-00ff-4307-8106-1f3e631bcd04"
 							]
 						}
 					},
@@ -722,7 +762,7 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/salon/084beea9-e0b7-4fcf-b58d-08854ce17f31",
+							"raw": "http://localhost:8080/salon/c09feaa9-1396-47f6-815e-903b8265c82",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -730,7 +770,7 @@
 							"port": "8080",
 							"path": [
 								"salon",
-								"084beea9-e0b7-4fcf-b58d-08854ce17f31"
+								"c09feaa9-1396-47f6-815e-903b8265c82"
 							]
 						}
 					},
@@ -813,7 +853,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"username\": \"mva\",\n  \"password\": \"mva\",\n  \"role\": \"ADMIN\"\n}\n"
+							"raw": "{\n  \"username\": \"mva2\",\n  \"password\": \"mva2\",\n  \"role\": \"ADMIN\"\n}\n"
 						},
 						"url": {
 							"raw": "http://localhost:8080/auth/register",
@@ -842,7 +882,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"username\": \"mva\",\n  \"password\": \"mva\"\n}\n",
+							"raw": "{\n  \"username\": \"johndoew8\",\n  \"password\": \"password123\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
