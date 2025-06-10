@@ -30,6 +30,7 @@ Como primer paso debemos entrar al directorio de la base de datos
 Luego ejecutamos
 
 Linux: python3 -m venv venv
+
 Windows: python -m venv venv
 
 Finalmente: venv\Scripts\activate
