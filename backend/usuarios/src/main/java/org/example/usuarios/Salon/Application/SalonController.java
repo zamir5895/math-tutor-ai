@@ -58,11 +58,10 @@ public class SalonController {
 
 
 
-
     @GetMapping("/profesor/my-salons")
     public ResponseEntity<?> getMySalonsAsProfesor(HttpServletRequest request) {
         try {
-            List<Salon> salones = salonService.getMySalonsAsProfesor(request.getHeader("Authorization"));
+            List<SalonResponse> salones = salonService.getSalonesByProfesorId(request.getHeader("Authorization"));
             return ResponseEntity.ok(salones);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -90,7 +89,7 @@ public class SalonController {
             @RequestBody SalonRequestDTO request,
             HttpServletRequest httpRequest) {
         try {
-            Salon updatedSalon = salonService.updateSalon(id, request, httpRequest.getHeader("Authorization"));
+            SalonResponse updatedSalon = salonService.updateSalon(id, request, httpRequest.getHeader("Authorization"));
             return ResponseEntity.ok(new ApiResponseDTO("Salón actualizado exitosamente", updatedSalon));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -118,6 +117,21 @@ public class SalonController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponseDTO("Error eliminando salón"));
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchSalonsByName(@RequestParam String nombre, HttpServletRequest httpServletRequest) {
+        try {
+            List<Salon> salones = salonService.searchSalonsByName(nombre, httpServletRequest.getHeader("Authorization"));
+            return ResponseEntity.ok(salones);
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(new ApiResponseDTO("Error buscando salones"));
+        }
+        catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponseDTO(e.getMessage()));
         }
     }
 }

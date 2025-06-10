@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,47 +27,81 @@ public class SalonService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-
-    public List<Salon> getSalonesByGrado(Integer grado) {
-        return salonRepository.findByGrado(grado);
+    public List<Salon> getAllSalones() {
+        return salonRepository.findAll();
     }
 
-    public List<Salon> getSalonesByTurno(String turno) {
-        return salonRepository.findByTurno(turno);
+    public Optional<Salon> getSalonById(UUID id) {
+        return salonRepository.findById(id);
     }
 
-    public List<Salon> getSalonesByGradoAndSeccion(Integer grado, String seccion) {
-        return salonRepository.findByGradoAndSeccion(grado, seccion);
+    public List<SalonResponse> getSalonesByProfesorId(String token) {
+        validateToken(token);
+
+        String jwt = token.substring(7);
+        UUID profesorId = jwtTokenProvider.extractUserId(jwt);
+        String role = jwtTokenProvider.extractRole(jwt);
+        if(!role.equals("TEACHER")){
+            throw new SecurityException("No tienes permisos para acceder a los salones de un profesor");
+        }
+        if (profesorId == null) {
+            throw new IllegalArgumentException("Token inválido o expirado");
+        }
+
+        List<Salon> s =  salonRepository.findByProfesorId(profesorId);
+        if(s.isEmpty()){
+            return new ArrayList<>();
+        }
+        List<SalonResponse> responses = new ArrayList<>();
+        for (Salon salon : s) {
+            SalonResponse response = convertToResponse(salon);
+            responses.add(response);
+        }
+        return responses;
     }
 
-    public Salon saveSalon(Salon salon) {
-        return salonRepository.save(salon);
+   private SalonResponse convertToResponse(Salon salon) {
+        SalonResponse response = new SalonResponse();
+        response.setId(salon.getId());
+        response.setSeccion(salon.getSeccion());
+        response.setGrado(salon.getGrado());
+        response.setTurno(salon.getTurno());
+        response.setDescripcion(salon.getDescripcion());
+        response.setCantidadAlumnos(salon.getAlumnos().size());
+        return response;
+    }
+
+    public List<SalonResponse> searchSalonsByName(String name, String token) {
+        validateToken(token);
+        String jwt = token.substring(7);
+        UUID profesorId = jwtTokenProvider.extractUserId(jwt);
+        String role = jwtTokenProvider.extractRole(jwt);
+
+        if (!role.equals("ADMIN") && !role.equals("TEACHER")) {
+            throw new SecurityException("No tienes permisos para buscar salones");
+        }
+
+        List<Salon> salones = salonRepository.findByNombreIgnoreCase(name);
+        List<SalonResponse> responses = new ArrayList<>();
+        for (Salon salon : salones) {
+            SalonResponse response = convertToResponse(salon);
+            responses.add(response);
+        }
+        return responses;
     }
 
     public void deleteSalon(UUID id) {
         salonRepository.deleteById(id);
     }
 
-    public Salon updateSalon(UUID id, Salon salonDetails) {
-        Optional<Salon> optionalSalon = salonRepository.findById(id);
-        if (optionalSalon.isPresent()) {
-            Salon salon = optionalSalon.get();
 
-            salon.setSeccion(salonDetails.getSeccion());
-            salon.setGrado(salonDetails.getGrado());
-            salon.setTurno(salonDetails.getTurno());
-            salon.setProfesorId(salonDetails.getProfesorId());
-
-
-
-            return salonRepository.save(salon);
-        }
-        return null;
-    }
 
     public SalonResponse createSalon(SalonRequestDTO request, String token) {
-
         validateToken(token);
+        String jwt = token.substring(7);
+
+        String role = jwtTokenProvider.extractRole(jwt);
+
         UUID profesorId;
 
         if ("ADMIN".equals(role)) {
@@ -102,19 +137,10 @@ public class SalonService {
         response.setCantidadAlumnos(savedSalon.getAlumnos().size());
         return response;
     }
-    public List<Salon> getMySalonsAsProfesor(String token) {
-        validateToken(token);
-        String jwt = token.substring(7);
-        UUID profesorId = jwtTokenProvider.extractUserId(jwt);
-        if (profesorId == null) {
-            throw new IllegalArgumentException("Token inválido o expirado");
-        }
-        return salonRepository.findByProfesorId(profesorId);
-    }
 
 
 
-    public Salon updateSalon(UUID id, SalonRequestDTO request, String token) {
+    public SalonResponse updateSalon(UUID id, SalonRequestDTO request, String token) {
         validateToken(token);
         String jwt = token.substring(7);
         UUID profesorId = jwtTokenProvider.extractUserId(jwt);
@@ -134,7 +160,8 @@ public class SalonService {
         salon.setGrado(request.getGrado());
         salon.setTurno(request.getTurno());
         salon.setProfesorId(request.getProfesorId());
-        return salonRepository.save(salon);
+        Salon s = salonRepository.save(salon);
+        return convertToResponse(s);
     }
 
     public void deleteSalon(UUID id, String token) {
