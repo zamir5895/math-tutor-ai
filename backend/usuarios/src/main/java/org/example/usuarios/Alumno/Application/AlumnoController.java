@@ -397,7 +397,7 @@ public class AlumnoController {
         }
     }
 
-    @PostMapping("/ejercicio-fecha/{id}")
+    @PostMapping("/addfecha/{id}")
     public ResponseEntity<?> agregarFechaEjercicio(@PathVariable UUID id) {
         try {
             Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
@@ -405,7 +405,6 @@ public class AlumnoController {
                 Alumno alumno = optionalAlumno.get();
                 LocalDate hoy = LocalDate.now();
 
-                // Verificar si ya existe la fecha de hoy para evitar duplicados
                 if (alumno.getFechasEjerciciosResueltos() == null) {
                     alumno.setFechasEjerciciosResueltos(new ArrayList<>());
                 }
