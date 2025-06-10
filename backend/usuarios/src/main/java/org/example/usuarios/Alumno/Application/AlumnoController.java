@@ -15,9 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -30,7 +30,6 @@ public class AlumnoController {
 
     @Autowired
     private SalonService salonService;
-
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -98,7 +97,6 @@ public class AlumnoController {
             // Obtener todos los alumnos
             List<Alumno> alumnos = alumnoService.getAllAlumnos();
 
-            // Crear la respuesta con los detalles de los alumnos
             List<AlumnoResponseDTO> response = alumnos.stream()
                     .map(alumno -> {
                         AlumnoResponseDTO dto = new AlumnoResponseDTO();
@@ -167,8 +165,6 @@ public class AlumnoController {
                 response.setId(alumno.getId().toString()); // Convertimos el UUID a String
                 response.setUsername(alumno.getUsername());
 
-
-
                 return ResponseEntity.ok(response);  // Devuelves la respuesta con el perfil del alumno
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -179,7 +175,6 @@ public class AlumnoController {
                     .body(new ApiResponseDTO("Error obteniendo el perfil del alumno"));
         }
     }
-
 
     @GetMapping("/student/salon")
     public ResponseEntity<?> getSalonByToken(@RequestHeader("Authorization") String authorizationHeader) {
@@ -237,7 +232,6 @@ public class AlumnoController {
                     .body(new ApiResponseDTO("Error obteniendo alumnos"));
         }
     }
-
 
     @PutMapping("/admin_only/{id}")
     public ResponseEntity<?> updateAlumno(@PathVariable UUID id, @RequestBody Alumno alumnoDetails) {
@@ -297,7 +291,6 @@ public class AlumnoController {
         }
     }
 
-
     @DeleteMapping("/admin_only/{id}")
     public ResponseEntity<?> deleteAlumno(@PathVariable UUID id) {
         try {
@@ -315,4 +308,227 @@ public class AlumnoController {
         }
     }
 
+    // NUEVOS ENDPOINTS
+
+    @PutMapping("/minutos/incrementar")
+    public ResponseEntity<?> incrementarMinutos(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            String token = authorizationHeader.substring(7);
+            UUID userId = jwtTokenProvider.extractUserId(token);
+
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            if (optionalAlumno.isPresent()) {
+                Alumno alumno = optionalAlumno.get();
+                Integer minutosActuales = alumno.getMinutosTotales() != null ? alumno.getMinutosTotales() : 0;
+                alumno.setMinutosTotales(minutosActuales + 1);
+
+                alumnoService.saveAlumno(alumno);
+
+                return ResponseEntity.ok(new ApiResponseDTO("Minutos incrementados correctamente", alumno.getMinutosTotales()));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponseDTO("Alumno no encontrado"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error incrementando minutos"));
+        }
+    }
+
+    @GetMapping("/minutos")
+    public ResponseEntity<?> getMinutosTotales(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            String token = authorizationHeader.substring(7);
+            UUID userId = jwtTokenProvider.extractUserId(token);
+
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            if (optionalAlumno.isPresent()) {
+                Alumno alumno = optionalAlumno.get();
+                Integer minutos = alumno.getMinutosTotales() != null ? alumno.getMinutosTotales() : 0;
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("minutosTotales", minutos);
+
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponseDTO("Alumno no encontrado"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error obteniendo minutos totales"));
+        }
+    }
+
+    @PutMapping("/ultima-conexion")
+    public ResponseEntity<?> actualizarUltimaConexion(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            String token = authorizationHeader.substring(7);
+            UUID userId = jwtTokenProvider.extractUserId(token);
+
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            if (optionalAlumno.isPresent()) {
+                Alumno alumno = optionalAlumno.get();
+                alumno.setUltimaConexion(LocalDateTime.now());
+
+                alumnoService.saveAlumno(alumno);
+
+                return ResponseEntity.ok(new ApiResponseDTO("Última conexión actualizada correctamente", alumno.getUltimaConexion().toString()));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponseDTO("Alumno no encontrado"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error actualizando última conexión"));
+        }
+    }
+
+    @GetMapping("/ultima-conexion")
+    public ResponseEntity<?> getUltimaConexion(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            String token = authorizationHeader.substring(7);
+            UUID userId = jwtTokenProvider.extractUserId(token);
+
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            if (optionalAlumno.isPresent()) {
+                Alumno alumno = optionalAlumno.get();
+                LocalDateTime ultimaConexion = alumno.getUltimaConexion();
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("ultimaConexion", ultimaConexion != null ? ultimaConexion.toString() : null);
+
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponseDTO("Alumno no encontrado"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error obteniendo última conexión"));
+        }
+    }
+
+    @PostMapping("/ejercicio-fecha")
+    public ResponseEntity<?> agregarFechaEjercicio(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            String token = authorizationHeader.substring(7);
+            UUID userId = jwtTokenProvider.extractUserId(token);
+
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            if (optionalAlumno.isPresent()) {
+                Alumno alumno = optionalAlumno.get();
+                LocalDate hoy = LocalDate.now();
+
+                // Verificar si ya existe la fecha de hoy para evitar duplicados
+                if (alumno.getFechasEjerciciosResueltos() == null) {
+                    alumno.setFechasEjerciciosResueltos(new ArrayList<>());
+                }
+
+                if (!alumno.getFechasEjerciciosResueltos().contains(hoy)) {
+                    alumno.agregarFechaEjercicioResuelto(hoy);
+                    alumnoService.saveAlumno(alumno);
+
+                    return ResponseEntity.ok(new ApiResponseDTO("Fecha de ejercicio agregada correctamente", hoy.toString()));
+                } else {
+                    return ResponseEntity.ok(new ApiResponseDTO("Ya existe un ejercicio registrado para hoy", hoy.toString()));
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponseDTO("Alumno no encontrado"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error agregando fecha de ejercicio"));
+        }
+    }
+
+    @GetMapping("/ejercicios-fechas")
+    public ResponseEntity<?> getFechasEjercicios(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            String token = authorizationHeader.substring(7);
+            UUID userId = jwtTokenProvider.extractUserId(token);
+
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            if (optionalAlumno.isPresent()) {
+                Alumno alumno = optionalAlumno.get();
+                List<LocalDate> fechas = alumno.getFechasEjerciciosResueltos();
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("fechasEjercicios", fechas != null ? fechas : new ArrayList<>());
+
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponseDTO("Alumno no encontrado"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error obteniendo fechas de ejercicios"));
+        }
+    }
+
+    @GetMapping("/racha")
+    public ResponseEntity<?> calcularRacha(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            String token = authorizationHeader.substring(7);
+            UUID userId = jwtTokenProvider.extractUserId(token);
+
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            if (optionalAlumno.isPresent()) {
+                Alumno alumno = optionalAlumno.get();
+                List<LocalDate> fechas = alumno.getFechasEjerciciosResueltos();
+
+                int racha = calcularRachaConsecutiva(fechas);
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("racha", racha);
+                response.put("mensaje", racha > 0 ?
+                        "¡Llevas " + racha + " día" + (racha > 1 ? "s" : "") + " consecutivo" + (racha > 1 ? "s" : "") + "!" :
+                        "¡Empieza tu racha resolviendo un ejercicio hoy!");
+
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponseDTO("Alumno no encontrado"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error calculando racha"));
+        }
+    }
+
+    private int calcularRachaConsecutiva(List<LocalDate> fechas) {
+        if (fechas == null || fechas.isEmpty()) {
+            return 0;
+        }
+
+        List<LocalDate> fechasOrdenadas = fechas.stream()
+                .distinct() // Eliminar duplicados
+                .sorted(Collections.reverseOrder())
+                .collect(Collectors.toList());
+
+        LocalDate hoy = LocalDate.now();
+        int racha = 0;
+
+        if (!fechasOrdenadas.contains(hoy)) {
+            if (!fechasOrdenadas.contains(hoy.minusDays(1))) {
+                return 0;
+            } else {
+                hoy = hoy.minusDays(1);
+            }
+        }
+
+        LocalDate fechaActual = hoy;
+        for (LocalDate fecha : fechasOrdenadas) {
+            if (fecha.equals(fechaActual)) {
+                racha++;
+                fechaActual = fechaActual.minusDays(1);
+            } else if (fecha.isBefore(fechaActual)) {
+                break;
+            }
+        }
+
+        return racha;
+    }
 }
