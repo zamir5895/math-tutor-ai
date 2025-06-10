@@ -310,13 +310,10 @@ public class AlumnoController {
 
     // NUEVOS ENDPOINTS
 
-    @PutMapping("/minutos/incrementar")
-    public ResponseEntity<?> incrementarMinutos(@RequestHeader("Authorization") String authorizationHeader) {
+    @PutMapping("/minutos/incrementar/{id}")
+    public ResponseEntity<?> incrementarMinutos(@PathVariable UUID id) {
         try {
-            String token = authorizationHeader.substring(7);
-            UUID userId = jwtTokenProvider.extractUserId(token);
-
-            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
             if (optionalAlumno.isPresent()) {
                 Alumno alumno = optionalAlumno.get();
                 Integer minutosActuales = alumno.getMinutosTotales() != null ? alumno.getMinutosTotales() : 0;
@@ -335,13 +332,10 @@ public class AlumnoController {
         }
     }
 
-    @GetMapping("/minutos")
-    public ResponseEntity<?> getMinutosTotales(@RequestHeader("Authorization") String authorizationHeader) {
+    @GetMapping("/minutos/{id}")
+    public ResponseEntity<?> getMinutosTotales(@PathVariable UUID id) {
         try {
-            String token = authorizationHeader.substring(7);
-            UUID userId = jwtTokenProvider.extractUserId(token);
-
-            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
             if (optionalAlumno.isPresent()) {
                 Alumno alumno = optionalAlumno.get();
                 Integer minutos = alumno.getMinutosTotales() != null ? alumno.getMinutosTotales() : 0;
@@ -360,13 +354,10 @@ public class AlumnoController {
         }
     }
 
-    @PutMapping("/ultima-conexion")
-    public ResponseEntity<?> actualizarUltimaConexion(@RequestHeader("Authorization") String authorizationHeader) {
+    @PutMapping("/ultima-conexion/{id}")
+    public ResponseEntity<?> actualizarUltimaConexion(@PathVariable UUID id) {
         try {
-            String token = authorizationHeader.substring(7);
-            UUID userId = jwtTokenProvider.extractUserId(token);
-
-            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
             if (optionalAlumno.isPresent()) {
                 Alumno alumno = optionalAlumno.get();
                 alumno.setUltimaConexion(LocalDateTime.now());
@@ -384,13 +375,10 @@ public class AlumnoController {
         }
     }
 
-    @GetMapping("/ultima-conexion")
-    public ResponseEntity<?> getUltimaConexion(@RequestHeader("Authorization") String authorizationHeader) {
+    @GetMapping("/ultima-conexion/{id}")
+    public ResponseEntity<?> getUltimaConexion(@PathVariable UUID id) {
         try {
-            String token = authorizationHeader.substring(7);
-            UUID userId = jwtTokenProvider.extractUserId(token);
-
-            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
             if (optionalAlumno.isPresent()) {
                 Alumno alumno = optionalAlumno.get();
                 LocalDateTime ultimaConexion = alumno.getUltimaConexion();
@@ -409,18 +397,14 @@ public class AlumnoController {
         }
     }
 
-    @PostMapping("/ejercicio-fecha")
-    public ResponseEntity<?> agregarFechaEjercicio(@RequestHeader("Authorization") String authorizationHeader) {
+    @PostMapping("/addfecha/{id}")
+    public ResponseEntity<?> agregarFechaEjercicio(@PathVariable UUID id) {
         try {
-            String token = authorizationHeader.substring(7);
-            UUID userId = jwtTokenProvider.extractUserId(token);
-
-            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
             if (optionalAlumno.isPresent()) {
                 Alumno alumno = optionalAlumno.get();
                 LocalDate hoy = LocalDate.now();
 
-                // Verificar si ya existe la fecha de hoy para evitar duplicados
                 if (alumno.getFechasEjerciciosResueltos() == null) {
                     alumno.setFechasEjerciciosResueltos(new ArrayList<>());
                 }
@@ -443,13 +427,10 @@ public class AlumnoController {
         }
     }
 
-    @GetMapping("/ejercicios-fechas")
-    public ResponseEntity<?> getFechasEjercicios(@RequestHeader("Authorization") String authorizationHeader) {
+    @GetMapping("/ejercicios-fechas/{id}")
+    public ResponseEntity<?> getFechasEjercicios(@PathVariable UUID id) {
         try {
-            String token = authorizationHeader.substring(7);
-            UUID userId = jwtTokenProvider.extractUserId(token);
-
-            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
             if (optionalAlumno.isPresent()) {
                 Alumno alumno = optionalAlumno.get();
                 List<LocalDate> fechas = alumno.getFechasEjerciciosResueltos();
@@ -468,13 +449,10 @@ public class AlumnoController {
         }
     }
 
-    @GetMapping("/racha")
-    public ResponseEntity<?> calcularRacha(@RequestHeader("Authorization") String authorizationHeader) {
+    @GetMapping("/racha/{id}")
+    public ResponseEntity<?> calcularRacha(@PathVariable UUID id) {
         try {
-            String token = authorizationHeader.substring(7);
-            UUID userId = jwtTokenProvider.extractUserId(token);
-
-            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
+            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
             if (optionalAlumno.isPresent()) {
                 Alumno alumno = optionalAlumno.get();
                 List<LocalDate> fechas = alumno.getFechasEjerciciosResueltos();

@@ -1,10 +1,9 @@
 {
 	"info": {
-		"_postman_id": "6cb60365-3b00-4bf0-8ca6-cd2274fbf3d4",
+		"_postman_id": "ff752219-278b-4ca2-adc9-3124de600d31",
 		"name": "Usuarios API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "34022380",
-		"_collection_link": "https://dbp000.postman.co/workspace/Software-zzxz~79d1206a-d9bd-46b2-9d1f-a20aa9766146/collection/34022380-6cb60365-3b00-4bf0-8ca6-cd2274fbf3d4?action=share&source=collection_link&creator=34022380"
+		"_exporter_id": "34150216"
 	},
 	"item": [
 		{
@@ -82,7 +81,10 @@
 					"name": "NO estan terminados los de arriba",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				},
@@ -90,7 +92,10 @@
 					"name": "pero tampoco son muy utiles xd",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				}
@@ -354,6 +359,139 @@
 								"alumno",
 								"admin_only",
 								"55319682-05d7-4ca2-8747-5303373822e8"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Aumentar minutos",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJKb3JnZSBNZWxnYXJlam8iLCJyb2xlIjoiU1RVREVOVCIsInVzZXJJZCI6Ijg0ZDI3NThjLWJhNWItNDNkMC1hOTlkLTg0MWIzM2ExMzE3YSIsImlhdCI6MTc0OTU2MjQ5MywiZXhwIjoxNzQ5NTY2MDkzfQ.DSM_XeaIb64ada_ZFQZ7oRhor-Nt6gqu2VTJS45Cj1O9_11vTgxMC-6MIf8oZEVnqG5zuSvUiNeNXf1qE3ofxg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/alumno/minutos/incrementar/84d2758c-ba5b-43d0-a99d-841b33a1317a",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"minutos",
+								"incrementar",
+								"84d2758c-ba5b-43d0-a99d-841b33a1317a"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get minutos",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Racha",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJKb3JnZSBNZWxnYXJlam8iLCJyb2xlIjoiU1RVREVOVCIsInVzZXJJZCI6Ijg0ZDI3NThjLWJhNWItNDNkMC1hOTlkLTg0MWIzM2ExMzE3YSIsImlhdCI6MTc0OTU2MjQ5MywiZXhwIjoxNzQ5NTY2MDkzfQ.DSM_XeaIb64ada_ZFQZ7oRhor-Nt6gqu2VTJS45Cj1O9_11vTgxMC-6MIf8oZEVnqG5zuSvUiNeNXf1qE3ofxg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/alumno/racha/84d2758c-ba5b-43d0-a99d-841b33a1317a",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"racha",
+								"84d2758c-ba5b-43d0-a99d-841b33a1317a"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Agregar fecha",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJKb3JnZSBNZWxnYXJlam8iLCJyb2xlIjoiU1RVREVOVCIsInVzZXJJZCI6Ijg0ZDI3NThjLWJhNWItNDNkMC1hOTlkLTg0MWIzM2ExMzE3YSIsImlhdCI6MTc0OTU2MjQ5MywiZXhwIjoxNzQ5NTY2MDkzfQ.DSM_XeaIb64ada_ZFQZ7oRhor-Nt6gqu2VTJS45Cj1O9_11vTgxMC-6MIf8oZEVnqG5zuSvUiNeNXf1qE3ofxg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/alumno/ejercicios-fecha/84d2758c-ba5b-43d0-a99d-841b33a1317a",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"ejercicios-fecha",
+								"84d2758c-ba5b-43d0-a99d-841b33a1317a"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ver fechas",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJKb3JnZSBNZWxnYXJlam8iLCJyb2xlIjoiU1RVREVOVCIsInVzZXJJZCI6Ijg0ZDI3NThjLWJhNWItNDNkMC1hOTlkLTg0MWIzM2ExMzE3YSIsImlhdCI6MTc0OTU2MjQ5MywiZXhwIjoxNzQ5NTY2MDkzfQ.DSM_XeaIb64ada_ZFQZ7oRhor-Nt6gqu2VTJS45Cj1O9_11vTgxMC-6MIf8oZEVnqG5zuSvUiNeNXf1qE3ofxg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/alumno/ejercicios-fechas/84d2758c-ba5b-43d0-a99d-841b33a1317a",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"ejercicios-fechas",
+								"84d2758c-ba5b-43d0-a99d-841b33a1317a"
 							]
 						}
 					},
