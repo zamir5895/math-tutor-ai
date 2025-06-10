@@ -6,13 +6,12 @@ import json
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
-import httpx  # Para realizar las solicitudes HTTP al endpoint de verificación del token
+import httpx  
 import logging
-from uuid import UUID, uuid4  # Usamos UUID en lugar de ObjectId y agregamos uuid4
+from uuid import UUID, uuid4 
 from bson import Binary, ObjectId
 from pymongo import ReturnDocument
 
-# Modelos
 from alumno import Alumno
 from tema import NivelEnum, Tema, TemaCreate, TemaUpdate, TemaResponse, Pregunta, PreguntaCreate, PreguntaUpdate, Nivel
 from progreso import Progreso, ProgresoCreate, RespuestaAlumno
@@ -32,13 +31,7 @@ router = APIRouter(
 
 @router.post("/progreso/iniciar", response_model=Dict[str, Any])
 async def iniciar_progreso(request: Dict[str, Any]):
-    """
-    Inicia el progreso de un alumno en un tema específico
-    Body: {
-        "alumno_id": "string",
-        "tema_id": "string"
-    }
-    """
+   
     try:
         alumno_id = request.get("alumno_id")
         tema_id = request.get("tema_id")
@@ -49,7 +42,6 @@ async def iniciar_progreso(request: Dict[str, Any]):
         except ValueError:
             raise HTTPException(status_code=400, detail="IDs inválidos")
         
-        # Verificar si ya existe progreso
         progreso_existente = await progresos_collection.find_one({
             "alumno_id": alumno_uuid,
             "tema_id": tema_uuid,
@@ -65,13 +57,11 @@ async def iniciar_progreso(request: Dict[str, Any]):
                 "progreso": progreso_existente
             }
         
-        # Crear nuevo progreso
         nuevo_progreso = ProgresoCreate(
             alumno_id=alumno_uuid,
             tema_id=tema_uuid
         )
         
-        # Convertir a dict y mapear id -> _id para MongoDB
         progreso_dict = nuevo_progreso.dict(by_alias=True)
         
         resultado = await progresos_collection.insert_one(progreso_dict)
@@ -92,17 +82,7 @@ async def iniciar_progreso(request: Dict[str, Any]):
 
 @router.post("/progreso/responder", response_model=Dict[str, Any])
 async def registrar_respuesta(request: Dict[str, Any]):
-    """
-    Registra la respuesta de un alumno a una pregunta
-    Body: {
-        "progreso_id": "string",
-        "nivel": int,
-        "pregunta": "string",
-        "respuesta_alumno": "string",
-        "respuesta_correcta": "string",
-        "tema": "string"
-    }
-    """
+
     try:
         progreso_id = request.get("progreso_id")
         nivel = request.get("nivel")
@@ -116,12 +96,10 @@ async def registrar_respuesta(request: Dict[str, Any]):
         except ValueError:
             raise HTTPException(status_code=400, detail="ID de progreso inválido")
         
-        # Evaluar respuesta
         evaluacion = await solucionario_service.evaluar_respuesta(
             pregunta, respuesta_correcta, respuesta_alumno, tema
         )
         
-        # Crear respuesta del alumno
         nueva_respuesta = RespuestaAlumno(
             nivel=nivel,
             pregunta=pregunta,
@@ -130,7 +108,6 @@ async def registrar_respuesta(request: Dict[str, Any]):
             correcto=evaluacion["correcto"]
         )
         
-        # Actualizar progreso
         await progresos_collection.update_one(
             {"_id": progreso_uuid},
             {
@@ -151,7 +128,6 @@ async def registrar_respuesta(request: Dict[str, Any]):
 
 @router.get("/progreso/{alumno_id}/{tema_id}", response_model=Dict[str, Any])
 async def obtener_progreso(alumno_id: str, tema_id: str):
-    """Obtiene el progreso de un alumno en un tema específico"""
     try:
         try:
             alumno_uuid = UUID(alumno_id)

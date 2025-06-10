@@ -3,11 +3,9 @@ from typing import Dict, Any
 import json
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
-import httpx  # Para realizar las solicitudes HTTP al endpoint de verificación del token
+import httpx  
 import logging
-from uuid import UUID, uuid4  # Usamos UUID en lugar de ObjectId
-
-# Modelos
+from uuid import UUID, uuid4  
 from alumno import Alumno
 from tema import NivelEnum, Tema, TemaCreate, TemaUpdate, Pregunta, PreguntaCreate, PreguntaUpdate, Nivel
 from progreso import Progreso, ProgresoCreate, RespuestaAlumno
@@ -39,30 +37,24 @@ def serialize_uuids_for_json(document):
         return result
     return document
 
-# 1. AGREGAR PREGUNTA A UN TEMA
 @router.post("/temas/{tema_id}/niveles/{nivel}/preguntas", response_model=Dict[str, Any])
 async def agregar_pregunta(
     tema_id: str,
     nivel: NivelEnum,
     pregunta_data: PreguntaCreate
 ):
-    """Agrega una nueva pregunta a un nivel específico de un tema"""
     try:
-        # ✅ SIMPLIFICADO: Solo validar y convertir a UUID
         tema_uuid = UUID(tema_id)
         
-        # Crear la nueva pregunta con ID único
         nueva_pregunta = Pregunta(
             id=uuid4(),
             **pregunta_data.dict()
         )
         
-        # Buscar el tema
         tema = await temas_collection.find_one({"_id": tema_uuid})
         if not tema:
             raise HTTPException(status_code=404, detail="Tema no encontrado")
         
-        # Actualizar usando MongoDB $push con filtro de array
         resultado = await temas_collection.update_one(
             {
                 "_id": tema_uuid,
@@ -98,20 +90,16 @@ async def agregar_pregunta(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
-# 2. ELIMINAR PREGUNTA DE UN TEMA
 @router.delete("/temas/{tema_id}/niveles/{nivel}/preguntas/{pregunta_id}")
 async def eliminar_pregunta(
     tema_id: str,
     nivel: NivelEnum,
     pregunta_id: str
 ):
-    """Elimina una pregunta específica de un nivel de un tema"""
     try:
-        # ✅ SIMPLIFICADO: Solo convertir a UUID
         tema_uuid = UUID(tema_id)
         pregunta_uuid = UUID(pregunta_id)
         
-        # Eliminar la pregunta usando $pull
         resultado = await temas_collection.update_one(
             {
                 "_id": tema_uuid,
@@ -129,7 +117,6 @@ async def eliminar_pregunta(
         if resultado.matched_count == 0:
             raise HTTPException(status_code=404, detail="Tema o nivel no encontrado")
         
-        # Verificar si la pregunta existía antes de intentar eliminarla
         tema = await temas_collection.find_one({"_id": tema_uuid, "niveles.nivel": nivel.value})
         pregunta_existe = False
         if tema:
@@ -157,7 +144,6 @@ async def eliminar_pregunta(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
-# 3. ACTUALIZAR UNA PREGUNTA ESPECÍFICA
 @router.put("/temas/{tema_id}/niveles/{nivel}/preguntas/{pregunta_id}", response_model=Dict[str, Any])
 async def actualizar_pregunta(
     tema_id: str,
@@ -167,11 +153,9 @@ async def actualizar_pregunta(
 ):
     """Actualiza una pregunta específica de un tema"""
     try:
-        # ✅ SIMPLIFICADO: Solo convertir a UUID
         tema_uuid = UUID(tema_id)
         pregunta_uuid = UUID(pregunta_id)
         
-        # Crear el objeto de actualización solo con campos no nulos
         update_data = {
             f"niveles.$[nivel].preguntas.$[pregunta].{k}": v 
             for k, v in pregunta_data.dict(exclude_unset=True).items()
@@ -180,7 +164,6 @@ async def actualizar_pregunta(
         if not update_data:
             raise HTTPException(status_code=400, detail="No hay campos para actualizar")
         
-        # Actualizar usando arrayFilters
         resultado = await temas_collection.update_one(
             {"_id": tema_uuid},
             {"$set": update_data},
@@ -210,18 +193,14 @@ async def actualizar_pregunta(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
-# 4. OBTENER TODAS LAS PREGUNTAS DE UN NIVEL ESPECÍFICO - ✅ CORREGIDO
 @router.get("/temas/{tema_id}/niveles/{nivel}/preguntas", response_model=Dict[str, Any])
 async def obtener_preguntas_nivel(
     tema_id: str,
     nivel: NivelEnum
 ):
-    """Obtiene todas las preguntas de un nivel específico"""
     try:
-        # ✅ SIMPLIFICADO: Solo convertir a UUID
         tema_uuid = UUID(tema_id)
         
-        # ✅ CORREGIDO: Pipeline sin conversión problemática de UUID a string
         pipeline = [
             {"$match": {"_id": tema_uuid}},
             {"$unwind": "$niveles"},
@@ -238,7 +217,6 @@ async def obtener_preguntas_nivel(
         if not resultado:
             raise HTTPException(status_code=404, detail="Tema o nivel no encontrado")
         
-        # ✅ SIMPLIFICADO: Usar helper para serializar UUIDs
         resultado_serializado = serialize_uuids_for_json(resultado[0])
         
         return {
@@ -254,20 +232,16 @@ async def obtener_preguntas_nivel(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
-# 5. OBTENER UNA PREGUNTA ESPECÍFICA - ✅ CORREGIDO
 @router.get("/temas/{tema_id}/niveles/{nivel}/preguntas/{pregunta_id}", response_model=Dict[str, Any])
 async def obtener_pregunta_especifica(
     tema_id: str,
     nivel: NivelEnum,
     pregunta_id: str
 ):
-    """Obtiene una pregunta específica"""
     try:
-        # ✅ SIMPLIFICADO: Solo convertir a UUID
         tema_uuid = UUID(tema_id)
         pregunta_uuid = UUID(pregunta_id)
         
-        # ✅ CORREGIDO: Pipeline sin conversión problemática de UUID a string
         pipeline = [
             {"$match": {"_id": tema_uuid}},
             {"$unwind": "$niveles"},
@@ -287,7 +261,6 @@ async def obtener_pregunta_especifica(
             raise HTTPException(status_code=404, detail="Pregunta no encontrada")
             
         
-        # ✅ SIMPLIFICADO: Usar helper para serializar UUIDs
         resultado_serializado = serialize_uuids_for_json(resultado[0])
         
         return {

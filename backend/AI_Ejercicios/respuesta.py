@@ -13,9 +13,9 @@ class RespuestaAlumnoBase(BaseModel):
 
 
 class RespuestaAlumnoCreate(BaseModel):
-    alumno_id: UUID  # Asegúrate de que sea UUID
-    tema_id: UUID    # Asegúrate de que sea UUID
-    pregunta_id: UUID  # Asegúrate de que sea UUID
+    alumno_id: UUID 
+    tema_id: UUID    
+    pregunta_id: UUID  
     respuesta: str
     fecha_respuesta: datetime = Field(default_factory=datetime.utcnow)
 

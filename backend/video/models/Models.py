@@ -3,8 +3,8 @@ from typing import List, Optional
 from datetime import datetime
 
 class Ejercicio(BaseModel):
-    enunciado: str  # Título o pregunta principal
-    cuerpo: str     # Descripción detallada o contexto del ejercicio
+    enunciado: str
+    cuerpo: str     
     opciones: List[str] = []
     respuesta_correcta: str
     dificultad: str  

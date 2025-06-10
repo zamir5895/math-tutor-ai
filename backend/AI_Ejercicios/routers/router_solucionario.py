@@ -6,13 +6,12 @@ import json
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
-import httpx  # Para realizar las solicitudes HTTP al endpoint de verificación del token
+import httpx  
 import logging
-from uuid import UUID, uuid4  # Usamos UUID en lugar de ObjectId y agregamos uuid4
+from uuid import UUID, uuid4 
 from bson import Binary, ObjectId
 from pymongo import ReturnDocument
 
-# Modelos
 from alumno import Alumno
 from tema import NivelEnum, Tema, TemaCreate, TemaUpdate, TemaResponse, Pregunta, PreguntaCreate, PreguntaUpdate, Nivel
 from progreso import Progreso, ProgresoCreate, RespuestaAlumno
@@ -37,14 +36,7 @@ router = APIRouter(
 
 @router.post("/solucionario/resolver", response_model=Dict[str, Any])
 async def resolver_ejercicio(request: Dict[str, Any]):
-    """
-    Resuelve un ejercicio paso a paso con explicación detallada
-    Body: {
-        "pregunta": "string",
-        "tema": "string",
-        "nivel": "facil|medio|dificil"
-    }
-    """
+
     try:
         pregunta = request.get("pregunta")
         tema = request.get("tema")
@@ -64,15 +56,7 @@ async def resolver_ejercicio(request: Dict[str, Any]):
 
 @router.post("/solucionario/evaluar", response_model=Dict[str, Any])
 async def evaluar_respuesta(request: Dict[str, Any]):
-    """
-    Evalúa la respuesta de un estudiante y proporciona retroalimentación
-    Body: {
-        "pregunta": "string",
-        "respuesta_correcta": "string",
-        "respuesta_alumno": "string",
-        "tema": "string"
-    }
-    """
+
     try:
         pregunta = request.get("pregunta")
         respuesta_correcta = request.get("respuesta_correcta")

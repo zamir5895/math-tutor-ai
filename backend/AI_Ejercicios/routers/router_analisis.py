@@ -6,13 +6,12 @@ import json
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
-import httpx  # Para realizar las solicitudes HTTP al endpoint de verificación del token
+import httpx 
 import logging
-from uuid import UUID, uuid4  # Usamos UUID en lugar de ObjectId y agregamos uuid4
+from uuid import UUID, uuid4
 from bson import Binary, ObjectId
 from pymongo import ReturnDocument
 
-# Modelos
 from alumno import Alumno
 from tema import NivelEnum, Tema, TemaCreate, TemaUpdate, TemaResponse, Pregunta, PreguntaCreate, PreguntaUpdate, Nivel
 from progreso import Progreso, ProgresoCreate, RespuestaAlumno
@@ -34,13 +33,7 @@ router = APIRouter(
 
 @router.post("/analisis/patrones", response_model=Dict[str, Any])
 async def analizar_patrones_errores(request: Dict[str, Any]):
-    """
-    Analiza patrones de errores del alumno y proporciona recomendaciones
-    Body: {
-        "alumno_id": "string",
-        "tema_id": "string" (opcional)
-    }
-    """
+
     try:
         alumno_id = request.get("alumno_id")
         tema_id = request.get("tema_id")
@@ -51,18 +44,15 @@ async def analizar_patrones_errores(request: Dict[str, Any]):
         except ValueError:
             raise HTTPException(status_code=400, detail="ID de alumno inválido")
         
-        # Construir filtro
         filtro = {"alumno_id": alumno_uuid}
         if tema_uuid:
             filtro["tema_id"] = tema_uuid
         
-        # Obtener progresos del alumno
         progresos = await progresos_collection.find(filtro).to_list(100)
         
         if not progresos:
             raise HTTPException(status_code=404, detail="No se encontraron progresos para analizar")
         
-        # Recopilar todas las respuestas
         todas_respuestas = []
         for progreso in progresos:
             todas_respuestas.extend(progreso.get("respuestas", []))
@@ -70,7 +60,6 @@ async def analizar_patrones_errores(request: Dict[str, Any]):
         if not todas_respuestas:
             raise HTTPException(status_code=404, detail="No se encontraron respuestas para analizar")
         
-        # Analizar patrones
         analisis = await gpt_service.analizar_patron_errores(todas_respuestas)
         
         return {
@@ -86,14 +75,7 @@ async def analizar_patrones_errores(request: Dict[str, Any]):
 
 @router.post("/ejercicios/personalizados", response_model=Dict[str, Any])
 async def generar_ejercicios_personalizados(request: Dict[str, Any]):
-    """
-    Genera ejercicios personalizados basados en las dificultades del alumno
-    Body: {
-        "alumno_id": "string",
-        "tema": "string",
-        "dificultades_identificadas": ["concepto1", "concepto2"]
-    }
-    """
+   
     try:
         alumno_id = request.get("alumno_id")
         tema = request.get("tema")
@@ -123,15 +105,7 @@ async def generar_ejercicios_personalizados(request: Dict[str, Any]):
 
 @router.post("/ejercicios/adicionales", response_model=Dict[str, Any])
 async def generar_ejercicios_adicionales(request: Dict[str, Any]):
-    """
-    Genera ejercicios adicionales basados en el nivel del alumno
-    Body: {
-        "tema": "string",
-        "nivel": "facil|medio|dificil",
-        "cantidad": int (opcional, default 5),
-        "alumno_id": "string" (opcional, para personalizar)
-    }
-    """
+  
     try:
         tema = request.get("tema")
         nivel = request.get("nivel")
@@ -144,16 +118,14 @@ async def generar_ejercicios_adicionales(request: Dict[str, Any]):
                 detail="Se requieren los campos 'tema' y 'nivel'"
             )
         
-        # Convertir alumno_id a string si es válido
         alumno_id_str = None
         if alumno_id:
             try:
                 alumno_uuid = UUID(alumno_id)
                 alumno_id_str = str(alumno_uuid)
             except ValueError:
-                pass  # Ignorar si el ID no es válido
+                pass  
         
-        # Generar ejercicios adicionales
         ejercicios_adicionales = await gpt_service.generar_ejercicios_adicionales(
             tema, nivel, cantidad, alumno_id_str
         )
@@ -177,7 +149,7 @@ async def listar_temas():
         temas = await temas_collection.find({}, {"nombre": 1, "descripcion": 1}).to_list(100)
         for tema in temas:
             tema["id"] = str(tema["_id"])
-            del tema["_id"]  # Eliminar _id para evitar confusión
+            del tema["_id"] 
         
         return {
             "temas": temas,
@@ -197,12 +169,10 @@ async def obtener_estadisticas_alumno(alumno_id: str):
         except ValueError:
             raise HTTPException(status_code=400, detail="ID de alumno inválido")
         
-        # Obtener todos los progresos del alumno
         progresos = await progresos_collection.find(
             {"alumno_id": alumno_uuid}
         ).to_list(100)
         
-        # Calcular estadísticas
         total_temas = len(progresos)
         total_ejercicios = sum(len(p.get("respuestas", [])) for p in progresos)
         ejercicios_correctos = sum(
@@ -211,7 +181,6 @@ async def obtener_estadisticas_alumno(alumno_id: str):
         )
         precision_general = (ejercicios_correctos / total_ejercicios * 100) if total_ejercicios > 0 else 0
         
-        # Obtener reportes
         reportes = await reportes_collection.find(
             {"alumno_id": alumno_uuid}
         ).sort("fecha", -1).to_list(100)

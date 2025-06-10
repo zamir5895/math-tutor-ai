@@ -135,13 +135,11 @@ async def unenroll_alumno_tema(
         print(f"DEBUG: Resultado de búsqueda: {tema is not None}")
         
         if not tema:
-            # Vamos a buscar todos los temas para ver qué IDs existen
             print("DEBUG: Buscando todos los temas para diagnosticar...")
             all_temas = await temas_collection.find({}, {"_id": 1, "nombre": 1}).to_list(length=10)
             print(f"DEBUG: Temas existentes: {[(str(t.get('_id')), t.get('nombre')) for t in all_temas]}")
             raise HTTPException(status_code=404, detail="Tema no encontrado")
         
-        # Verificar si el alumno está inscrito en el tema
         if "temas" not in alumno:
             alumno["temas"] = []
         
@@ -149,10 +147,8 @@ async def unenroll_alumno_tema(
         if tema_id not in temas_inscritos:
             raise HTTPException(status_code=400, detail=f"El alumno no está inscrito en el tema '{tema['nombre']}'")
         
-        # Desinscribir al alumno del tema
         alumno["temas"] = [t for t in alumno["temas"] if str(t.get("id")) != tema_id]
         
-        # Actualizar en la base de datos
         await alumnos_collection.update_one(
             {"_id": student_id_binary},
             {"$set": {"temas": alumno["temas"]}}
@@ -168,7 +164,6 @@ async def unenroll_alumno_tema(
         }
         
     except HTTPException as http_exc:
-        # Permitir que FastAPI maneje HTTPException correctamente
         raise http_exc
     except ValueError as ve:
         logger.error(f"Error de UUID: {str(ve)}")
@@ -186,14 +181,11 @@ async def obtener_usuario_v2(
     usuario_id: str,
     authorization: str = Header(...)
 ):
-    """Obtiene información de un usuario por ID - Versión simplificada"""
     try:
-        # Extraer el token Bearer
         if not isinstance(authorization, str) or not authorization.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="Formato de autorización inválido")
         token = authorization.removeprefix("Bearer ").strip()
 
-        # Verificar si el token es de un estudiante
         auth_data = None
         auth_data2 = None
         try:
@@ -208,17 +200,13 @@ async def obtener_usuario_v2(
         if not auth_data and not auth_data2:
             raise HTTPException(status_code=403, detail="No autorizado para acceder a este recurso")
 
-        # ✅ SIMPLIFICADO: Solo convertir string a UUID
         user_uuid = UUID(usuario_id)
         
-        # ✅ MongoDB ahora maneja automáticamente la conversión UUID ↔ Binary
         usuario = await alumnos_collection.find_one({"_id": user_uuid})
         
         if not usuario:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         
-        # ✅ Ya no necesitas serialize_binary - MongoDB devuelve UUIDs como objetos UUID
-        # Pero FastAPI necesita serializar UUIDs, así que convertimos a string
         if "_id" in usuario:
             usuario["_id"] = str(usuario["_id"])
         
@@ -233,7 +221,7 @@ async def obtener_usuario_v2(
 
 class TemaUpdate(BaseModel):
     nombre: str
-    nivel: str  # aquí podrías también usar Literal["facil","medio","dificil"] si quieres validar valores.
+    nivel: str 
 
 @router.put("/{usuario_id}/temas/{tema_id}", response_model=Dict[str, Any])
 async def actualizar_tema_de_usuario(
@@ -242,13 +230,10 @@ async def actualizar_tema_de_usuario(
     tema_data: TemaUpdate,
     authorization: str = Header(...)
 ):
-    """Actualiza un tema (por tema_id) dentro del array `temas` de un usuario."""
-    # 1) Validación Authorization header
     if not isinstance(authorization, str) or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Formato de autorización inválido")
     token = authorization.removeprefix("Bearer ").strip()
 
-    # 2) Verificar permisos: mismo estudiante o profesor/admin
     permitido = False
     try:
         if await verify_student_token_and_id(token, usuario_id):
@@ -264,13 +249,11 @@ async def actualizar_tema_de_usuario(
     if not permitido:
         raise HTTPException(status_code=403, detail="No autorizado")
 
-    # 3) Validar UUID de usuario (lanza ValueError si inválido)
     try:
         user_uuid = UUID(usuario_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="ID de usuario inválido")
 
-    # 4) Ejecución update: filtramos por _id de usuario y existencia del tema en el array
     result = await alumnos_collection.update_one(
         {"_id": user_uuid, "temas.id": tema_id},
         {"$set": {
@@ -278,16 +261,13 @@ async def actualizar_tema_de_usuario(
             "temas.$.nivel": tema_data.nivel
         }}
     )
-    # 5) Interpretar resultado
     if result.matched_count == 0:
-        # Puede ser que el usuario no exista o que el tema no esté en su array
         existe_usuario = await alumnos_collection.find_one({"_id": user_uuid})
         if not existe_usuario:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         else:
             raise HTTPException(status_code=404, detail="Tema no encontrado para este usuario")
 
-    # 6) Recuperar el documento actualizado
     usuario = await alumnos_collection.find_one({"_id": user_uuid})
     usuario["_id"] = str(usuario["_id"])
     return {"usuario": usuario}

@@ -25,7 +25,6 @@ public class UserController {
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile(HttpServletRequest request) {
         try {
-            // Extraer el token del header
             String token = request.getHeader("Authorization");
             if (token == null || !token.startsWith("Bearer ")) {
                 return ResponseEntity.status(401)
@@ -41,7 +40,6 @@ public class UserController {
                 return ResponseEntity.notFound().build();
             }
 
-            // No devolver la contraseña en la respuesta
             user.setPasswordHash(null);
 
             return ResponseEntity.ok(user);

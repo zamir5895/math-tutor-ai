@@ -70,7 +70,6 @@ public class AlumnoService {
         return null;
     }
 
-    // Métodos para manejo de minutos totales
     public Alumno incrementarMinutos(UUID alumnoId) {
         Optional<Alumno> optionalAlumno = alumnoRepository.findById(alumnoId);
         if (optionalAlumno.isPresent()) {
@@ -101,7 +100,6 @@ public class AlumnoService {
         return null;
     }
 
-    // Métodos para manejo de última conexión
     public Alumno actualizarUltimaConexion(UUID alumnoId) {
         Optional<Alumno> optionalAlumno = alumnoRepository.findById(alumnoId);
         if (optionalAlumno.isPresent()) {
@@ -120,7 +118,6 @@ public class AlumnoService {
         return null;
     }
 
-    // Métodos para manejo de fechas de ejercicios
     public Alumno agregarFechaEjercicio(UUID alumnoId, LocalDate fecha) {
         Optional<Alumno> optionalAlumno = alumnoRepository.findById(alumnoId);
         if (optionalAlumno.isPresent()) {
@@ -156,7 +153,6 @@ public class AlumnoService {
         return tieneEjercicioEnFecha(alumnoId, LocalDate.now());
     }
 
-    // Método para obtener estadísticas del alumno
     public AlumnoStats getEstadisticasAlumno(UUID alumnoId) {
         Optional<Alumno> optionalAlumno = alumnoRepository.findById(alumnoId);
         if (optionalAlumno.isPresent()) {
@@ -170,7 +166,6 @@ public class AlumnoService {
         return null;
     }
 
-    // Método para limpiar fechas duplicadas (mantenimiento)
     public Alumno limpiarFechasDuplicadas(UUID alumnoId) {
         Optional<Alumno> optionalAlumno = alumnoRepository.findById(alumnoId);
         if (optionalAlumno.isPresent()) {
@@ -185,7 +180,6 @@ public class AlumnoService {
         return null;
     }
 
-    // Clase interna para estadísticas
     public static class AlumnoStats {
         private Integer minutosTotales;
         private LocalDateTime ultimaConexion;
@@ -197,12 +191,10 @@ public class AlumnoService {
             this.totalEjercicios = totalEjercicios;
         }
 
-        // Getters
         public Integer getMinutosTotales() { return minutosTotales; }
         public LocalDateTime getUltimaConexion() { return ultimaConexion; }
         public Integer getTotalEjercicios() { return totalEjercicios; }
 
-        // Setters
         public void setMinutosTotales(Integer minutosTotales) { this.minutosTotales = minutosTotales; }
         public void setUltimaConexion(LocalDateTime ultimaConexion) { this.ultimaConexion = ultimaConexion; }
         public void setTotalEjercicios(Integer totalEjercicios) { this.totalEjercicios = totalEjercicios; }

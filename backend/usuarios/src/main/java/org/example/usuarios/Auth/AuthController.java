@@ -36,7 +36,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequest) {
         try {
-            // Autenticar al usuario
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(),
@@ -44,13 +43,10 @@ public class AuthController {
                     )
             );
 
-            // Establecer el contexto de seguridad
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Generar el token JWT
             String token = jwtTokenProvider.generateToken(authentication);
 
-            // Retornar el token JWT
             return ResponseEntity.ok(new JwtAuthenticationResponse(token));
 
         } catch (BadCredentialsException e) {
@@ -75,7 +71,6 @@ public class AuthController {
             User user = new User();
             user.setUsername(request.getUsername());
 
-            // IMPORTANTE: La contraseña ya debe venir encriptada desde el servicio
             user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
             if (request.getRole() != null) {
@@ -84,7 +79,6 @@ public class AuthController {
                 user.setRole(Rol.STUDENT);
             }
 
-            // Usar registerUser que NO encripta de nuevo
             User savedUser = userService.registerUser(user);
 
             return ResponseEntity.status(HttpStatus.CREATED)
@@ -104,21 +98,16 @@ public class AuthController {
     @GetMapping("/verify-token")
     public ResponseEntity<?> verifyToken(@RequestHeader("Authorization") String authorizationHeader) {
         try {
-            // Obtener el token de la cabecera "Authorization"
-            String token = authorizationHeader.substring(7); // "Bearer " es el prefijo, por lo que eliminamos los primeros 7 caracteres
-
-            // Verificar si el token es válido
+            String token = authorizationHeader.substring(7); 
             if (jwtTokenProvider.isTokenExpired(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new ApiResponseDTO("El token ha expirado"));
             }
 
-            // Extraer la información del token (username, role, uuid)
             String username = jwtTokenProvider.extractUsername(token);
             String role = jwtTokenProvider.extractRole(token);
             UUID userId = jwtTokenProvider.extractUserId(token);
 
-            // Crear la respuesta con la información extraída del token
             TokenVerificationResponseDTO response = new TokenVerificationResponseDTO();
             response.setUsername(username);
             response.setRole(role);

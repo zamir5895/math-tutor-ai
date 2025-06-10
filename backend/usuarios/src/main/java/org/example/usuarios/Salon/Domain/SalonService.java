@@ -51,21 +51,18 @@ public class SalonService {
         if (optionalSalon.isPresent()) {
             Salon salon = optionalSalon.get();
 
-            // Actualizamos los detalles básicos del salón
             salon.setSeccion(salonDetails.getSeccion());
             salon.setGrado(salonDetails.getGrado());
             salon.setTurno(salonDetails.getTurno());
             salon.setProfesorId(salonDetails.getProfesorId());
 
-            // Actualizamos solo los IDs de los alumnos
             if (salonDetails.getAlumnoIds() != null && !salonDetails.getAlumnoIds().isEmpty()) {
                 salon.setAlumnoIds(salonDetails.getAlumnoIds()); // Asignamos los IDs de los alumnos
             }
 
-            // Guardamos el salón actualizado
             return salonRepository.save(salon);
         }
-        return null; // Si no se encuentra el salón, devolvemos null
+        return null; 
     }
 
 
