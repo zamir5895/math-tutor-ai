@@ -32,7 +32,6 @@ public class Salon {
     @ElementCollection
     private List<UUID> alumnoIds = new ArrayList<>();
 
-    // Constructors
     public Salon() {}
 
     public Salon(String seccion, String grado, String turno, UUID profesorId) {
@@ -42,7 +41,6 @@ public class Salon {
         this.profesorId = profesorId;
     }
 
-    // Getters and Setters
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 

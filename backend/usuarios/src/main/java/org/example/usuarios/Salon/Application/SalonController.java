@@ -40,7 +40,6 @@ public class SalonController {
     @PostMapping
     public ResponseEntity<?> createSalon(@RequestBody SalonRequestDTO request, HttpServletRequest httpRequest) {
         try {
-            // Extraer el token Bearer de la cabecera Authorization
             String token = httpRequest.getHeader("Authorization");
 
             if (token == null || !token.startsWith("Bearer ")) {
