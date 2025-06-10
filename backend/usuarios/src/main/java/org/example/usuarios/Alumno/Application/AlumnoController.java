@@ -205,7 +205,7 @@ public class AlumnoController {
         }
     }
 
-    @GetMapping("/salon/{id}")
+   /* @GetMapping("/salon/{id}")
     public ResponseEntity<?> getAlumnosBySalonId(@PathVariable UUID id) {
         try {
             // Obtener el salón por su ID
@@ -232,7 +232,7 @@ public class AlumnoController {
                     .body(new ApiResponseDTO("Error obteniendo alumnos"));
         }
     }
-
+*/
     @PutMapping("/admin_only/{id}")
     public ResponseEntity<?> updateAlumno(@PathVariable UUID id, @RequestBody Alumno alumnoDetails) {
         try {
