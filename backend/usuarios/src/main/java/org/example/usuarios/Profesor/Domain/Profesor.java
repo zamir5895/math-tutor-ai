@@ -17,7 +17,6 @@ public class Profesor extends User {
     @Column(name = "telefono")
     private String telefono;
 
-
     public Profesor() {
         super();
         this.setRole(Rol.TEACHER);

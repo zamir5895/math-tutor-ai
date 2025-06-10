@@ -17,7 +17,6 @@ public class SalonRequestDTO {
 
     private String nombre;
 
-    private UUID profesorId;
 
 
 

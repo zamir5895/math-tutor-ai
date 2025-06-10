@@ -102,15 +102,12 @@ public class SalonService {
 
         String role = jwtTokenProvider.extractRole(jwt);
 
-        UUID profesorId;
+        UUID profesorId=jwtTokenProvider.extractUserId(jwt);
 
         if ("ADMIN".equals(role)) {
-            if (request.getProfesorId() == null) {
+            if (profesorId== null) {
                 throw new IllegalArgumentException("Falta el ID del profesor");
             }
-
-            profesorId = request.getProfesorId();
-
             if (!profesorService.existsById(profesorId)) {
                 throw new IllegalArgumentException("El profesor con el ID proporcionado no existe");
             }
@@ -159,7 +156,7 @@ public class SalonService {
         salon.setSeccion(request.getSeccion());
         salon.setGrado(request.getGrado());
         salon.setTurno(request.getTurno());
-        salon.setProfesorId(request.getProfesorId());
+        salon.setProfesorId(profesorId);
         Salon s = salonRepository.save(salon);
         return convertToResponse(s);
     }

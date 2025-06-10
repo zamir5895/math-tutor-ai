@@ -34,10 +34,9 @@ public class SalonController {
 
 
     @PostMapping
-    public ResponseEntity<?> createSalon(@RequestBody SalonRequestDTO request, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> createSalon(@RequestBody SalonRequestDTO request, @RequestHeader("Authorization") String token) {
         try {
-            String token = httpRequest.getHeader("Authorization");
-
+            System.out.println(request.getNombre());
             SalonResponse response = salonService.createSalon(request, token);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ApiResponseDTO("Salón creado exitosamente", response));
@@ -123,15 +122,16 @@ public class SalonController {
     @GetMapping("/search")
     public ResponseEntity<?> searchSalonsByName(@RequestParam String nombre, HttpServletRequest httpServletRequest) {
         try {
-            List<Salon> salones = salonService.searchSalonsByName(nombre, httpServletRequest.getHeader("Authorization"));
+            List<SalonResponse> salones = salonService.searchSalonsByName(nombre, httpServletRequest.getHeader("Authorization"));
             return ResponseEntity.ok(salones);
-        } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(new ApiResponseDTO("Error buscando salones"));
-        }
-        catch (SecurityException e) {
+        } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new ApiResponseDTO(e.getMessage()));
         }
+        catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(new ApiResponseDTO("Error buscando salones"));
+        }
+
     }
 }
