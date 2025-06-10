@@ -1,4 +1,3 @@
-# routers/usuarios.py
 from fastapi import APIRouter, HTTPException, Body, Depends
 from typing import Dict, Any
 from uuid import UUID
@@ -13,7 +12,6 @@ from db import alumnos_collection, temas_collection
 from fastapi import Header
 
 
-# Configurar logger
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -23,7 +21,6 @@ router = APIRouter(
 )
 
 
-# Endpoint refactorizado
 @router.post("/enroll_alumno_tema", response_model=Dict[str, Any])
 async def enroll_alumno_tema(
     tema_id: str = Body(...),
@@ -31,17 +28,14 @@ async def enroll_alumno_tema(
     alumno_id: str = Body(...)
 ):
     try:
-        # Verificar si es TEACHER o ADMIN
         auth_data = await verify_teacher_or_admin_token(token)
         
-        # Validar y convertir alumno_id
         try:
             student_uuid = UUID(alumno_id)
             student_id_binary = Binary.from_uuid(student_uuid)
         except ValueError:
             raise HTTPException(status_code=400, detail="ID de alumno inválido")
         
-        # Buscar el alumno
         alumno = await alumnos_collection.find_one({"_id": student_id_binary})
         if not alumno:
             raise HTTPException(status_code=404, detail="Alumno no encontrado")
@@ -54,22 +48,18 @@ async def enroll_alumno_tema(
         print(f"DEBUG: UUID convertido: {tema_uuid}")
 
         
-        # Buscar directamente con el UUID (MongoDB maneja automáticamente la conversión)
         tema = await temas_collection.find_one({"_id": tema_uuid})
         print(f"DEBUG: Resultado de búsqueda: {tema is not None}")
         
         if not tema:
-            # Vamos a buscar todos los temas para ver qué IDs existen
             print("DEBUG: Buscando todos los temas para diagnosticar...")
             all_temas = await temas_collection.find({}, {"_id": 1, "nombre": 1}).to_list(length=10)
             print(f"DEBUG: Temas existentes: {[(str(t.get('_id')), t.get('nombre')) for t in all_temas]}")
             raise HTTPException(status_code=404, detail="Tema no encontrado")
         
-        # Verificar si el alumno ya está inscrito
         if "temas" not in alumno:
             alumno["temas"] = []
         
-        # Comparar IDs como strings para verificar inscripción
         temas_inscritos = [str(t.get("id")) for t in alumno["temas"]]
         if tema_id in temas_inscritos:
             return {
@@ -81,14 +71,12 @@ async def enroll_alumno_tema(
                 "enrolled_by_role": auth_data.get("role")
             }
         
-        # Inscribir al alumno en el tema
         alumno["temas"].append({
             "id": tema_id,
             "nombre": tema["nombre"],
             "nivel": "facil"
         })
         
-        # Actualizar en la base de datos
         await alumnos_collection.update_one(
             {"_id": student_id_binary},
             {"$set": {"temas": alumno["temas"]}}
@@ -104,7 +92,6 @@ async def enroll_alumno_tema(
         }
         
     except HTTPException as http_exc:
-        # Permitir que FastAPI maneje HTTPException correctamente
         raise http_exc
     except ValueError as ve:
         logger.error(f"Error de UUID: {str(ve)}")
@@ -126,17 +113,14 @@ async def unenroll_alumno_tema(
     alumno_id: str = Body(...)
 ):
     try:
-        # Verificar si es TEACHER o ADMIN
         auth_data = await verify_teacher_or_admin_token(token)
         
-        # Validar y convertir alumno_id
         try:
             student_uuid = UUID(alumno_id)
             student_id_binary = Binary.from_uuid(student_uuid)
         except ValueError:
             raise HTTPException(status_code=400, detail="ID de alumno inválido")
         
-        # Buscar el alumno
         alumno = await alumnos_collection.find_one({"_id": student_id_binary})
         if not alumno:
             raise HTTPException(status_code=404, detail="Alumno no encontrado")
@@ -147,7 +131,6 @@ async def unenroll_alumno_tema(
         tema_uuid = UUID(tema_id_clean)
         print(f"DEBUG: UUID convertido: {tema_uuid}")
 
-        # Buscar directamente con el UUID (MongoDB maneja automáticamente la conversión)
         tema = await temas_collection.find_one({"_id": tema_uuid})
         print(f"DEBUG: Resultado de búsqueda: {tema is not None}")
         
