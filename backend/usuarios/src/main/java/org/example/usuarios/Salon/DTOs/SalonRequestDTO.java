@@ -13,7 +13,7 @@ public class SalonRequestDTO {
 
     private String turno;
 
-    private String desccripcion;
+    private String descripcion;
 
     private String nombre;
 

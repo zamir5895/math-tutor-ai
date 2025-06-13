@@ -26,13 +26,13 @@ public class Salon {
     @Column(nullable = false)
     private Integer grado;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String nombre;
 
     @Column(nullable = false)
     private String turno;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String descripcion;
     @Column(name = "profesor_id")
     private UUID profesorId;

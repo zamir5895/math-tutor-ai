@@ -42,7 +42,6 @@ public class Alumno extends User {
         this.dni = dni;
     }
 
-    // Getters and Setters
     public String getDni() {
         return dni;
     }

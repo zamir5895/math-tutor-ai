@@ -21,7 +21,6 @@ public class JwtTokenProvider {
     @Value("${app.JWT_EXPIRATION:86400000}")
     private long jwtExpiration; // 1 día por defecto
 
-    // Genera el token JWT
     public String generateToken(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         return Jwts.builder()
@@ -34,7 +33,6 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // Extrae el rol desde el token
     public String extractRole(String token) {
         return Jwts.parser()
                 .setSigningKey(jwtSecret)
@@ -43,7 +41,6 @@ public class JwtTokenProvider {
                 .get("role", String.class);
     }
 
-    // Extrae el username desde el token
     public String extractUsername(String token) {
         return Jwts.parser()
                 .setSigningKey(jwtSecret)
@@ -52,7 +49,6 @@ public class JwtTokenProvider {
                 .getSubject();
     }
 
-    // Nuevo método para extraer el UUID
     public UUID extractUserId(String token) {
         String userIdStr = Jwts.parser()
                 .setSigningKey(jwtSecret)

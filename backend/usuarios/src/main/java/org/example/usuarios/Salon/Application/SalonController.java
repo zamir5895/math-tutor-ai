@@ -1,11 +1,9 @@
 package org.example.usuarios.Salon.Application;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.example.usuarios.Alumno.Domain.Alumno;
-import org.example.usuarios.Alumno.Domain.AlumnoService;
+import org.example.usuarios.Alumno.DTOs.AlumnosDTO;
 import org.example.usuarios.Auth.ApiResponseDTO;
 import org.example.usuarios.Auth.JwtTokenProvider;
-import org.example.usuarios.Profesor.Domain.ProfesorService;
 import org.example.usuarios.Salon.DTOs.SalonRequestDTO;
 import org.example.usuarios.Salon.DTOs.SalonResponse;
 import org.example.usuarios.Salon.Domain.Salon;
@@ -15,9 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -134,4 +130,52 @@ public class SalonController {
         }
 
     }
+
+    @GetMapping("/alumnos/{id}")
+    public ResponseEntity<?> getAlumnosBySalonId(@PathVariable UUID id, HttpServletRequest httpServletRequest) {
+        try {
+            String token = httpServletRequest.getHeader("Authorization");
+            String jwt = token != null && token.startsWith("Bearer ") ? token.substring(7) : token;
+            String userId = jwtTokenProvider.extractUserId(jwt).toString();
+            List<AlumnosDTO> alumnos = salonService.obtenerAlumnosRegistradosRecientemente(id, UUID.fromString(userId));
+            return ResponseEntity.ok().body(new ApiResponseDTO("Alumnos obtenidos", alumnos));
+
+
+        }catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponseDTO(e.getMessage()));
+        }
+
+        catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponseDTO(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error obteniendo salón"));
+        }
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getSalonById(@PathVariable UUID id, HttpServletRequest httpServletRequest) {
+        try {
+            String token = httpServletRequest.getHeader("Authorization");
+            String jwt = token != null && token.startsWith("Bearer ") ? token.substring(7) : token;
+            String userId = jwtTokenProvider.extractUserId(jwt).toString();
+            SalonResponse salon = salonService.getInfoBySalonId(id, UUID.fromString(userId));
+            return ResponseEntity.ok().body(new ApiResponseDTO("Salón encontrado", salon));
+        }catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponseDTO(e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponseDTO(e.getMessage()));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error obteniendo salón"));
+        }
+    }
+
+
+
+
 }

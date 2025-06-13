@@ -1,14 +1,13 @@
 package org.example.usuarios.Salon.Domain;
 
-import org.example.usuarios.Auth.ApiResponseDTO;
+import org.example.usuarios.Alumno.DTOs.AlumnosDTO;
+import org.example.usuarios.Alumno.Domain.Alumno;
 import org.example.usuarios.Auth.JwtTokenProvider;
 import org.example.usuarios.Profesor.Domain.ProfesorService;
 import org.example.usuarios.Salon.DTOs.SalonRequestDTO;
 import org.example.usuarios.Salon.DTOs.SalonResponse;
 import org.example.usuarios.Salon.Infraestructure.SalonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -38,7 +37,7 @@ public class SalonService {
     public List<SalonResponse> getSalonesByProfesorId(String token) {
         validateToken(token);
 
-        String jwt = token.substring(7);
+        String jwt = token.startsWith("Bearer ") ? token.substring(7) : token;
         UUID profesorId = jwtTokenProvider.extractUserId(jwt);
         String role = jwtTokenProvider.extractRole(jwt);
         if(!role.equals("TEACHER")){
@@ -73,7 +72,7 @@ public class SalonService {
 
     public List<SalonResponse> searchSalonsByName(String name, String token) {
         validateToken(token);
-        String jwt = token.substring(7);
+        String jwt = token.startsWith("Bearer ") ? token.substring(7) : token;
         UUID profesorId = jwtTokenProvider.extractUserId(jwt);
         String role = jwtTokenProvider.extractRole(jwt);
 
@@ -98,24 +97,32 @@ public class SalonService {
 
     public SalonResponse createSalon(SalonRequestDTO request, String token) {
         validateToken(token);
-        String jwt = token.substring(7);
-
+        String jwt = token.startsWith("Bearer ") ? token.substring(7) : token;
+        System.out.println("Estamos aca");
         String role = jwtTokenProvider.extractRole(jwt);
-
-        UUID profesorId=jwtTokenProvider.extractUserId(jwt);
-
+        System.out.println("EL rol es: " + role);
+        UUID profesorId = jwtTokenProvider.extractUserId(jwt);
+        System.out.println("Estamos aca");
         if ("ADMIN".equals(role)) {
-            if (profesorId== null) {
+            System.out.println("Acaaa " +profesorId);
+            if (profesorId == null) {
                 throw new IllegalArgumentException("Falta el ID del profesor");
             }
             if (!profesorService.existsById(profesorId)) {
                 throw new IllegalArgumentException("El profesor con el ID proporcionado no existe");
             }
-
+            System.out.println(profesorId);
         } else if ("TEACHER".equals(role)) {
+            System.out.println("Acaaa " +profesorId);
+
             profesorId = jwtTokenProvider.extractUserId(jwt);
         } else {
             throw new SecurityException("No tienes permisos para crear un salón");
+        }
+        System.out.println(request);
+        // Validate and handle null fields
+        if (request.getSeccion() == null || request.getGrado() == null || request.getTurno() == null) {
+            throw new IllegalArgumentException("Sección, grado y turno son obligatorios");
         }
 
         Salon salon = new Salon();
@@ -123,23 +130,31 @@ public class SalonService {
         salon.setGrado(request.getGrado());
         salon.setTurno(request.getTurno());
         salon.setProfesorId(profesorId);
-        salon.setDescripcion(request.getDesccripcion());
-        Salon savedSalon = salonRepository.save(salon);
-        SalonResponse response = new SalonResponse();
-        response.setId(savedSalon.getId());
-        response.setSeccion(savedSalon.getSeccion());
-        response.setGrado(savedSalon.getGrado());
-        response.setTurno(savedSalon.getTurno());
-        response.setDescripcion(savedSalon.getDescripcion());
-        response.setCantidadAlumnos(savedSalon.getAlumnos().size());
-        return response;
-    }
+        salon.setDescripcion(request.getDescripcion() != null ? request.getDescripcion() : "Sin descripción");
+        salon.setNombre(request.getNombre() != null ? request.getNombre() : "Sin nombre");
+        try {
+            Salon savedSalon = salonRepository.save(salon);
 
+            SalonResponse response = new SalonResponse();
+            response.setId(savedSalon.getId());
+            response.setSeccion(savedSalon.getSeccion());
+            response.setGrado(savedSalon.getGrado());
+            response.setTurno(savedSalon.getTurno());
+            response.setDescripcion(savedSalon.getDescripcion());
+            response.setCantidadAlumnos(savedSalon.getAlumnos().size());
+            response.setNombre(savedSalon.getNombre());
+
+            return response;
+        } catch (Exception e) {
+            System.err.println("Error saving salon: " + e.getMessage());
+            throw new RuntimeException("Error al guardar el salón", e);
+        }
+    }
 
 
     public SalonResponse updateSalon(UUID id, SalonRequestDTO request, String token) {
         validateToken(token);
-        String jwt = token.substring(7);
+        String jwt = token.startsWith("Bearer ") ? token.substring(7) : token;
         UUID profesorId = jwtTokenProvider.extractUserId(jwt);
         if (profesorId == null) {
             throw new IllegalArgumentException("Token inválido o expirado");
@@ -163,7 +178,7 @@ public class SalonService {
 
     public void deleteSalon(UUID id, String token) {
         validateToken(token);
-        String jwt = token.substring(7);
+        String jwt = token.startsWith("Bearer ") ? token.substring(7) : token;
         UUID profesorId = jwtTokenProvider.extractUserId(jwt);
         if (profesorId == null) {
             throw new IllegalArgumentException("Token inválido o expirado");
@@ -181,9 +196,46 @@ public class SalonService {
     }
 
     private void validateToken(String token) {
-        if (token == null || !token.startsWith("Bearer ")) {
+        if (token == null ) {
             throw new IllegalArgumentException("Token de autorización requerido o inválido");
         }
+    }
+
+
+    public SalonResponse getInfoBySalonId(UUID salonID, UUID profesorID) {
+        Salon salon = salonRepository.findById(salonID).orElseThrow(() ->
+                new IllegalArgumentException("Salón no encontrado"));
+        if (!salon.getProfesorId().equals(profesorID)) {
+            throw new SecurityException("No tienes permisos para acceder a la información de este salón");
+        }
+        SalonResponse salonIndo = new SalonResponse();
+        salonIndo.setId(salon.getId());
+        salonIndo.setSeccion(salon.getSeccion());
+        salonIndo.setNombre(salon.getNombre());
+        salonIndo.setGrado(salon.getGrado());
+        salonIndo.setTurno(salon.getTurno());
+        salonIndo.setDescripcion(salon.getDescripcion());
+        salonIndo.setCantidadAlumnos(salon.getAlumnos().size());
+        return salonIndo;
+    }
+
+    public List<AlumnosDTO> obtenerAlumnosRegistradosRecientemente(UUID salonId, UUID profesorId) {
+        Salon salon = salonRepository.findById(salonId).orElseThrow(() ->
+                new IllegalArgumentException("Salón no encontrado"));
+        if (!salon.getProfesorId().equals(profesorId)) {
+            throw new SecurityException("No tienes permisos para acceder a los alumnos de este salón");
+        }
+        List<AlumnosDTO> alumnosDTOList = new ArrayList<>();
+        for (Alumno alumno : salon.getAlumnos()) {
+            AlumnosDTO dto = new AlumnosDTO();
+            dto.setId(alumno.getId());
+            dto.setNombre(alumno.getNombre());
+            dto.setApellido(alumno.getApellido());
+            dto.setUsername(alumno.getUsername());
+            dto.setDni(alumno.getDni());
+            alumnosDTOList.add(dto);
+        }
+        return alumnosDTOList;
     }
 
 
