@@ -95,7 +95,6 @@ public class AlumnoController {
     @GetMapping("/admin_only/all")
     public ResponseEntity<?> getAllAlumnos() {
         try {
-            // Obtener todos los alumnos
             List<Alumno> alumnos = alumnoService.getAllAlumnos();
 
             List<AlumnoResponseDTO> response = alumnos.stream()
@@ -114,7 +113,7 @@ public class AlumnoController {
                     })
                     .collect(Collectors.toList());
 
-            return ResponseEntity.ok(response); // Devuelve la lista de alumnos en formato JSON
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -134,10 +133,10 @@ public class AlumnoController {
                 Alumno alumno = optionalAlumno.get();
 
                 AlumnoProfileResponseDTO response = new AlumnoProfileResponseDTO();
-                response.setId(alumno.getId().toString()); // Convertimos el UUID a String
+                response.setId(alumno.getId().toString());
                 response.setUsername(alumno.getUsername());
 
-                return ResponseEntity.ok(response); // Devuelves la respuesta con el perfil del alumno
+                return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new ApiResponseDTO("Alumno no encontrado"));
@@ -157,10 +156,10 @@ public class AlumnoController {
                 Alumno alumno = optionalAlumno.get();
 
                 AlumnoProfileResponseDTO response = new AlumnoProfileResponseDTO();
-                response.setId(alumno.getId().toString()); // Convertimos el UUID a String
+                response.setId(alumno.getId().toString());
                 response.setUsername(alumno.getUsername());
 
-                return ResponseEntity.ok(response);  // Devuelves la respuesta con el perfil del alumno
+                return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new ApiResponseDTO("Alumno no encontrado"));

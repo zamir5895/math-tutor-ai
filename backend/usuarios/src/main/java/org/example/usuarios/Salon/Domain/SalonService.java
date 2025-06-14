@@ -4,6 +4,7 @@ import org.example.usuarios.Alumno.DTOs.AlumnosDTO;
 import org.example.usuarios.Alumno.Domain.Alumno;
 import org.example.usuarios.Auth.JwtTokenProvider;
 import org.example.usuarios.Profesor.Domain.ProfesorService;
+import org.example.usuarios.Salon.DTOs.SalonInfo;
 import org.example.usuarios.Salon.DTOs.SalonRequestDTO;
 import org.example.usuarios.Salon.DTOs.SalonResponse;
 import org.example.usuarios.Salon.Infraestructure.SalonRepository;
@@ -67,6 +68,7 @@ public class SalonService {
         response.setTurno(salon.getTurno());
         response.setDescripcion(salon.getDescripcion());
         response.setCantidadAlumnos(salon.getAlumnos().size());
+        response.setNombre(salon.getNombre());
         return response;
     }
 
@@ -120,7 +122,6 @@ public class SalonService {
             throw new SecurityException("No tienes permisos para crear un salón");
         }
         System.out.println(request);
-        // Validate and handle null fields
         if (request.getSeccion() == null || request.getGrado() == null || request.getTurno() == null) {
             throw new IllegalArgumentException("Sección, grado y turno son obligatorios");
         }
@@ -237,6 +238,25 @@ public class SalonService {
         }
         return alumnosDTOList;
     }
+
+    public SalonInfo getInfoOfSalonByprofesorId(UUID profesorId){
+        //Buscamos to
+        List<Salon> s =  salonRepository.findByProfesorId(profesorId);
+        if(s.isEmpty()){
+            return null;
+        }
+        SalonInfo salonInfo = new SalonInfo();
+        Integer cantidadAlumnos = 0;
+        for(Salon salon : s){
+            SalonResponse response = getInfoBySalonId(salon.getId(), salon.getProfesorId());
+            cantidadAlumnos+=response.getCantidadAlumnos();
+            salonInfo.getSalonIds().add(response.getId());
+        }
+        salonInfo.setCantidadAlumnos(cantidadAlumnos);
+        return salonInfo;
+
+    }
+
 
 
 }

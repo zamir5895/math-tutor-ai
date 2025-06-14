@@ -19,16 +19,18 @@ public class JwtTokenProvider {
     private String jwtSecret;
 
     @Value("${app.JWT_EXPIRATION:86400000}")
-    private long jwtExpiration; // 1 día por defecto
+    private long jwtExpiration;
 
     public String generateToken(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpiration);
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .claim("role", user.getRole())
                 .claim("userId", user.getId().toString()) // Agregar UUID
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }

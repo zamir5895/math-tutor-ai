@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.example.usuarios.Alumno.DTOs.AlumnosDTO;
 import org.example.usuarios.Auth.ApiResponseDTO;
 import org.example.usuarios.Auth.JwtTokenProvider;
+import org.example.usuarios.Salon.DTOs.SalonInfo;
 import org.example.usuarios.Salon.DTOs.SalonRequestDTO;
 import org.example.usuarios.Salon.DTOs.SalonResponse;
 import org.example.usuarios.Salon.Domain.Salon;
@@ -174,6 +175,24 @@ public class SalonController {
                     .body(new ApiResponseDTO("Error obteniendo salón"));
         }
     }
+
+    @GetMapping("/profesor")
+    public ResponseEntity<?> getInfoOfAllSalons(
+            @RequestHeader("Authorization") String token) {
+        try {
+            String jwt = token != null && token.startsWith("Bearer ") ? token.substring(7) : token;
+            String userId = jwtTokenProvider.extractUserId(jwt).toString();
+            SalonInfo info = salonService.getInfoOfSalonByprofesorId(UUID.fromString(userId));
+            return ResponseEntity.ok().body(info);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponseDTO(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseDTO("Error obteniendo los salones del profesor"));
+        }
+    }
+
 
 
 
