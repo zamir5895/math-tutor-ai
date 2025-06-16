@@ -275,3 +275,4 @@ class TemaService:
             return {"error": f"Error en la API externa: {e.response.text}"}
         except Exception as e:
             return {"error": str(e)}
+    
