@@ -298,13 +298,13 @@ public class AlumnoController {
     }
 
     @PutMapping("/minutos/incrementar/{id}")
-    public ResponseEntity<?> incrementarMinutos(@PathVariable UUID id) {
+    public ResponseEntity<?> incrementarMinutos(@PathVariable UUID id, @RequestBody Integer minutosAAumentar) {
         try {
             Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
             if (optionalAlumno.isPresent()) {
                 Alumno alumno = optionalAlumno.get();
                 Integer minutosActuales = alumno.getMinutosTotales() != null ? alumno.getMinutosTotales() : 0;
-                alumno.setMinutosTotales(minutosActuales + 1);
+                alumno.setMinutosTotales(minutosActuales + minutosAAumentar);
 
                 alumnoService.saveAlumno(alumno);
 
