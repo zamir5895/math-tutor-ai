@@ -3,11 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional, Dict, Any
 
 
-from uuid import UUID, uuid4  # Usamos UUID en lugar de ObjectId y agregamos uuid4
+from uuid import UUID, uuid4 
 from bson import Binary
 from pymongo import ReturnDocument
 
-# Modelos
 from alumno import Alumno
 from tema import NivelEnum, Tema, TemaCreate, TemaUpdate, TemaResponse, Pregunta, PreguntaCreate, PreguntaUpdate, Nivel
 
@@ -23,39 +22,30 @@ router = APIRouter(
 
 @router.post("/temas", response_model=TemaResponse, status_code=status.HTTP_201_CREATED)
 async def crear_tema(tema_data: TemaCreate):
-    """Crea un nuevo tema"""
     try:
-        # Crear el nuevo tema con ID único
         nuevo_tema = Tema(**tema_data.dict())
         
-        # Asegurarnos de que el ID es un UUID
         if not isinstance(nuevo_tema.id, UUID):
             raise HTTPException(status_code=400, detail="El ID del tema no es un UUID válido.")
         
-        # Convertir UUID a Binary para MongoDB
         tema_dict = nuevo_tema.dict(by_alias=True)
         
-        # Convertir _id a Binary para la base de datos
         tema_dict["_id"] = Binary.from_uuid(nuevo_tema.id)
         
-        # Convertir IDs de preguntas a Binary también
         for nivel in tema_dict.get("niveles", []):
             for pregunta in nivel.get("preguntas", []):
 
-                # Solo convertir si es string, si ya es UUID o Binary, dejarlo
                 if "id" in pregunta:
                     if isinstance(pregunta["id"], str):
                         pregunta["id"] = Binary.from_uuid(UUID(pregunta["id"]))
                     elif isinstance(pregunta["id"], UUID):
                         pregunta["id"] = Binary.from_uuid(pregunta["id"])
         
-        # Insertar en la base de datos
         resultado = await temas_collection.insert_one(tema_dict)
         
         if not resultado.inserted_id:
             raise HTTPException(status_code=500, detail="No se pudo crear el tema")
         
-        # Retornar el tema creado
         tema_response = TemaResponse(
             **nuevo_tema.dict(exclude={"id"}),
             id=str(nuevo_tema.id)
@@ -68,26 +58,22 @@ async def crear_tema(tema_data: TemaCreate):
 
 
 
-# 2. OBTENER TODOS LOS TEMAS
 @router.get("/temas", response_model=List[TemaResponse])
 async def obtener_todos_los_temas(
     skip: int = 0,
     limit: int = 100
 ):
-    """Obtiene todos los temas con paginación"""
     try:
         cursor = temas_collection.find().skip(skip).limit(limit)
         temas = await cursor.to_list(length=limit)
         
         temas_response = []
         for tema in temas:
-            # Convertir Binary UUID a string
             if isinstance(tema.get("_id"), Binary):
                 tema_id = str(tema["_id"].as_uuid())
             else:
                 tema_id = str(tema["_id"])
             
-            # Limpiar IDs de preguntas
             for nivel in tema.get("niveles", []):
                 for pregunta in nivel.get("preguntas", []):
                     if "id" in pregunta and isinstance(pregunta["id"], Binary):
@@ -104,33 +90,26 @@ async def obtener_todos_los_temas(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener temas: {str(e)}")
 
-# 3. OBTENER UN TEMA POR ID
 @router.get("/temas/{tema_id}", response_model=TemaResponse)
 async def obtener_tema_por_id(tema_id: str):
-    """Obtiene un tema específico por su ID"""
     try:
         print(f"DEBUG: Recibido tema_id: '{tema_id}' (tipo: {type(tema_id)}, longitud: {len(tema_id)})")
         
-        # Limpiar el tema_id de espacios y caracteres especiales
         tema_id_clean = tema_id.strip()
         print(f"DEBUG: tema_id limpio: '{tema_id_clean}'")
         
-        # Convertir string a UUID
         tema_uuid = UUID(tema_id_clean)
         print(f"DEBUG: UUID convertido: {tema_uuid}")
         
-        # Buscar directamente con el UUID (MongoDB maneja automáticamente la conversión)
         tema = await temas_collection.find_one({"_id": tema_uuid})
         print(f"DEBUG: Resultado de búsqueda: {tema is not None}")
         
         if not tema:
-            # Vamos a buscar todos los temas para ver qué IDs existen
             print("DEBUG: Buscando todos los temas para diagnosticar...")
             all_temas = await temas_collection.find({}, {"_id": 1, "nombre": 1}).to_list(length=10)
             print(f"DEBUG: Temas existentes: {[(str(t.get('_id')), t.get('nombre')) for t in all_temas]}")
             raise HTTPException(status_code=404, detail="Tema no encontrado")
         
-        # Función auxiliar para convertir UUIDs a string recursivamente
         def convert_uuids_to_string(obj):
             if isinstance(obj, dict):
                 return {k: convert_uuids_to_string(v) for k, v in obj.items()}
@@ -143,10 +122,8 @@ async def obtener_tema_por_id(tema_id: str):
             else:
                 return obj
         
-        # Convertir todos los UUIDs a string
         tema_clean = convert_uuids_to_string(tema)
         
-        # Crear la respuesta
         tema_response = TemaResponse(
             **{k: v for k, v in tema_clean.items() if k != "_id"},
             id=tema_id_clean
@@ -166,21 +143,17 @@ async def obtener_tema_por_id(tema_id: str):
 
     
         
-# 4. ACTUALIZAR UN TEMA
 @router.put("/temas/{tema_id}", response_model=TemaResponse)
 async def actualizar_tema(tema_id: str, tema_data: TemaUpdate):
-    """Actualiza un tema existente"""
     try:
         tema_uuid = UUID(tema_id)
         tema_binary_id = Binary.from_uuid(tema_uuid)
         
-        # Crear objeto de actualización solo con campos no nulos
         update_data = tema_data.dict(exclude_unset=True)
         
         if not update_data:
             raise HTTPException(status_code=400, detail="No hay campos para actualizar")
         
-        # Convertir IDs de preguntas a Binary si se están actualizando los niveles
         if "niveles" in update_data:
             for nivel in update_data["niveles"]:
                 for pregunta in nivel.get("preguntas", []):
@@ -189,9 +162,8 @@ async def actualizar_tema(tema_id: str, tema_data: TemaUpdate):
                             try:
                                 pregunta["id"] = Binary.from_uuid(UUID(pregunta["id"]))
                             except Exception:
-                                pass  # Ignore if not a valid UUID
+                                pass  
         
-        # Actualizar el tema
         resultado = await temas_collection.find_one_and_update(
             {"_id": tema_binary_id},
             {"$set": update_data},
@@ -201,7 +173,6 @@ async def actualizar_tema(tema_id: str, tema_data: TemaUpdate):
         if not resultado:
             raise HTTPException(status_code=404, detail="Tema no encontrado")
         
-        # Limpiar IDs binarios para la respuesta
         for nivel in resultado.get("niveles", []):
             for pregunta in nivel.get("preguntas", []):
                 if "id" in pregunta and isinstance(pregunta["id"], Binary):
@@ -226,7 +197,6 @@ async def actualizar_tema(tema_id: str, tema_data: TemaUpdate):
 
 
 
-# 5. ELIMINAR UN TEMA
 @router.delete("/temas/{tema_id}")
 async def eliminar_tema(tema_id: str):
     """Elimina un tema por su ID"""
@@ -234,13 +204,11 @@ async def eliminar_tema(tema_id: str):
         tema_uuid = UUID(tema_id)
         tema_binary_id = Binary.from_uuid(tema_uuid)
         
-        # Verificar que el tema existe antes de eliminar
         tema_existente = await temas_collection.find_one({"_id": tema_binary_id})
         
         if not tema_existente:
             raise HTTPException(status_code=404, detail="Tema no encontrado")
         
-        # Eliminar el tema
         resultado = await temas_collection.delete_one({"_id": tema_binary_id})
         
         if resultado.deleted_count == 0:

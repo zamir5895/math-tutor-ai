@@ -12,7 +12,6 @@ class PDFProcessor:
         openai.api_key = os.getenv("OPENAI_API_KEY")
     
     def extract_text_from_pdf(self, pdf_file) -> str:
-        """Extrae texto del PDF"""
         pdf_reader = PyPDF2.PdfReader(pdf_file)
         text = ""
         for page in pdf_reader.pages:
@@ -88,22 +87,20 @@ class PDFProcessor:
         """Procesamiento básico cuando la IA no está disponible"""
         exercises = []
         
-        # Patrones básicos para detectar ejercicios
         exercise_pattern = r'(\d+\.?\s*)(.*?)(?=\d+\.?\s*|$)'
         matches = re.findall(exercise_pattern, text, re.DOTALL)
         
         for i, (num, content) in enumerate(matches):
-            if len(content.strip()) < 10:  # Filtrar contenido muy corto
+            if len(content.strip()) < 10: 
                 continue
                 
-            # Detectar si es multiple choice
             is_mc = bool(re.search(r'[A-D]\)', content) or re.search(r'[a-d]\)', content))
             
             exercise = Exercise(
-                tema=f"Tema {i+1}",  # Tema genérico
+                tema=f"Tema {i+1}", 
                 problema=content.strip(),
                 is_multiple_choice=is_mc,
-                respuestas=None,  # Se necesitaría procesamiento más avanzado
+                respuestas=None, 
                 respuesta_correcta="No procesada automáticamente"
             )
             exercises.append(exercise)

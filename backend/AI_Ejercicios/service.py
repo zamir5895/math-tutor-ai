@@ -7,7 +7,7 @@ from tema import TemaCreate, NivelEnum
 from db import temas_collection, progresos_collection
 import hashlib
 from typing import Dict, List, Optional
-from uuid import UUID, uuid4  # Agregamos uuid4
+from uuid import UUID, uuid4  
 from fastapi import HTTPException
 
 class GPTService:
@@ -173,20 +173,17 @@ class GPTService:
 
         tema_obj = TemaCreate(**tema_dict)
         
-        # 🔧 CORRECCIÓN PRINCIPAL: Manejar UUID correctamente
         tema_existente = await temas_collection.find_one({"nombre": tema})
         
         if tema_existente:
-            # Actualizar tema existente - usar el _id original
             await temas_collection.update_one(
-                {"_id": tema_existente["_id"]},  # Usar el _id original (sea ObjectId o UUID)
+                {"_id": tema_existente["_id"]}, 
                 {"$set": tema_obj.dict(by_alias=True)}
             )
             operation = "actualizado"
         else:
-            # Crear nuevo tema con UUID explícito
             tema_data = tema_obj.dict(by_alias=True)
-            tema_data["_id"] = uuid4()  # Generar UUID explícitamente
+            tema_data["_id"] = uuid4()  
             await temas_collection.insert_one(tema_data)
             operation = "creado"
 
@@ -217,16 +214,13 @@ class GPTService:
             List[Dict]: Lista de ejercicios adicionales
         """
         
-        # Si hay alumno_id, obtener su historial para personalizar
         contexto_alumno = ""
         if alumno_id:
             try:
-                # 🔧 CORRECCIÓN: Validar y convertir UUID correctamente
                 alumno_uuid = UUID(alumno_id)
                 
-                # Buscar progreso del alumno usando UUID
                 progreso = await progresos_collection.find_one({
-                    "alumno_id": alumno_uuid  # Tu configuración UUID maneja esto
+                    "alumno_id": alumno_uuid 
                 })
                 
                 if progreso and progreso.get("respuestas"):
@@ -243,11 +237,10 @@ class GPTService:
                         Genera ejercicios que refuercen estos conceptos.
                         """
             except ValueError:
-                # Si alumno_id no es un UUID válido, continuar sin personalización
                 print(f"Warning: alumno_id '{alumno_id}' no es un UUID válido")
             except Exception as e:
                 print(f"Error al obtener contexto del alumno: {e}")
-                pass  # Si hay error, continuar sin personalización
+                pass  
 
         PROMPT_ADICIONALES = f"""
         Genera {cantidad} ejercicios adicionales de matemáticas para 2° de secundaria (Perú).
@@ -286,14 +279,13 @@ class GPTService:
                     SystemMessage("Eres un generador experto de ejercicios matemáticos personalizados."),
                     UserMessage(PROMPT_ADICIONALES),
                 ],
-                temperature=0.8,  # Un poco de creatividad pero no demasiado
+                temperature=0.8, 
                 top_p=0.9,
                 model=self.model
             )
             
             ejercicios = json.loads(response.choices[0].message.content)
             
-            # Validar que se generaron ejercicios
             if not isinstance(ejercicios, list) or len(ejercicios) == 0:
                 raise ValueError("No se generaron ejercicios válidos")
             

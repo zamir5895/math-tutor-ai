@@ -237,6 +237,7 @@ public class SalonService {
             alumnosDTOList.add(dto);
         }
         return alumnosDTOList;
+
     }
 
     public SalonInfo getInfoOfSalonByprofesorId(UUID profesorId){

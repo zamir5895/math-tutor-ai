@@ -57,7 +57,7 @@ public class SalonController {
     @GetMapping("/profesor/my-salons")
     public ResponseEntity<?> getMySalonsAsProfesor(HttpServletRequest request) {
         try {
-            List<SalonResponse> salones = salonService.getSalonesByProfesorId(request.getHeader("Authorization"));
+            List<SalonResponse> salones = salonService.getSalonesByProfesorId(request.getHeader("Authorization"));           
             return ResponseEntity.ok(salones);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

@@ -6,9 +6,9 @@ import json
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
-import httpx  # Para realizar las solicitudes HTTP al endpoint de verificación del token
+import httpx  
 import logging
-from uuid import UUID, uuid4  # Usamos UUID en lugar de ObjectId y agregamos uuid4
+from uuid import UUID, uuid4  
 from bson import Binary, ObjectId
 from pymongo import ReturnDocument
 
@@ -54,60 +54,36 @@ solucionario_service = SolucionarioService()
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# ========================
-# ENDPOINTS DE USUARIO
-# ========================
 
 
 app.include_router(alumno_router)
 
 
-# ========================
-# ENDPOINTS DE PREGUNTAS
-# ========================
+
 
 app.include_router(preguntas_router)
 
 
-# ========================
-# ENDPOINTS DE RESPUESTAS
-# ========================
+
 
 app.include_router(respuestas_router)
 
-# ========================
-# ENDPOINTS DE TEMAS
-# ========================
 
 app.include_router(temas_router)
 
-# ========================
-# ENDPOINTS DE EJERCICIOS
-# ========================
+
 
 app.include_router(ejercicios_router)
 
-# ========================
-# ENDPOINTS DE SOLUCIONARIO
-# ========================
 
 app.include_router(solucionario_router)
 
-# ========================
-# ENDPOINTS DE PROGRESO
-# ========================
 
 app.include_router(progreso_router)
 
-# ========================
-# ENDPOINTS DE REPORTES
-# ========================
+
 
 app.include_router(reporte_router)
-
-# ========================
-# ENDPOINTS DE ANÁLISIS Y PATRONES
-# ========================
 
 app.include_router(analisis_router)
 

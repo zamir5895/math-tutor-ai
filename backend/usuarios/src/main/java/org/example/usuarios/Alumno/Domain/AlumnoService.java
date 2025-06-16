@@ -94,7 +94,6 @@ public class AlumnoService {
         return null;
     }
 
-
     public Alumno incrementarMinutos(UUID alumnoId) {
         Optional<Alumno> optionalAlumno = alumnoRepository.findById(alumnoId);
         if (optionalAlumno.isPresent()) {

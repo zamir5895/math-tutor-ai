@@ -5,15 +5,13 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-MONGO_URI = os.getenv("MONGO_URI")  # Corregí el typo MOGO_URI -> MONGO_URI
+MONGO_URI = os.getenv("MONGO_URI") 
 
 client = AsyncIOMotorClient(MONGO_URI)
 database = client.learning_platform
 
-# Configuración para manejar UUIDs correctamente
 uuid_codec_options = CodecOptions(uuid_representation=UuidRepresentation.STANDARD)
 
-# Aplicar la configuración UUID a todas las colecciones que la necesiten
 alumnos_collection = database.get_collection("alumnos").with_options(codec_options=uuid_codec_options)
 temas_collection = database.get_collection("temas").with_options(codec_options=uuid_codec_options)
 progresos_collection = database.get_collection("progresos").with_options(codec_options=uuid_codec_options)
