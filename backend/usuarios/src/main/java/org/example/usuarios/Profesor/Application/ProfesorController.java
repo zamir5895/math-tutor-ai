@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.example.usuarios.Auth.ApiResponseDTO;
 import org.example.usuarios.Auth.JwtTokenProvider;
 import org.example.usuarios.Profesor.DTOs.ProfesorRegisterRequestDTO;
+import org.example.usuarios.Profesor.DTOs.ResponseProfesor;
 import org.example.usuarios.Profesor.Domain.Profesor;
 import org.example.usuarios.Profesor.Domain.ProfesorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,37 +33,23 @@ public class ProfesorController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerProfesor(@RequestBody ProfesorRegisterRequestDTO request) {
-        logger.debug("Invocando endpoint registerProfesor con username: {}", request.getUsername());
-
         try {
-            if (profesorService.existsByUsername(request.getUsername())) {
-                logger.warn("El username ya está registrado: {}", request.getUsername());
-                return ResponseEntity.badRequest()
-                        .body(new ApiResponseDTO("El username ya está registrado"));
-            }
-
-            Profesor profesor = new Profesor();
-            profesor.setUsername(request.getUsername());
-            profesor.setPasswordHash(request.getPassword());
-            profesor.setTelefono(request.getTelefono());
-
-            Profesor savedProfesor = profesorService.saveProfesor(profesor);
-            logger.info("Profesor registrado exitosamente: {}", savedProfesor.getUsername());
-
+            ResponseProfesor r = profesorService.guardarProfesor(request);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new ApiResponseDTO("Profesor registrado exitosamente", savedProfesor));
-
+                    .body(new ApiResponseDTO("Profesor registrado exitosamente", r));
+        }
+        catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponseDTO(e.getMessage()));
         } catch (Exception e) {
-            logger.error("Error interno al registrar profesor", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponseDTO("Error interno del servidor"));
         }
+
     }
 
     @GetMapping("/admin_only/all")
     public ResponseEntity<?> getAllProfesores() {
-        logger.debug("Invocando endpoint getAllProfesores");
-
         try {
             List<Profesor> profesores = profesorService.getAllProfesores();
             return ResponseEntity.ok(profesores);
@@ -122,75 +109,6 @@ public class ProfesorController {
             logger.error("Error obteniendo perfil", e);
             return ResponseEntity.status(500)
                     .body(new ApiResponseDTO("Error obteniendo perfil"));
-        }
-    }
-
-    @PutMapping("/admin_only/{id}")
-    public ResponseEntity<?> updateProfesor(@PathVariable UUID id, @RequestBody ProfesorRegisterRequestDTO request) {
-        logger.debug("Invocando endpoint updateProfesor con ID: {} y username: {}", id, request.getUsername());
-
-        try {
-            Profesor profesorDetails = new Profesor();
-            profesorDetails.setUsername(request.getUsername());
-            profesorDetails.setTelefono(request.getTelefono());
-            if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-                profesorDetails.setPasswordHash(request.getPassword());
-            }
-
-            Profesor updatedProfesor = profesorService.updateProfesor(id, profesorDetails);
-
-            if (updatedProfesor == null) {
-                logger.warn("Profesor con ID: {} no encontrado para actualizar", id);
-                return ResponseEntity.notFound().build();
-            }
-
-            logger.info("Profesor con ID: {} actualizado exitosamente", id);
-            return ResponseEntity.ok(new ApiResponseDTO("Profesor actualizado exitosamente", updatedProfesor));
-        } catch (Exception e) {
-            logger.error("Error actualizando profesor con ID: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponseDTO("Error actualizando profesor"));
-        }
-    }
-
-    @PutMapping("/profile")
-    public ResponseEntity<?> updateMyProfile(HttpServletRequest request, @RequestBody ProfesorRegisterRequestDTO requestBody) {
-        logger.debug("Invocando endpoint updateMyProfile para el profesor");
-
-        try {
-            String token = request.getHeader("Authorization");
-            if (token == null || !token.startsWith("Bearer ")) {
-                logger.warn("Token de autorización no presente o inválido.");
-                return ResponseEntity.status(401)
-                        .body(new ApiResponseDTO("Token de autorización requerido"));
-            }
-
-            String jwt = token.substring(7);
-            UUID userId = jwtTokenProvider.extractUserId(jwt);
-            logger.debug("Token válido, userId extraído: {}", userId);
-
-            Profesor profesorDetails = new Profesor();
-            profesorDetails.setUsername(requestBody.getUsername());
-            profesorDetails.setTelefono(requestBody.getTelefono());
-
-            if (requestBody.getPassword() != null && !requestBody.getPassword().isEmpty()) {
-                profesorDetails.setPasswordHash(requestBody.getPassword());
-            }
-
-            Profesor updatedProfesor = profesorService.updateProfesor(userId, profesorDetails);
-
-            if (updatedProfesor == null) {
-                logger.warn("Profesor con ID: {} no encontrado para actualizar", userId);
-                return ResponseEntity.notFound().build();
-            }
-
-            updatedProfesor.setPasswordHash(null);
-            logger.info("Perfil del profesor con ID: {} actualizado exitosamente", userId);
-            return ResponseEntity.ok(new ApiResponseDTO("Perfil actualizado exitosamente", updatedProfesor));
-        } catch (Exception e) {
-            logger.error("Error actualizando perfil del profesor", e);
-            return ResponseEntity.status(500)
-                    .body(new ApiResponseDTO("Error actualizando perfil"));
         }
     }
 

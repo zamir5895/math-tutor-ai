@@ -7,14 +7,18 @@ import org.example.usuarios.Alumno.Domain.Alumno;
 import org.example.usuarios.Alumno.Domain.AlumnoService;
 import org.example.usuarios.Auth.ApiResponseDTO;
 import org.example.usuarios.Auth.JwtTokenProvider;
+import org.example.usuarios.Salon.DTOs.RegistroMasivoResponse;
 import org.example.usuarios.Salon.Domain.Salon;
 import org.example.usuarios.Salon.Domain.SalonService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.http.MediaType;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -34,67 +38,63 @@ public class AlumnoController {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registerAlumno( @RequestBody AlumnoRegisterRequestDTO request) {
+
+
+    @PostMapping("/register/individual/{salonId}")
+    public ResponseEntity<?> registerAlumno( @RequestBody AlumnoRegisterRequestDTO request,
+                                             @PathVariable UUID salonId,
+                                             @RequestHeader("Authorization") String authorizationHeader) {
         try {
-            // Verificar si el DNI ya existe
-            if (alumnoService.existsByDni(request.getDni())) {
-                return ResponseEntity.badRequest()
-                        .body(new ApiResponseDTO("El DNI ya está registrado"));
-            }
 
-            // Crear nuevo alumno
-            Alumno alumno = new Alumno();
-            alumno.setUsername(request.getUsername());
-            alumno.setPasswordHash(request.getPassword());
-            alumno.setDni(request.getDni());
+            return ResponseEntity.ok(alumnoService.guardarAlumno(request,salonId));
 
-            Alumno savedAlumno = alumnoService.saveAlumno(alumno);
-
-            // Crear response
-            AlumnoResponseDTO response = new AlumnoResponseDTO();
-            response.setId(savedAlumno.getId().toString());
-            response.setUsername(savedAlumno.getUsername());
-            response.setDni(savedAlumno.getDni());
-            response.setRole("student");
-            response.setCreatedAt(savedAlumno.getCreatedAt().toString());
-
-            if (savedAlumno.getSalon() != null) {
-                response.setSalon(savedAlumno.getSalon().getId());
-            }
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-
+        }catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponseDTO(e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponseDTO(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponseDTO("Error interno del servidor"));
         }
     }
 
-    @PostMapping("/register-bulk")
-    public ResponseEntity<?> registerAlumnosBulk(@RequestParam("file") MultipartFile file) {
+    @PostMapping("/register/{salonId}")
+    public ResponseEntity<?> registerAlumnosBulk(
+            @RequestPart("file") MultipartFile file,
+            @PathVariable UUID salonId,
+            @RequestHeader("Authorization") String authorizationHeader) {
+
         try {
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body(new ApiResponseDTO("El archivo está vacío"));
             }
 
-            //TODO: Implementar procesamiento de CSV/Excel
-            // Por ahora simulamos el registro de 25 alumnos
-            int totalRegistrados = 25;
+            RegistroMasivoResponse response = alumnoService.registrarAlumnosDesdeArchivo(file, salonId);
 
-            return ResponseEntity.ok(new ApiResponseDTO("Alumnos registrados correctamente", totalRegistrados));
+            String csvContent = response.getCsvRespuesta();
+            byte[] csvBytes = csvContent.getBytes(StandardCharsets.UTF_8);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.valueOf("text/csv"));
+            headers.setContentDisposition(
+                    ContentDisposition.builder("attachment")
+                            .filename("alumnos_registrados.csv")
+                            .build()
+            );
+
+            return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponseDTO("Error procesando el archivo"));
+                    .body(new ApiResponseDTO("Error procesando el archivo: " + e.getMessage()));
         }
     }
-
     @GetMapping("/admin_only/all")
     public ResponseEntity<?> getAllAlumnos() {
         try {
-            // Obtener todos los alumnos
             List<Alumno> alumnos = alumnoService.getAllAlumnos();
 
             List<AlumnoResponseDTO> response = alumnos.stream()
@@ -113,7 +113,7 @@ public class AlumnoController {
                     })
                     .collect(Collectors.toList());
 
-            return ResponseEntity.ok(response); // Devuelve la lista de alumnos en formato JSON
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -124,23 +124,19 @@ public class AlumnoController {
     @GetMapping("/student/profile")
     public ResponseEntity<?> getProfile(@RequestHeader("Authorization") String authorizationHeader) {
         try {
-            // Obtener el token de la cabecera "Authorization"
             String token = authorizationHeader.substring(7); // "Bearer " es el prefijo, por lo que eliminamos los primeros 7 caracteres
 
-            // Extraer el userId del token
             UUID userId = jwtTokenProvider.extractUserId(token);
 
-            // Buscar el alumno por su ID
             Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
             if (optionalAlumno.isPresent()) {
                 Alumno alumno = optionalAlumno.get();
 
-                // Crear un objeto de respuesta con el perfil del alumno
                 AlumnoProfileResponseDTO response = new AlumnoProfileResponseDTO();
-                response.setId(alumno.getId().toString()); // Convertimos el UUID a String
+                response.setId(alumno.getId().toString());
                 response.setUsername(alumno.getUsername());
 
-                return ResponseEntity.ok(response); // Devuelves la respuesta con el perfil del alumno
+                return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new ApiResponseDTO("Alumno no encontrado"));
@@ -155,17 +151,15 @@ public class AlumnoController {
     @GetMapping("/studentbyId/{id}")
     public ResponseEntity<?> getStudentById(@PathVariable UUID id) {
         try {
-            // Buscar el alumno por su ID
             Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
             if (optionalAlumno.isPresent()) {
                 Alumno alumno = optionalAlumno.get();
 
-                // Crear un objeto de respuesta con los detalles del alumno
                 AlumnoProfileResponseDTO response = new AlumnoProfileResponseDTO();
-                response.setId(alumno.getId().toString()); // Convertimos el UUID a String
+                response.setId(alumno.getId().toString());
                 response.setUsername(alumno.getUsername());
 
-                return ResponseEntity.ok(response);  // Devuelves la respuesta con el perfil del alumno
+                return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new ApiResponseDTO("Alumno no encontrado"));
@@ -205,43 +199,41 @@ public class AlumnoController {
         }
     }
 
-    @GetMapping("/salon/{id}")
-    public ResponseEntity<?> getAlumnosBySalonId(@PathVariable UUID id) {
-        try {
-            // Obtener el salón por su ID
-            Salon salon = salonService.getSalonById(id).orElse(null);
+    /* @GetMapping("/salon/{id}")
+     public ResponseEntity<?> getAlumnosBySalonId(@PathVariable UUID id) {
+         try {
+             // Obtener el salón por su ID
+             Salon salon = salonService.getSalonById(id).orElse(null);
 
-            if (salon == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ApiResponseDTO("Salón no encontrado"));
-            }
+             if (salon == null) {
+                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                         .body(new ApiResponseDTO("Salón no encontrado"));
+             }
 
-            // Obtener la lista de alumnoIds del salón
-            List<UUID> alumnoIds = salon.getAlumnoIds();
+             // Obtener la lista de alumnoIds del salón
+             List<UUID> alumnoIds = salon.getAlumnoIds();
 
-            // Si el salón no tiene alumnos asignados, devolver una lista vacía
-            if (alumnoIds == null || alumnoIds.isEmpty()) {
-                return ResponseEntity.ok(new ApiResponseDTO("No hay alumnos asignados a este salón"));
-            }
+             // Si el salón no tiene alumnos asignados, devolver una lista vacía
+             if (alumnoIds == null || alumnoIds.isEmpty()) {
+                 return ResponseEntity.ok(new ApiResponseDTO("No hay alumnos asignados a este salón"));
+             }
 
-            // Crear la respuesta con los alumnoIds
-            return ResponseEntity.ok(alumnoIds);
+             // Crear la respuesta con los alumnoIds
+             return ResponseEntity.ok(alumnoIds);
 
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponseDTO("Error obteniendo alumnos"));
-        }
-    }
-
+         } catch (Exception e) {
+             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                     .body(new ApiResponseDTO("Error obteniendo alumnos"));
+         }
+     }
+ */
     @PutMapping("/admin_only/{id}")
     public ResponseEntity<?> updateAlumno(@PathVariable UUID id, @RequestBody Alumno alumnoDetails) {
         try {
-            // Buscar el alumno por su ID
             Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(id);
             if (optionalAlumno.isPresent()) {
                 Alumno alumno = optionalAlumno.get();
 
-                // Actualizar solo los campos que se proporcionan en la solicitud (todo menos el id)
                 if (alumnoDetails.getUsername() != null && !alumnoDetails.getUsername().isEmpty()) {
                     alumno.setUsername(alumnoDetails.getUsername());
                 }
@@ -254,7 +246,6 @@ public class AlumnoController {
                     alumno.setPasswordHash(alumnoDetails.getPasswordHash());
                 }
 
-                // Verificar que el salón proporcionado existe antes de asignarlo
                 if (alumnoDetails.getSalon() != null) {
                     Optional<Salon> salonOptional = salonService.getSalonById(alumnoDetails.getSalon().getId());
                     if (salonOptional.isPresent()) {
@@ -265,10 +256,8 @@ public class AlumnoController {
                     }
                 }
 
-                // Guardar el alumno actualizado
                 Alumno updatedAlumno = alumnoService.saveAlumno(alumno);
 
-                // Crear la respuesta con los detalles actualizados
                 AlumnoResponseDTO response = new AlumnoResponseDTO();
                 response.setId(updatedAlumno.getId().toString());
                 response.setUsername(updatedAlumno.getUsername());
@@ -307,8 +296,6 @@ public class AlumnoController {
                     .body(new ApiResponseDTO("Error eliminando el alumno"));
         }
     }
-
-    // NUEVOS ENDPOINTS
 
     @PutMapping("/minutos/incrementar/{id}")
     public ResponseEntity<?> incrementarMinutos(@PathVariable UUID id) {

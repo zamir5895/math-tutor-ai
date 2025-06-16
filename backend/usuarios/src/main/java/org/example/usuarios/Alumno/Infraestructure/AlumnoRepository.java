@@ -20,4 +20,6 @@ public interface AlumnoRepository extends JpaRepository<Alumno, UUID> {
 
     @Query("SELECT a FROM Alumno a WHERE a.salon.seccion = :seccion")
     List<Alumno> findBySeccion(@Param("seccion") String seccion);
+
+    boolean existsByUsername(String username);
 }

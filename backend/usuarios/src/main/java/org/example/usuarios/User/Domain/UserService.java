@@ -26,14 +26,12 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
-        // Debug: verificar que el usuario se encuentra correctamente
         System.out.println("Usuario encontrado: " + user.getUsername());
         System.out.println("Rol del usuario: " + user.getRole());
 
-        return user; // User implementa UserDetails
+        return user;
     }
 
-    // Métodos de gestión de usuarios
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
@@ -71,7 +69,6 @@ public class UserService implements UserDetailsService {
     }
 
     private boolean isPasswordEncrypted(String password) {
-        // BCrypt hashes typically start with $2a$, $2b$, or $2y$ and are 60 characters long
         return password != null && password.startsWith("$2") && password.length() == 60;
     }
 

@@ -15,10 +15,12 @@ public interface SalonRepository extends JpaRepository<Salon, UUID> {
     @Query("SELECT s FROM Salon s WHERE s.profesorId = :profesorId")
     List<Salon> findByProfesorId(@Param("profesorId") UUID profesorId);
 
-    List<Salon> findByGrado(String grado);
+    List<Salon> findByGrado(Integer grado);
+
     List<Salon> findByTurno(String turno);
 
-    @Query("SELECT s FROM Salon s WHERE s.grado = :grado AND s.seccion = :seccion")
-    List<Salon> findByGradoAndSeccion(@Param("grado") String grado, @Param("seccion") String seccion);
-}
 
+    @Query("SELECT s FROM Salon s WHERE LOWER(s.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
+    List<Salon> findByNombreIgnoreCase(@Param("nombre") String nombre);
+
+}

@@ -1,7 +1,6 @@
 package org.example.usuarios.Profesor.DTOs;
 
 public class ProfesorRegisterRequestDTO {
-    private String username;
 
     private String password;
 
@@ -9,8 +8,9 @@ public class ProfesorRegisterRequestDTO {
     private String telefono;
     private String role = "teacher";
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    private String nombre;
+    private String apellido;
+
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
     public String getEspecialidad() { return especialidad; }
@@ -19,4 +19,8 @@ public class ProfesorRegisterRequestDTO {
     public void setTelefono(String telefono) { this.telefono = telefono; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getApellido() { return apellido; }
+    public void setApellido(String apellido) { this.apellido = apellido; }
 }

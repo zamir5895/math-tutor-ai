@@ -19,7 +19,6 @@ public class ApiResponseDTO {
         this.totalRegistrados = totalRegistrados;
     }
 
-    // Getters and Setters
     public String getMensaje() { return mensaje; }
     public void setMensaje(String mensaje) { this.mensaje = mensaje; }
     public Object getData() { return data; }

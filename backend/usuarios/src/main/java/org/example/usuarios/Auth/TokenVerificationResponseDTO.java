@@ -5,7 +5,6 @@ public class TokenVerificationResponseDTO {
     private String role;
     private String userId;
 
-    // Getters and Setters
     public String getUsername() {
         return username;
     }
