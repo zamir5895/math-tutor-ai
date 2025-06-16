@@ -124,7 +124,7 @@ public class AlumnoController {
     @GetMapping("/student/profile")
     public ResponseEntity<?> getProfile(@RequestHeader("Authorization") String authorizationHeader) {
         try {
-            String token = authorizationHeader.substring(7); // "Bearer " es el prefijo, por lo que eliminamos los primeros 7 caracteres
+            String token = authorizationHeader.substring(7);
 
             UUID userId = jwtTokenProvider.extractUserId(token);
 
