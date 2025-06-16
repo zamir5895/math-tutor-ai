@@ -1,12 +1,12 @@
 from Repositorio.EjerciciosResueltosRepositorio import EjercicioResueltosRepository
 from models.Ejerccicio import EjercicioResueltoCreate, UpdateRespuesta
 from schemas.ejercicios_resueltos import *
-
+import httpx
 from Repositorio.EjercicioRepositorio import EjercicioRepository
 from Repositorio.SubTemaRepositorio import SubTemaRepository
 from Repositorio.TemaRepositorio import TemaRepository
 from datetime import date
-
+import requests
 class EjerciciosResueltosService:
     def __init__(self):
         self.ejercicio_resuelto_repository = EjercicioResueltosRepository()
@@ -14,7 +14,7 @@ class EjerciciosResueltosService:
         self.subtema_repository = SubTemaRepository()
         self.tema_repository = TemaRepository()
 
-    async def createEjercicioResuelto(self,tema_id:str, info:EjercicioResueltoCreate):
+    async def createEjercicioResuelto(self,tema_id:str, info:EjercicioResueltoCreate, token: str):
         try:
             ejercicio = await self.ejercicio_repository.getEjercicioById(info.ejercicio_id)
             if not ejercicio:
@@ -33,6 +33,11 @@ class EjerciciosResueltosService:
             if info.respuesta_usuario == ejercicio.get("respuesta_correcta"):
                 ejercicio_resuelto["es_correcto"] = True
                 rpt = True
+                requests.post(f"http://localhost:8090/alumno/addfecha/{info.usuario_id}", 
+                            headers={
+                                'Authorization': f'Bearer {token}',
+                                'Content-Type': 'application/json'
+                            })
             created_ejercicio_resuelto = await self.ejercicio_resuelto_repository.add_ejercicio_resuelto(info.usuario_id, info.salon_id, ejercicio_resuelto)
             if not created_ejercicio_resuelto:
                 return {"error": "No se pudo crear el ejercicio resuelto"}
