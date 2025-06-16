@@ -59,17 +59,15 @@ public class SecurityConfig {
                                 .requestMatchers("/alumno/admin_only/**").hasAnyAuthority("ROLE_ADMIN")
                                 .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
 
-                                // Rutas solo para TEACHER
                                 .requestMatchers("/salon/profesor/**").hasAuthority("ROLE_TEACHER")
                                 .requestMatchers("/profesor/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
 
-                                // Rutas accesibles para ADMIN y TEACHER
                                 .requestMatchers("/salon/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
                                 .requestMatchers("/seccion/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
                                 .requestMatchers("/alumno/studentbyId/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_TEACHER")
                                 .requestMatchers("/alumno/student/**").hasAnyAuthority("ROLE_STUDENT")
                                 .requestMatchers("/alumno/salon/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_STUDENT", "ROLE_TEACHER")
-                                .requestMatchers("/alumno/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_STUDENT")
+                                .requestMatchers("/alumno/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_STUDENT", "ROLE_TEACHER")
 
 
                                 // Cualquier otra solicitud debe estar autenticada

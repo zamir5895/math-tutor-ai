@@ -29,31 +29,36 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             throws IOException, ServletException {
 
         final String token = request.getHeader("Authorization");
+        System.out.println(token);
 
-        if (token != null && token.startsWith("Bearer ")) {
-            String jwt = token.substring(7);  // Extraer JWT del header
-            String username = jwtTokenProvider.extractUsername(jwt);
+        if (token != null) {
+            String jwt = token.startsWith("Bearer ") ? token.substring(7) : token;
+            System.out.println("jwt " + jwt);
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                if (jwtTokenProvider.validateToken(jwt, username)) {
-                    // Extraer el único rol del JWT
-                    String role = jwtTokenProvider.extractRole(jwt);  // Método para extraer el único rol del token
+            try {
+                if (jwt.chars().filter(ch -> ch == '.').count() == 2) {
+                    String username = jwtTokenProvider.extractUsername(jwt);
 
-                    // Convertir el rol a SimpleGrantedAuthority
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+                    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                        if (jwtTokenProvider.validateToken(jwt, username)) {
+                            String role = jwtTokenProvider.extractRole(jwt);
 
-                    // Crear el token de autenticación con el único rol
-                    UsernamePasswordAuthenticationToken authenticationToken =
-                            new UsernamePasswordAuthenticationToken(username, null, Collections.singletonList(authority));
+                            SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
 
-                    // Establecer el contexto de seguridad
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                            UsernamePasswordAuthenticationToken authenticationToken =
+                                    new UsernamePasswordAuthenticationToken(username, null, Collections.singletonList(authority));
+
+                            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                        }
+                    }
+                } else {
+                    System.err.println("Invalid JWT format: " + jwt);
                 }
+            } catch (Exception e) {
+                System.err.println("Error processing JWT: " + e.getMessage());
             }
         }
 
-        // Continuar con la cadena de filtros
         chain.doFilter(request, response);
     }
-
 }

@@ -98,7 +98,8 @@ public class AuthController {
     @GetMapping("/verify-token")
     public ResponseEntity<?> verifyToken(@RequestHeader("Authorization") String authorizationHeader) {
         try {
-            String token = authorizationHeader.substring(7); 
+            String token = authorizationHeader.substring(7);
+
             if (jwtTokenProvider.isTokenExpired(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new ApiResponseDTO("El token ha expirado"));

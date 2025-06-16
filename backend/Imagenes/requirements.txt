@@ -1,6 +1,0 @@
-fastapi==0.95.2
-uvicorn==0.22.0
-pdfplumber==0.9.0
-pymupdf==1.22.5
-boto3==1.26.158
-python-multipart==0.0.6
