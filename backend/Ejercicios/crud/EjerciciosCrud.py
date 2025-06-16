@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from services.EjerciciosService import EjercicioService
 from schemas.Temas import Ejercicio, EjercicioCreate
 from services.EjerciciosResueltos import EjerciciosResueltosService
@@ -122,9 +122,12 @@ class CrudEjercicios:
             raise e
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-    async def create_ejercicio_resuelto(self, tema_id: str, info: EjercicioResueltoCreate):
+    async def create_ejercicio_resuelto(self, tema_id: str, info: EjercicioResueltoCreate, request:Request):
         try:
-            result = await self.resueltos_service.createEjercicioResuelto(tema_id, info)
+            token = request.headers.get("Authorization")
+            result = await self.resueltos_service.createEjercicioResuelto(tema_id, info, token)
+            if not token:
+                raise HTTPException(status_code=401, detail="Token not provided")
             if "error" in result:
                 raise HTTPException(status_code=400, detail=result["error"])
             return result
