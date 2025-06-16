@@ -129,7 +129,7 @@ public class SalonService {
         Salon salon = new Salon();
         salon.setSeccion(request.getSeccion());
         salon.setGrado(request.getGrado());
-        salon.setTurno(request.getTurno());
+        salon.setTurno(request.getTurno() != null ? request.getTurno() : "Mañana");
         salon.setProfesorId(profesorId);
         salon.setDescripcion(request.getDescripcion() != null ? request.getDescripcion() : "Sin descripción");
         salon.setNombre(request.getNombre() != null ? request.getNombre() : "Sin nombre");
