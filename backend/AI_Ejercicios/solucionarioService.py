@@ -5,7 +5,7 @@ from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
 from typing import Dict, List, Any
 from fastapi import HTTPException
-from uuid import UUID  # Usamos UUID en lugar de ObjectId
+from uuid import UUID 
 
 class SolucionarioService:
     def __init__(self):

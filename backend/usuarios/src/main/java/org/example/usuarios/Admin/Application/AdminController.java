@@ -23,7 +23,6 @@ public class AdminController {
     @PostMapping("/register")
     public ResponseEntity<?> registerAdmin( @RequestBody RegisterRequestDTO request) {
         try {
-            // Crear nuevo administrador
             Admin admin = new Admin();
             admin.setUsername(request.getUsername());
             admin.setPasswordHash(request.getPassword());

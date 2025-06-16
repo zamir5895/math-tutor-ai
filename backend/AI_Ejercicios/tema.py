@@ -22,14 +22,13 @@ class Nivel(BaseModel):
     nivel: NivelEnum
     preguntas: List[Pregunta]
 
-# Modelo base de Tema con los campos nuevos
 class TemaBase(BaseModel):
     nombre: str
     descripcion: Optional[str] = None
     niveles: List[Nivel] = []
     fecha_creacion: datetime = Field(default_factory=datetime.utcnow)
-    puntos: Optional[int] = 0  # Campo para puntos
-    cantidad_problemas: Optional[int] = 0  # Campo para cantidad de problemas
+    puntos: Optional[int] = 0 
+    cantidad_problemas: Optional[int] = 0 
 
 class Tema(TemaBase):
     id: UUID = Field(default_factory=uuid4, alias="_id")
@@ -48,8 +47,8 @@ class TemaUpdate(BaseModel):
     nombre: Optional[str] = None
     descripcion: Optional[str] = None
     niveles: Optional[List[Nivel]] = None
-    puntos: Optional[int] = None  # Permitir actualizar puntos
-    cantidad_problemas: Optional[int] = None  # Permitir actualizar cantidad de problemas
+    puntos: Optional[int] = None  
+    cantidad_problemas: Optional[int] = None 
 
 class TemaResponse(TemaBase):
     id: str
@@ -59,7 +58,6 @@ class TemaResponse(TemaBase):
             datetime: lambda v: v.isoformat()
         }
 
-# Nuevos modelos para manejo de preguntas
 class PreguntaCreate(BaseModel):
     pregunta: str
     respuesta_correcta: str

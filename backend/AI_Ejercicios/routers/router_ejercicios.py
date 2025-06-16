@@ -6,9 +6,9 @@ import json
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
-import httpx  # Para realizar las solicitudes HTTP al endpoint de verificación del token
+import httpx  
 import logging
-from uuid import UUID, uuid4  # Usamos UUID en lugar de ObjectId y agregamos uuid4
+from uuid import UUID, uuid4 
 from bson import Binary, ObjectId
 from pymongo import ReturnDocument
 
@@ -54,13 +54,11 @@ async def generar_ejercicios(
 async def obtener_ejercicios(tema: str):
     """Obtiene ejercicios de un tema específico"""
     try:
-        # Buscar el tema en la base de datos, asumiendo que el nombre del tema es único
         tema_data = await temas_collection.find_one(
             {"nombre": {"$regex": f"^{tema}$", "$options": "i"}}
         )
         
         if not tema_data:
-            # Si no existe, generar automáticamente
             try:
                 resultado = await gpt_service.generar_ejercicios(tema)
                 tema_data = await temas_collection.find_one(
@@ -72,7 +70,6 @@ async def obtener_ejercicios(tema: str):
                     detail=f"Tema '{tema}' no encontrado y no se pudo generar: {str(e)}"
                 )
 
-        # Convertir _id a id para el response
         tema_data["id"] = str(tema_data.pop("_id"))
         
         return {"tema": tema_data}
@@ -91,7 +88,6 @@ async def obtener_ejercicios_por_nivel(tema: str, nivel: NivelEnum):
     if not tema_data:
         raise HTTPException(status_code=404, detail=f"Tema '{tema}' no encontrado")
     
-    # Filtrar por nivel
     ejercicios_nivel = []
     for nivel_data in tema_data.get("niveles", []):
         if nivel_data["nivel"] == nivel:
