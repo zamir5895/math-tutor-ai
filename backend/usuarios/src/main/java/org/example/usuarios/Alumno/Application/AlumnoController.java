@@ -8,6 +8,8 @@ import org.example.usuarios.Alumno.Domain.AlumnoService;
 import org.example.usuarios.Auth.ApiResponseDTO;
 import org.example.usuarios.Auth.JwtTokenProvider;
 import org.example.usuarios.Salon.DTOs.RegistroMasivoResponse;
+import org.example.usuarios.Salon.DTOs.SalonInfo;
+import org.example.usuarios.Salon.DTOs.SalonResponse;
 import org.example.usuarios.Salon.Domain.Salon;
 import org.example.usuarios.Salon.Domain.SalonService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -173,26 +175,13 @@ public class AlumnoController {
     @GetMapping("/student/salon")
     public ResponseEntity<?> getSalonByToken(@RequestHeader("Authorization") String authorizationHeader) {
         try {
-            String token = authorizationHeader.substring(7);
+            String token = authorizationHeader.startsWith("Bearer ")
+                    ? authorizationHeader.substring(7)
+                    : authorizationHeader;
 
             UUID userId = jwtTokenProvider.extractUserId(token);
-
-            Optional<Alumno> optionalAlumno = alumnoService.getAlumnoById(userId);
-            if (optionalAlumno.isPresent()) {
-                Alumno alumno = optionalAlumno.get();
-                Salon salon = alumno.getSalon();
-
-                if (salon != null) {
-                    return ResponseEntity.ok(salon);
-                } else {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(new ApiResponseDTO("El alumno no tiene un salón asignado"));
-                }
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ApiResponseDTO("Alumno no encontrado"));
-            }
-
+            SalonResponse salon = alumnoService.getSalonByAlumnoId(userId);
+            return ResponseEntity.ok(salon);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponseDTO("Error obteniendo el salón"));

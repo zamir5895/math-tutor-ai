@@ -231,43 +231,40 @@ class TemaService:
         except Exception as e:
             return {"error": str(e)}
         
-    async def getAllInfoOfTemas(self, token: str):
+    async def getAllTemasAndSubtemasForAlumno(self, token: str):
         try:
-            url = f"http://localhost:8090/salon/profesor/my-salons"
+            url = f"http://localhost:8090/alumno/student/salon"
             headers = {"Authorization": token}
             async with httpx.AsyncClient() as client:
                 response = await client.get(url, headers=headers)
+                print("Response status code:", response.json())
                 response.raise_for_status()
                 data = response.json()
-                tem = []
-                totalTemas = 0
-                totalSubtemas = 0
-                for salon in data:
-                    temas_info= {}
-                    salon_id = salon.get("id")
-                    temas = await self.tema_repository.getTemasBySalonId(salon_id)
-                    if not temas:
-                        temas = []
-                    totalTemas += len(temas)
-                    for tema in temas:
-                        tema["_id"] = str(tema["_id"])
-                        tema["subtema_id"] = [str(subtema) for subtema in tema.get("subtema_id", [])]
-                        totalSubtemas += len(tema.get("subtema_id", []))
-                        temas_info = {
-                            "_id": tema.get("_id"),
-                            "nombre": tema.get("nombre"),
-                            "descripcion": tema.get("descripcion"),
-                            "orden": tema.get("orden", 0),
-                            "totalSubtemas": len(tema.get("subtema_id", [])),
-                            "totalAlumnos": salon.get("cantidadAlumnos", 0),
-                        }
-                        tem.append(temas_info)
-                    
+                temas = []
+                salon_id = data.get("id")
+                if not salon_id:
+                    return {"error": "No se encontró el salon del alumno"}
+                temas_data = await self.tema_repository.getTemasBySalonId(salon_id)
+                if not temas_data:
+                    return {"error": "No se encontraron temas para el salon del alumno"}
+                cantidadTemas = len(temas_data)
+                for tema in temas_data:
+                    tema["_id"] = str(tema["_id"])
+                    # Obtener subtemas completos para cada tema
+                    subtemas = await self.subtema_repository.getSubTemasByTemaId(tema["_id"])
+                    if subtemas:
+                        for subtema in subtemas:
+                            subtema["_id"] = str(subtema["_id"])
+                            subtema["tema_id"] = str(subtema.get("tema_id", ""))
+                        tema["cantidadSubtemas"] = len(subtemas)
+                    else:
+                        tema["cantidadSubtemas"] = 0
+                    tema["subtema_id"] = [str(subtema) for subtema in tema.get("subtema_id", [])]
+                    temas.append(tema)
                 return {
-                    "totalSalones": len(data),
-                    "totalTemas": totalTemas,
-                    "totalSubtemas": totalSubtemas,
-                    "temas": tem
+                    "salon_id": salon_id,
+                    "temas": temas,
+                    "totalTemas": cantidadTemas 
                 }
         except httpx.RequestError as e:
             return {"error": f"Error de conexión a la API externa: {str(e)}"}
@@ -275,4 +272,92 @@ class TemaService:
             return {"error": f"Error en la API externa: {e.response.text}"}
         except Exception as e:
             return {"error": str(e)}
-    
+
+    async def getAllInfoOfTemas(self, token: str):
+
+        try:
+
+            url = f"http://localhost:8090/salon/profesor/my-salons"
+
+            headers = {"Authorization": token}
+
+            async with httpx.AsyncClient() as client:
+
+                response = await client.get(url, headers=headers)
+
+                response.raise_for_status()
+
+                data = response.json()
+
+                tem = []
+
+                totalTemas = 0
+
+                totalSubtemas = 0
+
+                for salon in data:
+
+                    temas_info= {}
+
+                    salon_id = salon.get("id")
+
+                    temas = await self.tema_repository.getTemasBySalonId(salon_id)
+
+                    if not temas:
+
+                        temas = []
+
+                    totalTemas += len(temas)
+
+                    for tema in temas:
+
+                        tema["_id"] = str(tema["_id"])
+
+                        tema["subtema_id"] = [str(subtema) for subtema in tema.get("subtema_id", [])]
+
+                        totalSubtemas += len(tema.get("subtema_id", []))
+
+                        temas_info = {
+
+                            "_id": tema.get("_id"),
+
+                            "nombre": tema.get("nombre"),
+
+                            "descripcion": tema.get("descripcion"),
+
+                            "orden": tema.get("orden", 0),
+
+                            "totalSubtemas": len(tema.get("subtema_id", [])),
+
+                            "totalAlumnos": salon.get("cantidadAlumnos", 0),
+
+                        }
+
+                        tem.append(temas_info)
+
+
+
+                return {
+
+                    "totalSalones": len(data),
+
+                    "totalTemas": totalTemas,
+
+                    "totalSubtemas": totalSubtemas,
+
+                    "temas": tem
+
+                }
+
+        except httpx.RequestError as e:
+
+            return {"error": f"Error de conexión a la API externa: {str(e)}"}
+
+        except httpx.HTTPStatusError as e:
+
+            return {"error": f"Error en la API externa: {e.response.text}"}
+
+        except Exception as e:
+
+
+            return {"error": str(e)}

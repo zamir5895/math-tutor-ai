@@ -13,6 +13,8 @@ import org.example.usuarios.Alumno.Infraestructure.AlumnoRepository;
 import org.example.usuarios.Auth.ApiResponseDTO;
 import org.example.usuarios.Salon.DTOs.AlumnoRegistroDTO;
 import org.example.usuarios.Salon.DTOs.RegistroMasivoResponse;
+import org.example.usuarios.Salon.DTOs.SalonInfo;
+import org.example.usuarios.Salon.DTOs.SalonResponse;
 import org.example.usuarios.Salon.Domain.Salon;
 import org.example.usuarios.Salon.Infraestructure.SalonRepository;
 import org.example.usuarios.User.Domain.Rol;
@@ -395,5 +397,23 @@ public class AlumnoService {
         }
 
         return csv.toString();
+    }
+
+    public SalonResponse getSalonByAlumnoId(UUID alumnoId) {
+        Alumno alumno = alumnoRepository.findById(alumnoId)
+                .orElseThrow(() -> new IllegalArgumentException("El alumno con ID " + alumnoId + " no existe"));
+
+        Salon salon = salonRepository.findStudentSalon(alumnoId)
+                .orElseThrow(() -> new IllegalArgumentException("El alumno no está asignado a ningún salón"));
+
+        SalonResponse salonResponse = new SalonResponse();
+        salonResponse.setId(salon.getId());
+        salonResponse.setCantidadAlumnos(salon.getAlumnos().size());
+        salonResponse.setNombre(salon.getNombre());
+        salonResponse.setSeccion(salon.getSeccion());
+        salonResponse.setGrado(salon.getGrado());
+        salonResponse.setTurno(salon.getTurno());
+        salonResponse.setDescripcion(salon.getDescripcion());
+        return salonResponse;
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -23,4 +24,7 @@ public interface SalonRepository extends JpaRepository<Salon, UUID> {
     @Query("SELECT s FROM Salon s WHERE LOWER(s.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
     List<Salon> findByNombreIgnoreCase(@Param("nombre") String nombre);
 
+    @Query("SELECT s FROM Salon s JOIN s.alumnos a WHERE a.id = :alumnoId")
+    Optional<Salon> findStudentSalon(
+            @Param("alumnoId") UUID alumnoId);
 }

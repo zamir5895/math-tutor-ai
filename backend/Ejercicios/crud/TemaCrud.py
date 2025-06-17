@@ -60,6 +60,12 @@ class CrudTemas:
             methods=["GET"],
             response_model=dict
         )
+        self.router.add_api_route(
+            "/info/student",
+            self.getAllTemasForStudent,
+            methods=["GET"],
+            response_model=dict
+        )
         self.service = TemaService()
     
     async def create_tema(self, tema: CreateTema):
@@ -173,10 +179,24 @@ class CrudTemas:
             print(token)
             if not token:
                 raise HTTPException(status_code=401, detail="Token not provided")
-            
+
             response = await self.service.getAllInfoOfTemas(token)
             if "error" in response:
                 print(response)
+                raise HTTPException(status_code=400, detail=response["error"])
+            return response
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    async def getAllTemasForStudent(self, request: Request):
+        try:
+            token = request.headers.get("Authorization")
+            if not token:
+                raise HTTPException(status_code=401, detail="Token not provided")
+            
+            response = await self.service.getAllTemasAndSubtemasForAlumno(token)
+            if "error" in response:
                 raise HTTPException(status_code=400, detail=response["error"])
             return response
         except HTTPException as e:
