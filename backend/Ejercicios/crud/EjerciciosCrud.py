@@ -73,6 +73,25 @@ class CrudEjercicios:
             methods=["POST"],
             response_model=dict
         )
+        self.router.add_api_route(
+            "/manual/{subtema_id}",
+            self.createEjercicioManual,
+            methods=["POST"],
+            response_model=dict
+        )
+        self.router.add_api_route(
+            "/delete/{ejercicio_id}/{subtema_id}",
+            self.deleteEjercicio,
+            methods=["DELETE"],
+            response_model=dict
+        )
+        self.router.add_api_route(
+            "/update/{ejercicio_id}",
+            self.updateEjercicio,
+            methods=["PUT"],
+            response_model=dict
+        )
+
         self.resueltos_service = EjerciciosResueltosService()
         self.service = EjercicioService()
 
@@ -168,6 +187,7 @@ class CrudEjercicios:
         try:
             result = await self.resueltos_service.updateEjercicioResuelto(alumno_id, ejercicio_id, respuesta_usuario)
             if "error" in result:
+                print("Error al actualizar ejercicio resuelto:", result["error"])
                 raise HTTPException(status_code=400, detail=result["error"])
             return result
         except HTTPException as e:
@@ -197,6 +217,41 @@ class CrudEjercicios:
             raise e
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))     
-    
+    async def createEjercicioManual(self, ejercicio: EjercicioCreate, subtema_id: str):
+        try:
+            print("Creando ejercicio manualmente:", ejercicio, subtema_id)
+            result = await self.service.createEjercicioManualmente(ejercicio, subtema_id)
+            if "error" in result:
+                print("Error al crear ejercicio manual:", result["error"])
+                raise HTTPException(status_code=400, detail=result["error"])
+            return result
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    async def deleteEjercicio(self, ejercicio_id: str, subtema_id: str):
+        try:
+            result = await self.service.deleteEjercicio(ejercicio_id, subtema_id)
+            if "error" in result:
+                print("Error al eliminar ejercicio:", result["error"])
+                raise HTTPException(status_code=400, detail=result["error"])
+            return {"message": "Ejercicio eliminado exitosamente"}
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    async def updateEjercicio(self, ejercicio_id: str, ejercicio_data: EjercicioCreate):
+        try:
+            print("Actualizando ejercicio:", ejercicio_id, ejercicio_data)
+            result = await self.service.updateEjercicio(ejercicio_id, ejercicio_data)
+            if "error" in result:
+                print("Error al actualizar ejercicio:", result["error"])
+                raise HTTPException(status_code=400, detail=result["error"])
+            return {"message": "Ejercicio actualizado exitosamente"}
+        except HTTPException as e:
+            print("Error al actualizar ejercicio:", e.detail)
+            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 crud_ejercicios = CrudEjercicios()
 router = crud_ejercicios.router

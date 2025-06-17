@@ -215,3 +215,53 @@ class EjercicioService:
             }
         except Exception as e:
             return {"error": str(e)}
+
+    async def createEjercicioManualmente(self, ejercicio: EjercicioCreate, subtema_id: str):
+        try:
+            # Guarda directamente usando EjercicioCreate
+            ejercicio_id = await self.ejercicio_repository.createEjercicio(ejercicio)
+            if ejercicio_id is None:
+                return {"error": "No se pudo crear el ejercicio"}
+            ejercicio = ejercicio.dict()
+            added = await self.subtema_repository.addEjercicioToSubTema(subtema_id, ejercicio_id, ejercicio["nivel"].value)
+            if not added:
+                return {"error": "No se pudo agregar el ejercicio al subtema"}
+            print(added)
+            ejercicio_response = await self.ejercicio_repository.getEjercicioById(ejercicio_id)
+            if ejercicio_response is None:
+                return {"error": "No se pudo obtener el ejercicio creado"}
+            return ejercicio_response
+        except Exception as e:
+            return {"error": str(e)}
+    
+    async def deleteEjercicio(self, ejercicio_id:str, subtema_id: str):
+        try:
+            ejercicio = await self.ejercicio_repository.getEjercicioById(ejercicio_id)
+            removed = await self.subtema_repository.removeEjercicioFromSubTema(subtema_id, ejercicio_id, ejercicio["nivel"])
+            if ejercicio is None:
+                return {"error": "El ejercicio no existe"}
+            
+            if not removed:
+                return {"error": "No se pudo eliminar el ejercicio del subtema"}
+            
+            # Elimina el ejercicio de la base de datos
+            deleted = await self.ejercicio_repository.deleteEjercicio(ejercicio_id)
+            if not deleted:
+                return {"error": "No se pudo eliminar el ejercicio"}
+            # Elimina los registros de ejercicios resueltos relacionados
+            await self.ejercicios_resueltos_repository.deleteEjercicioResueltoByEjercicioId(ejercicio_id)
+            return {"message": "Ejercicio eliminado correctamente"}
+        except Exception as e:
+            return {"error": str(e)}
+    
+    async def updateEjercicio(self, ejercicio_id: str, ejercicio_data: EjercicioCreate):
+        try:
+            updated = await self.ejercicio_repository.updateEjercicio(ejercicio_id, ejercicio_data)
+            if not updated:
+                return {"error": "No se pudo actualizar el ejercicio"}
+            ejercicio = await self.ejercicio_repository.getEjercicioById(ejercicio_id)
+            if ejercicio is None:
+                return {"error": "El ejercicio actualizado no existe"}
+            return ejercicio
+        except Exception as e:
+            return {"error": str(e)}

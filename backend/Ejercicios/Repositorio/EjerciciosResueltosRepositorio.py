@@ -101,3 +101,14 @@ class EjercicioResueltosRepository:
         except Exception as e:
             print(f"Error al obtener el ejercicio resuelto por alumno y ejercicio: {e}")
             return None
+    
+    async def deleteEjercicioResueltoByEjercicioId(self, ejercicio_id: str):
+        try:
+            result = await ejercicios_resueltos.update_many(
+                {},
+                {"$pull": {"ejercicios_resueltos": {"ejercicio_id": ejercicio_id}}}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            print(f"Error al eliminar el ejercicio resuelto por ID: {e}")
+            return False
