@@ -89,3 +89,6 @@ class EjerciciosResueltosService:
             return {"message": "Ejercicio resuelto eliminado correctamente"}
         except Exception as e:
             return {"error": str(e)}
+    
+    
+    

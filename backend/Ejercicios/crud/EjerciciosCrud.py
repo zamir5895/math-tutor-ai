@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from services.EjerciciosService import EjercicioService
 from schemas.Temas import Ejercicio, EjercicioCreate
 from services.EjerciciosResueltos import EjerciciosResueltosService
-from models.Ejerccicio import UpdateRespuesta, EjercicioResueltoCreate
+from models.Ejerccicio import UpdateRespuesta, EjercicioResueltoCreate, GetEjercicios
 class CrudEjercicios:
     def __init__(self):
         self.router = APIRouter()
@@ -65,6 +65,12 @@ class CrudEjercicios:
             "/resuelto/remove/{alumno_id}/{ejercicio_id}",
             self.remove_ejercicio_resuelto,
             methods=["DELETE"],
+            response_model=dict
+        )
+        self.router.add_api_route(
+            "/student/info",
+            self.get_ejercicios_for_alumno,
+            methods=["POST"],
             response_model=dict
         )
         self.resueltos_service = EjerciciosResueltosService()
@@ -179,5 +185,18 @@ class CrudEjercicios:
             raise e
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+    
+    async def get_ejercicios_for_alumno(self,request:GetEjercicios):
+        try:
+            print("Obteniendo ejercicios para el alumno:", request)
+            reponse = await self.service.getEjercicioByNivelForAlumno(request.subtema_id, request.nivel, request.alumno_id)
+            if "error" in reponse:
+                raise HTTPException(status_code=400, detail=reponse["error"])
+            return reponse
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))     
+    
 crud_ejercicios = CrudEjercicios()
 router = crud_ejercicios.router

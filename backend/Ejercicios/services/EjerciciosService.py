@@ -3,21 +3,23 @@ from schemas.Temas import Ejercicio, EjercicioCreate
 from Repositorio.SubTemaRepositorio import SubTemaRepository
 from Repositorio.TemaRepositorio import TemaRepository
 from services.IAService import GPTService
+from Repositorio.EjerciciosResueltosRepositorio import EjercicioResueltosRepository
+
 class EjercicioService:
     def __init__(self):
         self.ejercicio_repository = EjercicioRepository()
         self.subtema_repository = SubTemaRepository()
         self.tema_repository = TemaRepository()
-        self.ia_servicces = GPTService()
-    
+        self.ia_services = GPTService()
+        self.ejercicios_resueltos_repository = EjercicioResueltosRepository()
 
     async def generar_ejercicios_with_gpt(self, id:str):
         try:
             subtema = await self.subtema_repository.getSubTemaById(id)
             if subtema is None:
                 return {"error": "El subtema no existe"}
-            
-            ejercicios = await self.ia_servicces.generateExcersiceBaseOnSubtema(subtema["titulo"])
+
+            ejercicios = await self.ia_services.generateExcersiceBaseOnSubtema(subtema["titulo"])
             if not ejercicios:
                 return {"error": "No se pudieron generar ejercicios"}
             print("Ejercicios generados:", ejercicios)
@@ -187,5 +189,29 @@ class EjercicioService:
             if not deleted:
                 return {"error": "No se pudo eliminar el ejercicio"}
             return {"message": "Ejercicio eliminado correctamente"}
+        except Exception as e:
+            return {"error": str(e)}
+    
+    async def getEjercicioByNivelForAlumno(self, subtema_id:str, nivel:str, alumno_id:str):
+        try:
+            subtema = await self.subtema_repository.getSubTemaById(subtema_id)
+            if subtema is None:
+                return {"error": "El subtema no existe"}
+            
+            reponse = await self.getEjerciciosByNivel(subtema_id, nivel)
+            if "error" in reponse:
+                return reponse
+            ejercicios = reponse.get("ejercicios", [])
+            ejercicios_filtrados = []
+            for ejercicio in ejercicios:
+                ejercicio_resuelto = await self.ejercicios_resueltos_repository.getEjercicioResueltoByAlumnoIdAndEjercicioId(alumno_id, ejercicio["_id"])
+                if not ejercicio_resuelto:
+                    ejercicios_filtrados.append(ejercicio)
+
+            return {
+                "ejercicios": ejercicios_filtrados,
+                "total_ejercicios": len(ejercicios_filtrados),    
+                "total_resueltos": len(ejercicios) - len(ejercicios_filtrados)
+            }
         except Exception as e:
             return {"error": str(e)}

@@ -89,3 +89,15 @@ class EjercicioResueltosRepository:
         except Exception as e:
             print(f"Error al filtrar ejercicios resueltos: {e}")
             return []
+    
+    async def getEjercicioResueltoByAlumnoIdAndEjercicioId(self, alumno_id: str, ejercicio_id: str):
+        try:
+            doc = await ejercicios_resueltos.find_one({"alumno_id": alumno_id})
+            if doc and "ejercicios_resueltos" in doc:
+                for ejercicio in doc["ejercicios_resueltos"]:
+                    if str(ejercicio.get("ejercicio_id")) == str(ejercicio_id):
+                        return self.fix_objectid(ejercicio)
+            return None
+        except Exception as e:
+            print(f"Error al obtener el ejercicio resuelto por alumno y ejercicio: {e}")
+            return None

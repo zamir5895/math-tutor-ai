@@ -210,4 +210,25 @@ class SubTemaService:
         except Exception as e:
             return {"error": str(e)}
     
-        
+    async def getSubtemasByTemaIdForStudent(self, tema_id: str):
+        try:
+            tema = await self.tema_repository.getTemaById(tema_id)
+            if tema is None:
+                return {"error": "El tema no existe"}
+            subtemas = await self.subtema_repository.getSubTemasByTemaId(tema_id)
+            for subtema in subtemas:
+                subtema["_id"] = str(subtema["_id"])
+                subtema["tema_id"] = str(subtema.get("tema_id", ""))
+                if "video_urls" in subtema:
+                    subtema["video_url"] = subtema.pop("video_urls")
+                elif "video_url" not in subtema:
+                    subtema["video_url"] = []
+                cantidad_ejercicios_por_nivel = {
+                "facil": len(subtema.get("preguntas", {}).get("facil", [])),
+                "medio": len(subtema.get("preguntas", {}).get("medio", [])),
+                "dificil": len(subtema.get("preguntas", {}).get("dificil", [])),
+                }
+                subtema["cantidad_ejercicios_por_nivel"] = cantidad_ejercicios_por_nivel
+            return {"subtemas": subtemas}
+        except Exception as e:
+            return {"error": str(e)}

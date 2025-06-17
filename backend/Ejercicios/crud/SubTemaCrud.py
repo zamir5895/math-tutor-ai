@@ -67,6 +67,12 @@ class CrudSubTemas:
             methods=["PUT"],
             response_model=dict
         )
+        self.router.add_api_route(
+            "/student/{tema_id}",
+            self.getSubtemasForStudent,
+            methods=["GET"],
+            response_model=dict
+        )
         
         self.service = SubTemaService()
 
@@ -185,5 +191,15 @@ class CrudSubTemas:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
+    async def getSubtemasForStudent(self, tema_id: str):
+        try:
+            subtemas = await self.service.getSubtemasByTemaIdForStudent(tema_id)
+            if "error" in subtemas:
+                raise HTTPException(status_code=400, detail=subtemas["error"])
+            return subtemas
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 crud_subtemas = CrudSubTemas()
 router = crud_subtemas.router

@@ -17,3 +17,8 @@ class EjercicioResueltoCreate(BaseModel):
     respuesta_usuario: str
 class UpdateRespuesta(BaseModel):
     respuesta_usuario:str
+
+class GetEjercicios(BaseModel):
+    subtema_id: str
+    nivel: str
+    alumno_id:str
