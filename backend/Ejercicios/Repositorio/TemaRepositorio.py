@@ -3,16 +3,16 @@ from bson import ObjectId
 from pymongo.errors import PyMongoError
 from models.Temas import CreateTema
 class TemaRepository:
-    
-
-    async def exists(self, nombre: str, curso_id: int):
+    def __init__(self):
+        pass
+    async def exists(self, nombre: str, curso_id: str):
         try:
             existing_tema = await temas_collection.find_one({"nombre": nombre, "classroom_id": curso_id})
             return existing_tema is not None
         except PyMongoError as e:
             return False
 
-    async def _verificar_tema_existente(self, tema: str) -> bool:
+    async def _verificar_tema_existe(self, tema: str) -> bool:
         try:
             tema_existente = await temas_collection.find_one(
                 {"nombre": {"$regex": f"^{tema}$", "$options": "i"}}
@@ -21,7 +21,7 @@ class TemaRepository:
         except PyMongoError as e:
             return False
 
-    async def getTemasBySalonId(self, classroom_id: int):
+    async def getTemasBySalonId(self, classroom_id: str):
         try:
             temas = await temas_collection.find({"classroom_id": classroom_id}).to_list(length=None)
             return temas
