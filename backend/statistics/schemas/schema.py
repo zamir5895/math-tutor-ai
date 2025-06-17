@@ -73,17 +73,24 @@ class statsPorAlumnoBaseParaProfesor(BaseModel):
     porcentaje_incorrectos:float=0.0
     porcentaje_precision:float=0.0
 
+class StatsPorNivel(BaseModel):
+    cantidad_ejercicios: int = 0
+    cantidad_ejercicios_resueltos: int = 0
+    cantidad_ejercicios_no_resueltos: int = 0
+    porcentaje_avanze: float = 0.0
+    cantidad_ejercicios_correctos: int = 0
+    cantidad_ejercicios_incorrectos: int = 0
+
+
 class statsPorNivelSubtemaBaseParaAlumno(BaseModel):
     alumno_id:str
-    nivel:NivelEnum
-    subtema_id:str
     tema_id:str
-    cantidad_ejercicios:int=0
-    cantidad_ejercicios_resueltos:int=0
-    cantidad_ejercicios_no_resueltos:int=0
-    porcentaje_avanze:float=0.0
-    cantidad_ejercicios_correctos:int=0
-    cantidad_ejercicios_incorrectos:int=0
+    subtema_id:str
+    facil: StatsPorNivel = StatsPorNivel()
+    medio: StatsPorNivel = StatsPorNivel()  
+    dificil: StatsPorNivel = StatsPorNivel()
+
+    
 
 class statsSubtemaBaseParaAlumno(BaseModel):
     alumno_id:str
@@ -123,7 +130,7 @@ class statsAlumnoBase(BaseModel):
     tiempo_total: int = 0  
     ultimos_ejercicios: List[UltimoEjercicio] = []
     racha_actual: int = 0
-    fecha_ultima_actividad: Optional[datetime] = None
+    fecha_ultima_actividad: datetime = datetime.now()
 
 
 class statsPorEejercicioCreateParaProfesor(statsPorEejercicioBaseParaProfesor):
@@ -216,7 +223,7 @@ class statsTemaAlumno(statsTemaBaseParaAlumno):
         populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
-class statsAlumnoAlumno(statsAlumnoBase):
+class statsAlumno(statsAlumnoBase):
     id: str = Field(alias="_id")
 
     class Config:
