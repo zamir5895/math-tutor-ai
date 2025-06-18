@@ -1,0 +1,28 @@
+docker run -d \
+  --name postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=bdcontra \
+  -e POSTGRES_DB=midb \
+  -v postgres-data:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  postgres:latest
+
+docker volume create postgres-data
+
+
+docker run -d \
+  --name redis \
+  -v redis-data:/data \
+  -p 6379:6379 \
+  redis:latest
+
+docker volume create redis-data
+
+docker run -d \
+  --name mongo \
+  -v mongo-data:/data/db \
+  -p 27017:27017 \
+  mongo:latest
+
+docker volume create mongo-data
+
