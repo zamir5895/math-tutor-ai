@@ -3,6 +3,8 @@ from config import settings
 import json
 from functools import wraps
 
+
+
 class CacheService:
     def __init__(self):
         self.client = redis.from_url(settings.redis_url)
