@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+google-generativeai
+qdrant-client
+pymongo
+redis
+python-dotenv
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
