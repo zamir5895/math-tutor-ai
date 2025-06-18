@@ -1,7 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from db.config import settings
-
-
+from config import settings
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 import os

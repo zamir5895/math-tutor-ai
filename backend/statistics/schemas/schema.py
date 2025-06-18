@@ -6,7 +6,7 @@ from enum import Enum
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from typing import Optional
-from schemas.util import PyObjectId
+from util import PyObjectId
 class NivelEnum(str, Enum):
     facil = "facil"
     medio = "medio"

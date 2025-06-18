@@ -1,7 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from typing import Any, Dict, List, Optional
-from db.db import (
+from ..db.db import (
     stats_alumno_coleccion,
     stats_tema_alumno_collection,
     stats_subtema_por_nivel_alumno_collection,
@@ -9,7 +9,7 @@ from db.db import (
     
 )
 
-from schemas.schema import (
+from ..schemas.schema import (
     statsPorNivelSubtemaBaseParaAlumno,
     statsSubtemaBaseParaAlumno,
     statsTemaBaseParaAlumno,

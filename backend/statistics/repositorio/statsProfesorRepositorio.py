@@ -3,7 +3,7 @@ from bson import ObjectId
 from typing import Any, Dict, List, Optional, Type, TypeVar
 from pydantic import BaseModel
 
-from schemas.schema import (
+from ..schemas.schema import (
     statsPorEejercicioBaseParaProfesor,
     statsPorSubtemaBaseParaProfesor,
     StatsPorNivelSubtemaBaseParaProfesor,
