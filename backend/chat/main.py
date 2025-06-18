@@ -77,3 +77,29 @@ async def get_conversation(user_id: str, conversation_id: str):
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
     return conversation
+
+@app.get("/conversations/{user_id}")
+async def list_conversations(user_id: str):
+    try:
+        conversations = mongo.conversations.find(
+            {"user_id": user_id},
+            {"_id": 0, "conversation_id": 1, "messages": {"$slice": -1}, "updated_at": 1}
+        ).sort("updated_at", -1)
+        
+        result = []
+        async for conv in conversations:
+            if not conv.get("messages"):
+                continue
+                
+            last_msg = conv["messages"][-1]
+            result.append({
+                "id": conv["conversation_id"],
+                "title": f"Conversación del {conv['updated_at'].strftime('%d/%m/%Y')}",
+                "last_message": last_msg["content"],
+                "timestamp": conv["updated_at"].isoformat()
+            })
+            
+        return result
+    except Exception as e:
+        logger.error(f"Error listing conversations: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
