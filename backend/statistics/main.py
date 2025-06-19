@@ -2,7 +2,7 @@ import logging
 
 from fastapi import FastAPI, HTTPException
 
-from backend.statistics.models import ReporteEstadistica, ProgresoEstadistica
+from models import ReporteEstadistica, ProgresoEstadistica
 from db_postgres import database
 from service import obtener_totales_postgres, estadisticas_progreso_por_alumno, estadisticas_reportes_por_alumno
 
