@@ -6,7 +6,6 @@ from ..db.db import (
     stats_tema_alumno_collection,
     stats_subtema_por_nivel_alumno_collection,
     stats_subtema_alumno_collection
-    
 )
 
 from ..schemas.schema import (

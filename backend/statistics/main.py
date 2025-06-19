@@ -2,9 +2,9 @@ import logging
 
 from fastapi import FastAPI, HTTPException
 
-from models import ReporteEstadistica, ProgresoEstadistica
-from db.db import database
-from service import obtener_totales_postgres, estadisticas_progreso_por_alumno, estadisticas_reportes_por_alumno
+from .models import ReporteEstadistica, ProgresoEstadistica
+from .db.db import database
+from .service import obtener_totales_postgres, estadisticas_progreso_por_alumno, estadisticas_reportes_por_alumno
 
 app = FastAPI(title="Microservicio Statistics")
 
