@@ -1,10 +1,9 @@
 import logging
-from http.client import HTTPException
-
+from fastapi import HTTPException               # use the FastAPI one!
 from bson import ObjectId
 
 from db_mongo import progresos_collection, reportes_collection
-from db_postgres import database
+from .db.db import database
 from models import ProgresoEstadistica, ReporteEstadistica
 
 logger = logging.getLogger(__name__)
