@@ -1,6 +1,6 @@
-from repositorio.statsAlumnoRepositorio import StatsAlumnoRepository, StatsTemaAlumnoRepository, StatsSubtemaAlumnoRepository, StatsNivelSubtemaAlumnoRepository
+from ..repositorio.statsAlumnoRepositorio import StatsAlumnoRepository, StatsTemaAlumnoRepository, StatsSubtemaAlumnoRepository, StatsNivelSubtemaAlumnoRepository
 from datetime import datetime
-from schemas.schema import (
+from ..schemas.schema import (
     statsPorNivelSubtemaBaseParaAlumno,
     statsSubtemaBaseParaAlumno,
     statsTemaBaseParaAlumno,
