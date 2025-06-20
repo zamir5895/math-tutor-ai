@@ -1,6 +1,7 @@
 services:
   statistics:
     build: .
+    image: statistics
     container_name: statistics
     ports:
       - "8050:8050"

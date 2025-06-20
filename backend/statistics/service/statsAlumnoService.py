@@ -1,5 +1,5 @@
 from datetime import datetime
-from ..db.db import mongo
+from db.db import mongo
 from collections import defaultdict
 
 class StatsAlumnoService:
