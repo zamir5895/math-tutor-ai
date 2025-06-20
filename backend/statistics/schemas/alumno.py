@@ -33,3 +33,14 @@ class AlumnoStats(BaseModel):
     progreso_general: ProgresoGeneral
     temas: List[TemaStats]
     updated_at: str
+
+class NivelDificultad(BaseModel):
+    alumno_id: str
+    salon_id: str
+    progreso_general: ProgresoGeneral
+    margen: int
+    updated_at: str
+
+
+class ProgresoBase:
+    pass

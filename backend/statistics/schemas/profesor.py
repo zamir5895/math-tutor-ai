@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from enum import Enum
 
-from schemas.alumno import NivelDificultad, ProgresoBase, DesempenoNivel
+from ..schemas.alumno import NivelDificultad, ProgresoBase
 class DesempenoGrupo(BaseModel):
     promedio: float
     mejor: float
