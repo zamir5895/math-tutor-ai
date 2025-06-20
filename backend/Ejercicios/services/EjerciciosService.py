@@ -16,31 +16,30 @@ class EjercicioService:
 
     async def notificarEstadisticas(self, token:str, salon_id:str, tema_id:str, subtema_id:str, nivel:dict[str,int]):
         try:
-            # Obtenemos los alumnos del salon
-            url = f"http://localhost:8090/salon/{salon_id}"
+            print("Entrando a notificarEstadisticas")
+            url = f"http://users:8090/salon/{salon_id}"
             headers = {"Authorization": token}
             async with httpx.AsyncClient() as client:
                 response = await client.get(url, headers=headers)
+                print("Respuesta de salon:", response.status_code, response.text)
                 response.raise_for_status()
                 data = response.json().get("data", {})
-                async with httpx.AsyncClient() as client:
-                    tareas = []
-                    urlEstadisticas = f"http://localhost:8050/estadisticas/init"
-
-                    for alumno in data.get("alumnosIds", []):
-                        json_data = {
-                            "alumno_id": alumno,
-                            "tema_id": tema_id,
-                            "salon_id": salon_id,
-                            "subtema_id": subtema_id,
-                            "ejercicios_por_nivel": nivel
-                        }
-                        tareas.append(client.post(urlEstadisticas, json=json_data, headers=headers))
-                    await asyncio.gather(*tareas, return_exceptions=True)
-        except httpx.RequestError as e:
-            print(f"Error de conexión: {str(e)}")
-        except httpx.HTTPStatusError as e:
-            print(f"HTTP error occurred: {e.response.status_code} - {e.response.text}")
+                alumnos = data.get("alumnosIds", [])
+                print("Alumnos encontrados:", alumnos)
+                tareas = []
+                urlEstadisticas = f"http://statistics:8050/estadisticas/init"
+                for alumno in alumnos:
+                    json_data = {
+                        "alumno_id": str(alumno),
+                        "tema_id": str(tema_id),
+                        "salon_id": str(salon_id),
+                        "subtema_id": str(subtema_id),
+                        "ejercicios_por_nivel": nivel
+                    }
+                    print("Enviando estadística para:", json_data)
+                    tareas.append(client.post(urlEstadisticas, json=json_data, headers=headers))
+                resultados = await asyncio.gather(*tareas, return_exceptions=True)
+                print("Resultados de POST estadísticas:", resultados)
         except Exception as e:
             print(f"An error occurred: {str(e)}")
 
@@ -53,8 +52,9 @@ class EjercicioService:
             ejercicios = await self.ia_services.generateExcersiceBaseOnSubtema(subtema["titulo"])
             if not ejercicios:
                 return {"error": "No se pudieron generar ejercicios"}
-            print("Ejercicios generados:", ejercicios)
-            tema = await self.tema_repository.getTemaBySubtemaId(subtema["tema_id"])
+            tema = await self.tema_repository.getTemaBySubtemaId(id)
+            print("Tema encontrado:", tema)
+            print("Subtema encontrado:", subtema)
             if tema is None:
                 return {"error": "El tema del subtema no existe"}
             ejercicios_response = []    
@@ -73,17 +73,18 @@ class EjercicioService:
                 
                 ejercicios_response.append(ejercicio_response)
             response = await self.getEjerciciosBySubTemaId(id)
-            print("Ejercicios creados:", ejercicios_response)
             ejercicio_por_nivel = {
                 "facil": len(response["ejercicios"].get("facil", [])),
                 "medio": len(response["ejercicios"].get("medio", [])),
                 "dificil": len(response["ejercicios"].get("dificil", [])),
             }
+            print(f"token aca " + token)
             asyncio.create_task(
-                self.notificarEstadisticas(token, tema["salon_id"], tema["_id"], id, ejercicio_por_nivel)
+                self.notificarEstadisticas(token, tema["classroom_id"], tema["_id"], id, ejercicio_por_nivel)
             )
             return response
         except Exception as e:
+            print(f"Error al generar ejercicios: {str(e)}")
             return {"error": str(e)}
 
     async def getEjerciciosBySubTemaId(self, subtema_id:str):
@@ -233,7 +234,7 @@ class EjercicioService:
                 "dificil": 1 if nivel == "dificil" else 0
             }
             asyncio.create_task(
-                self.notificarEstadisticas(token, tema["salon_id"], tema["_id"], subtema_id, ejercicio_nivel)
+                self.notificarEstadisticas(token, tema["classroom_id"], tema["_id"], subtema_id, ejercicio_nivel)
             )
             return ejercicio
         except Exception as e:

@@ -145,3 +145,6 @@ async def list_conversations(user_id: str):
     except Exception as e:
         logger.error(f"Error listing conversations: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+@app.get("/")
+async def root():
+    return {"message": "Bienvenido al servicio de chat Matemix AI. Usa el endpoint /chat-stream para interactuar."}

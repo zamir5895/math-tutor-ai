@@ -49,9 +49,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // Configuración CORS
                 .authorizeHttpRequests(auth ->
                         // Rutas públicas
+
                         auth.requestMatchers("/auth/login").permitAll()
                                 .requestMatchers("/profesor/register").permitAll()
                                 .requestMatchers("/alumno/register").permitAll()
+                                .requestMatchers("/health").permitAll()
 
                                 // Rutas solo para ADMIN
                                 .requestMatchers("/salon/admin_only/**").hasAuthority("ROLE_ADMIN")

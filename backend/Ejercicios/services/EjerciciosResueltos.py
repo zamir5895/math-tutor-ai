@@ -18,14 +18,15 @@ class EjerciciosResueltosService:
     async def registrarProgresoEjercicio(self, alumno_id:str, tema_id:str, subtema_id:str, nivel:str, es_correcto:bool):
         try:
             async with httpx.AsyncClient() as client:
-                urlEstadisticas = f"http://localhost:8050/estadisticas/progreso"
+                urlEstadisticas = f"http://statistics:8050/estadisticas/progreso"
                 json_data = {
-                    "alumno_id": alumno_id,
-                    "tema_id": tema_id,
-                    "subtema_id": subtema_id,
-                    "nivel": nivel,
+                    "alumno_id": str(alumno_id),
+                    "tema_id": str(tema_id),
+                    "subtema_id": str(subtema_id),
+                    "nivel": str(nivel),
                     "es_correcto": es_correcto
                 }
+                print(f"Registrando progreso: {json_data}")
                 response = await client.post(urlEstadisticas, json=json_data)
                 response.raise_for_status()
         except httpx.RequestError as e:
@@ -38,8 +39,8 @@ class EjerciciosResueltosService:
     async def createEjercicioResuelto(self,tema_id:str, info:EjercicioResueltoCreate, token: str):
         try:
             ejercicio = await self.ejercicio_repository.getEjercicioById(info.ejercicio_id)
-            resolvio = await self.ejercicio_resuelto_repository.getEjercicioResueltoByAlumnoIdAndEjercicioId
-            (info.alumno_id, info.ejercicio_id)
+            resolvio = await self.ejercicio_resuelto_repository.getEjercicioResueltoByAlumnoIdAndEjercicioId(info.alumno_id, info.ejercicio_id)
+            print(f"Ejercicio: {ejercicio}")
             if resolvio:
                 resolvio["respuesta_usuario"] = info.respuesta_usuario
                 if ejercicio.get("respuesta_usuario") == ejercicio.get("respuesta_correcta"):
@@ -48,7 +49,7 @@ class EjerciciosResueltosService:
                     resolvio["es_correcto"] = False
                 resolvio["fecha_resuelto"] = date.today().isoformat()
                 updated = await self.ejercicio_resuelto_repository.add_ejercicio_resuelto(info.alumno_id, ejercicio["salon_id"], resolvio)
-                asyncio.create_task(self.registrarProgresoEjercicio(info.alumno_id, tema_id, ejercicio.get("subtema_id", ""), ejercicio.get("nivel", ""), resolvio.get("es_correcto")))
+                asyncio.create_task(self.registrarProgresoEjercicio(info.alumno_id, tema_id, info.subtema_id, ejercicio.get("nivel", ""), resolvio.get("es_correcto")))
                 if not updated:
                     return {"error": "No se pudo actualizar el ejercicio resuelto"}
                 return {"message": "Ejercicio resuelto actualizado correctamente",
@@ -59,21 +60,22 @@ class EjerciciosResueltosService:
                 "ejercicio_id": info.ejercicio_id,
                 "respuesta_usuario": info.respuesta_usuario,
                 "nivel": ejercicio.get("nivel", ""),
-                "subtema_id": ejercicio.get("subtema_id", ""),
+                "subtema_id": info.subtema_id,
                 "tema_id": tema_id,
                 "es_correcto": False,
                 "fecha_resuelto": date.today().isoformat()
             }
             if info.respuesta_usuario == ejercicio.get("respuesta_correcta"):
                 ejercicio_resuelto["es_correcto"] = True
-                requests.post(f"http://localhost:8090/alumno/addfecha/{info.alumno_id}", 
+                requests.post(f"http://users:8090/alumno/addfecha/{info.alumno_id}", 
                             headers={
                                 'Authorization': f'Bearer {token}',
                                 'Content-Type': 'application/json'
-                            })
-            asyncio.create_task(self.registrarProgresoEjercicio(info.alumno_id, tema_id, ejercicio.get("subtema_id", ""), ejercicio.get("nivel", ""), ejercicio_resuelto["es_correcto"]))
-            
+                            })            
             created_ejercicio_resuelto = await self.ejercicio_resuelto_repository.add_ejercicio_resuelto(info.alumno_id, info.salon_id, ejercicio_resuelto)
+            print(f"Ejercicio: {created_ejercicio_resuelto}")
+            asyncio.create_task(self.registrarProgresoEjercicio(info.alumno_id, tema_id, info.subtema_id, ejercicio.get("nivel", ""), ejercicio_resuelto["es_correcto"]))
+            print(f"Ejercicio resuelto creado: {created_ejercicio_resuelto}")
             if not created_ejercicio_resuelto:
                 return {"error": "No se pudo crear el ejercicio resuelto"}
             return {"es_correcto": ejercicio_resuelto["es_correcto"]}

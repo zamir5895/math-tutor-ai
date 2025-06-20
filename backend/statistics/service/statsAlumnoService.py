@@ -143,30 +143,25 @@ class StatsAlumnoService:
                                                                         "$$subtema.errores"
                                                                     ]
                                                                 },
-                                                                "niveles": {
-                                                                    **{
-                                                                        event["nivel"]: {
-                                                                            "correctos": {
-                                                                                "$add": [
-                                                                                    "$$subtema.niveles." + event["nivel"] + ".correctos",
+                                                               "niveles": {
+                                                                    event["nivel"]: {
+                                                                        "correctos": {
+                                                                            "$add": [
+                                                                                "$$subtema.niveles." + event["nivel"] + ".correctos",
+                                                                                1
+                                                                            ]
+                                                                        },
+                                                                        "errores": {
+                                                                            "$cond": [
+                                                                                {"$gt": ["$$subtema.niveles." + event["nivel"] + ".errores", 0]},
+                                                                                {"$subtract": [
+                                                                                    "$$subtema.niveles." + event["nivel"] + ".errores",
                                                                                     1
-                                                                                ]
-                                                                            },
-                                                                            "errores": {
-                                                                                "$cond": [
-                                                                                    {"$gt": ["$$subtema.niveles." + event["nivel"] + ".errores", 0]},
-                                                                                    {"$subtract": [
-                                                                                        "$$subtema.niveles." + event["nivel"] + ".errores",
-                                                                                        1
-                                                                                    ]},
-                                                                                    "$$subtema.niveles." + event["nivel"] + ".errores"
-                                                                                ]
-                                                                            },
-                                                                            "total": "$$subtema.niveles." + event["nivel"] + ".total"
-                                                                        }
-                                                                    },
-                                                                    **{
-                                                                        k: v for k, v in "$$subtema.niveles".items() if k != event["nivel"]
+                                                                                ]},
+                                                                                "$$subtema.niveles." + event["nivel"] + ".errores"
+                                                                            ]
+                                                                        },
+                                                                        "total": "$$subtema.niveles." + event["nivel"] + ".total"
                                                                     }
                                                                 }
                                                             }
@@ -217,7 +212,7 @@ class StatsAlumnoService:
                 
             )
             await StatsAlumnoService.actualizar_temas_dominados_alumno(event["alumno_id"])
-            await StatsAlumnoService.actualizar_subtemas_dominados_alumno(event["alumno_id"], event["tema_id"], event["subtema_id"])
+            await StatsAlumnoService.actualizar_subtemas_dominados_alumno(event["alumno_id"])
             salon_id = doc.get("salon_id")
             if salon_id:
                 await StatsAlumnoService.actualizar_temas_dominados_salon(salon_id)

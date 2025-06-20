@@ -65,7 +65,7 @@ class TemaService:
         
     async def getInfoSalonByProfesorToken(self, token:str):
         try:
-            url = f"http://localhost:8090/salon/profesor"
+            url = f"http://users:8090/salon/profesor"
             headers = {"Authorization": token}
             async with httpx.AsyncClient() as client:
                 response = await client.get(url, headers=headers)
@@ -102,7 +102,7 @@ class TemaService:
         
     async def getInfoOfAllSalonByProfesorToken(self, token:str):
         try:
-            url = f"http://localhost:8090/salon/profesor/my-salons"
+            url = f"http://users:8090/salon/profesor/my-salons"
             headers = {"Authorization": token}
             async with httpx.AsyncClient() as client:
                 response = await client.get(url, headers=headers)
@@ -154,7 +154,7 @@ class TemaService:
         
     async def getAlumnosBySalonId(self, salon_id: str, token: str):
         try:
-            url = f"http://localhost:8090/salon/alumnos/{salon_id}"
+            url = f"http://users:8090/salon/alumnos/{salon_id}"
             headers = {"Authorization": token}
             async with httpx.AsyncClient() as client:
                 response = await client.get(url, headers=headers)
@@ -170,7 +170,7 @@ class TemaService:
     
     async def getInfoOfSalonId(self, salon_id:str, token:str):
         try:
-            url = f"http://localhost:8090/salon/{salon_id}"
+            url = f"http://users:8090/salon/{salon_id}"
             headers = {"Authorization": token}
             async with httpx.AsyncClient() as client:
                 response = await client.get(url, headers=headers)
@@ -233,7 +233,7 @@ class TemaService:
         
     async def getAllTemasAndSubtemasForAlumno(self, token: str):
         try:
-            url = f"http://localhost:8090/alumno/student/salon"
+            url = f"http://users:8090/alumno/student/salon"
             headers = {"Authorization": token}
             async with httpx.AsyncClient() as client:
                 response = await client.get(url, headers=headers)
@@ -277,7 +277,7 @@ class TemaService:
 
         try:
 
-            url = f"http://localhost:8090/salon/profesor/my-salons"
+            url = f"http://users:8090/salon/profesor/my-salons"
 
             headers = {"Authorization": token}
 

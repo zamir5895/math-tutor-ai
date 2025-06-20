@@ -6,13 +6,13 @@ from azure.core.credentials import AzureKeyCredential
 from fastapi import HTTPException
 from Repositorio.TemaRepositorio import TemaRepository
 import re
-
+from db.config import settings
 class GPTService:
 
     def __init__(self):
         endpoint = "https://models.github.ai/inference"
         model = "openai/gpt-4.1"
-        token = os.environ["GITHUB_TOKEN"]
+        token = settings.github_token
         self.client = ChatCompletionsClient(
             endpoint=endpoint,
             credential=AzureKeyCredential(token),

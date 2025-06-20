@@ -10,11 +10,12 @@ class EjercicioCreate(BaseModel):
     concepto_principal: str | None = None
     nivel: str 
 
-class EjercicioResueltoCreate(BaseModel):
+class  EjercicioResueltoCreate(BaseModel):
     alumno_id: str
     salon_id: str
     ejercicio_id: str
     respuesta_usuario: str
+    subtema_id: str
 class UpdateRespuesta(BaseModel):
     respuesta_usuario:str
 

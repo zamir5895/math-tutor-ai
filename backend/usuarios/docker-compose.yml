@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  users:
+    build: .
+    container_name: users
+    ports:
+      - "8090:8090"
+    env_file:
+      - .env
+    environment:
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET}
+      JWT_EXPIRATION_TIME: ${JWT_EXPIRATION:-3600000}
+    networks:
+      - microservicios
+
+networks:
+  microservicios:
+    external: true

@@ -95,9 +95,17 @@ class CrudEjercicios:
         self.resueltos_service = EjerciciosResueltosService()
         self.service = EjercicioService()
 
-    async def create_ejercicio(self, subtema_id: str):
+    async def create_ejercicio(self, subtema_id: str, request: Request):
+        
         try:
-            result = await self.service.generar_ejercicios_with_gpt(subtema_id)
+            token = request.headers.get("Authorization")
+            if not token:
+                raise HTTPException(status_code=401, detail="Token not provided")
+            print("Generando ejercicios para el subtema:", subtema_id)
+            print("Token controller :", token)
+            result = await self.service.generar_ejercicios_with_gpt(subtema_id, token)
+            if "error" in result:
+                raise HTTPException(status_code=400, detail=result["error"])
             return result
         except HTTPException as e:
             raise e
@@ -149,11 +157,13 @@ class CrudEjercicios:
             raise HTTPException(status_code=500, detail=str(e))
     async def create_ejercicio_resuelto(self, tema_id: str, info: EjercicioResueltoCreate, request:Request):
         try:
+            print("Creando ejercicio resuelto para el tema:", tema_id, "con info:", info)
             token = request.headers.get("Authorization")
             result = await self.resueltos_service.createEjercicioResuelto(tema_id, info, token)
             if not token:
                 raise HTTPException(status_code=401, detail="Token not provided")
             if "error" in result:
+                print("Error al crear ejercicio resuelto:", result["error"])
                 raise HTTPException(status_code=400, detail=result["error"])
             return result
         except HTTPException as e:
@@ -217,18 +227,25 @@ class CrudEjercicios:
             raise e
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))     
-    async def createEjercicioManual(self, ejercicio: EjercicioCreate, subtema_id: str):
+
+    async def createEjercicioManual(self, ejercicio: EjercicioCreate, subtema_id: str, request: Request):
         try:
+            token = request.headers.get("Authorization")
+            if not token:
+                raise HTTPException(status_code=401, detail="Token not provided")
             print("Creando ejercicio manualmente:", ejercicio, subtema_id)
-            result = await self.service.createEjercicioManualmente(ejercicio, subtema_id)
+            result = await self.service.createEjercicioManual( subtema_id, token, ejercicio)
             if "error" in result:
                 print("Error al crear ejercicio manual:", result["error"])
                 raise HTTPException(status_code=400, detail=result["error"])
             return result
         except HTTPException as e:
+            print("Error al crear ejercicio manual:", e.detail)
             raise e
         except Exception as e:
+            print("Error al crear ejercicio manual:", str(e))
             raise HTTPException(status_code=500, detail=str(e))
+    
     async def deleteEjercicio(self, ejercicio_id: str, subtema_id: str):
         try:
             result = await self.service.deleteEjercicio(ejercicio_id, subtema_id)

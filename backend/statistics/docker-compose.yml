@@ -1,0 +1,16 @@
+services:
+  statistics:
+    build: .
+    container_name: statistics
+    ports:
+      - "8050:8050"
+    volumes:
+      - .:/app 
+    environment:
+      - MONGO_URI=${MONGO_URI}
+    networks:
+      - microservicios
+
+networks:
+  microservicios:
+    external: true

@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 
 
 class Settings(BaseSettings):
-    mongo_uri: Optional[str] = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-    youtube_api_key: Optional[str] = os.getenv("YOUTUBE_API_KEY", "YOUR_YOUTUBE_API_KEY")
+    mongo_uri: Optional[str] = os.getenv("MONGO_URI")
+    youtube_api_key: Optional[str] = os.getenv("YOUTUBE_API_KEY")
+    github_token: Optional[str] = os.getenv("GITHUB_TOKEN")
     database_name: str = "learning_platform"
     load_dotenv()
     class Config:
