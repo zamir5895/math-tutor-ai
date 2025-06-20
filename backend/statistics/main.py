@@ -24,6 +24,7 @@ async def inicializar_estadisticas(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/estadisticas/progreso", status_code=202)
 async def registrar_progreso(
     event: ProgresoEvent,

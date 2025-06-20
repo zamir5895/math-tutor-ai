@@ -2,6 +2,8 @@ package org.example.usuarios.Salon.DTOs;
 
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -14,4 +16,5 @@ public class SalonResponse {
     private String turno;
     private Integer cantidadAlumnos;
     private String descripcion;
+    private List<UUID> alumnosIds = new ArrayList<>();
 }

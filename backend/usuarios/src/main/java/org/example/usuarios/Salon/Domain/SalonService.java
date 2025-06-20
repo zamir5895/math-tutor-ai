@@ -217,6 +217,10 @@ public class SalonService {
         salonIndo.setTurno(salon.getTurno());
         salonIndo.setDescripcion(salon.getDescripcion());
         salonIndo.setCantidadAlumnos(salon.getAlumnos().size());
+        for(Alumno a: salon.getAlumnos()){
+            salonIndo.getAlumnosIds().add(a.getId());
+        }
+
         return salonIndo;
     }
 
@@ -240,7 +244,6 @@ public class SalonService {
     }
 
     public SalonInfo getInfoOfSalonByprofesorId(UUID profesorId){
-        //Buscamos to
         List<Salon> s =  salonRepository.findByProfesorId(profesorId);
         if(s.isEmpty()){
             return null;

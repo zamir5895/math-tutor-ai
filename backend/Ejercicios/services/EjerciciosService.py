@@ -1,10 +1,11 @@
 from Repositorio.EjercicioRepositorio import EjercicioRepository
-from schemas.Temas import Ejercicio, EjercicioCreate
 from Repositorio.SubTemaRepositorio import SubTemaRepository
 from Repositorio.TemaRepositorio import TemaRepository
 from services.IAService import GPTService
 from Repositorio.EjerciciosResueltosRepositorio import EjercicioResueltosRepository
-
+import httpx
+import asyncio
+from models.Ejerccicio import EjercicioCreate, EjercicioResueltoCreate, UpdateRespuesta, GetEjercicios, EstadisticaCreateRequest
 class EjercicioService:
     def __init__(self):
         self.ejercicio_repository = EjercicioRepository()
@@ -13,7 +14,37 @@ class EjercicioService:
         self.ia_services = GPTService()
         self.ejercicios_resueltos_repository = EjercicioResueltosRepository()
 
-    async def generar_ejercicios_with_gpt(self, id:str):
+    async def notificarEstadisticas(self, token:str, salon_id:str, tema_id:str, subtema_id:str, nivel:dict[str,int]):
+        try:
+            # Obtenemos los alumnos del salon
+            url = f"http://localhost:8090/salon/{salon_id}"
+            headers = {"Authorization": token}
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers=headers)
+                response.raise_for_status()
+                data = response.json().get("data", {})
+                async with httpx.AsyncClient() as client:
+                    tareas = []
+                    urlEstadisticas = f"http://localhost:8050/estadisticas/init"
+
+                    for alumno in data.get("alumnosIds", []):
+                        json_data = {
+                            "alumno_id": alumno,
+                            "tema_id": tema_id,
+                            "salon_id": salon_id,
+                            "subtema_id": subtema_id,
+                            "ejercicios_por_nivel": nivel
+                        }
+                        tareas.append(client.post(urlEstadisticas, json=json_data, headers=headers))
+                    await asyncio.gather(*tareas, return_exceptions=True)
+        except httpx.RequestError as e:
+            print(f"Error de conexión: {str(e)}")
+        except httpx.HTTPStatusError as e:
+            print(f"HTTP error occurred: {e.response.status_code} - {e.response.text}")
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+
+    async def generar_ejercicios_with_gpt(self, id:str, token:str):
         try:
             subtema = await self.subtema_repository.getSubTemaById(id)
             if subtema is None:
@@ -23,6 +54,9 @@ class EjercicioService:
             if not ejercicios:
                 return {"error": "No se pudieron generar ejercicios"}
             print("Ejercicios generados:", ejercicios)
+            tema = await self.tema_repository.getTemaBySubtemaId(subtema["tema_id"])
+            if tema is None:
+                return {"error": "El tema del subtema no existe"}
             ejercicios_response = []    
             for ejercicio in ejercicios:
                 ejercicio_create = EjercicioCreate(**ejercicio)
@@ -38,9 +72,16 @@ class EjercicioService:
                     return {"error": "No se pudo obtener el ejercicio creado"}
                 
                 ejercicios_response.append(ejercicio_response)
-
-            print("Ejercicios creados:", ejercicios_response)
             response = await self.getEjerciciosBySubTemaId(id)
+            print("Ejercicios creados:", ejercicios_response)
+            ejercicio_por_nivel = {
+                "facil": len(response["ejercicios"].get("facil", [])),
+                "medio": len(response["ejercicios"].get("medio", [])),
+                "dificil": len(response["ejercicios"].get("dificil", [])),
+            }
+            asyncio.create_task(
+                self.notificarEstadisticas(token, tema["salon_id"], tema["_id"], id, ejercicio_por_nivel)
+            )
             return response
         except Exception as e:
             return {"error": str(e)}
@@ -171,7 +212,7 @@ class EjercicioService:
         except Exception as e:
             return {"error": str(e)}
     
-    async def createEjercicioManual(self, ejercicio_data: EjercicioCreate):
+    async def createEjercicioManual(self,subtema_id:str, token:str, ejercicio_data: EjercicioCreate):
         try:
             ejercicio_id = await self.ejercicio_repository.createEjercicio(ejercicio_data)
             if ejercicio_id is None:
@@ -179,6 +220,21 @@ class EjercicioService:
             ejercicio = await self.ejercicio_repository.getEjercicioById(ejercicio_id)
             if ejercicio is None:
                 return {"error": "El ejercicio creado no existe"}
+            added = await self.subtema_repository.addEjercicioToSubTema(subtema_id, ejercicio_id, ejercicio["nivel"])
+            if not added:
+                return {"error": "No se pudo agregar el ejercicio al subtema"}
+            tema = await self.tema_repository.getTemaBySubtemaId(subtema_id)
+            if tema is None:
+                return {"error": "El tema del subtema no existe"}   
+            nivel = ejercicio_data.nivel.value if hasattr(ejercicio_data.nivel, "value") else ejercicio_data.nivel
+            ejercicio_nivel = {
+                "facil": 1 if nivel == "facil" else 0,
+                "medio": 1 if nivel == "medio" else 0,
+                "dificil": 1 if nivel == "dificil" else 0
+            }
+            asyncio.create_task(
+                self.notificarEstadisticas(token, tema["salon_id"], tema["_id"], subtema_id, ejercicio_nivel)
+            )
             return ejercicio
         except Exception as e:
             return {"error": str(e)}
@@ -218,7 +274,6 @@ class EjercicioService:
 
     async def createEjercicioManualmente(self, ejercicio: EjercicioCreate, subtema_id: str):
         try:
-            # Guarda directamente usando EjercicioCreate
             ejercicio_id = await self.ejercicio_repository.createEjercicio(ejercicio)
             if ejercicio_id is None:
                 return {"error": "No se pudo crear el ejercicio"}

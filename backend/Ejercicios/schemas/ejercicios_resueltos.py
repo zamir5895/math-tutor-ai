@@ -16,7 +16,6 @@ class EjercicioResueltoBase(BaseModel):
     nivel: str
 
 class EjerciciosResueltoByAlumno(BaseModel):
-
     alumno_id: str
     salon_id: str
     ejercicios_resueltos: list[EjercicioResueltoBase] = Field(default_factory=list)

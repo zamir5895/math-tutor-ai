@@ -79,25 +79,133 @@ class StatsAlumnoService:
     @staticmethod
     async def procesar_progreso_event(event: dict):
         db = mongo.db
-        update = {
-            "$inc": {
-                "progreso_general.correctos" if event["es_correcto"] else "progreso_general.errores": 1,
-                "progreso_general.completados": 1,
-                "temas.$[t].correctos" if event["es_correcto"] else "temas.$[t].errores": 1,
-                "temas.$[t].subtemas.$[s].correctos" if event["es_correcto"] else "temas.$[t].subtemas.$[s].errores": 1,
-                f"temas.$[t].subtemas.$[s].niveles.{event['nivel']}.correctos" if event["es_correcto"] 
-                else f"temas.$[t].subtemas.$[s].niveles.{event['nivel']}.errores": 1
-            },
-            "$set": {"updated_at": datetime.utcnow()}
-        }
-        await db.alumnos.update_one(
-            {"alumno_id": event["alumno_id"]},
-            update,
-            array_filters=[
-                {"t.tema_id": event["tema_id"]},
-                {"s.subtema_id": event["subtema_id"]}
+    
+        if event["es_correcto"]:
+            update = [
+                {
+                    "$set": {
+                        "progreso_general.correctos": {"$add": ["$progreso_general.correctos", 1]},
+                        "progreso_general.completados": {"$add": ["$progreso_general.completados", 1]},
+                        "progreso_general.errores": {
+                            "$cond": [
+                                {"$gt": ["$progreso_general.errores", 0]},
+                                {"$subtract": ["$progreso_general.errores", 1]},
+                                0
+                            ]
+                        },
+                        "temas": {
+                            "$map": {
+                                "input": "$temas",
+                                "as": "tema",
+                                "in": {
+                                    "$mergeObjects": [
+                                        "$$tema",
+                                        {
+                                            "correctos": {
+                                                "$cond": [
+                                                    {"$eq": ["$$tema.tema_id", event["tema_id"]]},
+                                                    {"$add": ["$$tema.correctos", 1]},
+                                                    "$$tema.correctos"
+                                                ]
+                                            },
+                                            "errores": {
+                                                "$cond": [
+                                                    {"$and": [
+                                                        {"$eq": ["$$tema.tema_id", event["tema_id"]]},
+                                                        {"$gt": ["$$tema.errores", 0]}
+                                                    ]},
+                                                    {"$subtract": ["$$tema.errores", 1]},
+                                                    "$$tema.errores"
+                                                ]
+                                            },
+                                            "subtemas": {
+                                                "$map": {
+                                                    "input": "$$tema.subtemas",
+                                                    "as": "subtema",
+                                                    "in": {
+                                                        "$mergeObjects": [
+                                                            "$$subtema",
+                                                            {
+                                                                "correctos": {
+                                                                    "$cond": [
+                                                                        {"$eq": ["$$subtema.subtema_id", event["subtema_id"]]},
+                                                                        {"$add": ["$$subtema.correctos", 1]},
+                                                                        "$$subtema.correctos"
+                                                                    ]
+                                                                },
+                                                                "errores": {
+                                                                    "$cond": [
+                                                                        {"$and": [
+                                                                            {"$eq": ["$$subtema.subtema_id", event["subtema_id"]]},
+                                                                            {"$gt": ["$$subtema.errores", 0]}
+                                                                        ]},
+                                                                        {"$subtract": ["$$subtema.errores", 1]},
+                                                                        "$$subtema.errores"
+                                                                    ]
+                                                                },
+                                                                "niveles": {
+                                                                    **{
+                                                                        event["nivel"]: {
+                                                                            "correctos": {
+                                                                                "$add": [
+                                                                                    "$$subtema.niveles." + event["nivel"] + ".correctos",
+                                                                                    1
+                                                                                ]
+                                                                            },
+                                                                            "errores": {
+                                                                                "$cond": [
+                                                                                    {"$gt": ["$$subtema.niveles." + event["nivel"] + ".errores", 0]},
+                                                                                    {"$subtract": [
+                                                                                        "$$subtema.niveles." + event["nivel"] + ".errores",
+                                                                                        1
+                                                                                    ]},
+                                                                                    "$$subtema.niveles." + event["nivel"] + ".errores"
+                                                                                ]
+                                                                            },
+                                                                            "total": "$$subtema.niveles." + event["nivel"] + ".total"
+                                                                        }
+                                                                    },
+                                                                    **{
+                                                                        k: v for k, v in "$$subtema.niveles".items() if k != event["nivel"]
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "updated_at": datetime.utcnow()
+                    }
+                }
             ]
-        )
+            await db.alumnos.update_one(
+                {"alumno_id": event["alumno_id"]},
+                update
+            )
+        else:
+            update = {
+                "$inc": {
+                    "progreso_general.errores": 1,
+                    "progreso_general.completados": 1,
+                    "temas.$[t].errores": 1,
+                    "temas.$[t].subtemas.$[s].errores": 1,
+                    f"temas.$[t].subtemas.$[s].niveles.{event['nivel']}.errores": 1
+                },
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+            await db.alumnos.update_one(
+                {"alumno_id": event["alumno_id"]},
+                update,
+                array_filters=[
+                    {"t.tema_id": event["tema_id"]},
+                    {"s.subtema_id": event["subtema_id"]}
+                ]
+            )
         doc = await db.alumnos.find_one({"alumno_id": event["alumno_id"]})
         if doc:
             correctos = doc["progreso_general"]["correctos"]

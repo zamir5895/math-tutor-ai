@@ -87,3 +87,10 @@ class TemaRepository:
             return result.modified_count > 0
         except PyMongoError as e:
             return False
+
+    async def getTemaBySubtemaId(self, subtema_id: str):
+        try:
+            tema = await temas_collection.find_one({"subtema_id": subtema_id})
+            return tema
+        except PyMongoError as e:
+            return None
