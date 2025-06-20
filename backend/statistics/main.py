@@ -1,54 +1,144 @@
-import logging
+from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from models import EstadisticaCreateRequest, ProgresoEvent
+from service.statsAlumnoService import StatsAlumnoService
 
-from fastapi import FastAPI, HTTPException
+app = FastAPI()
 
-from .models import ReporteEstadistica, ProgresoEstadistica
-from .db.db import database
-from .service import obtener_totales_postgres, estadisticas_progreso_por_alumno, estadisticas_reportes_por_alumno
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-app = FastAPI(title="Microservicio Statistics")
-
-# Configure logging
-logger = logging.getLogger("uvicorn.error")
-
-@app.on_event("startup")
-async def startup():
+@app.post("/estadisticas/init", status_code=202)
+async def inicializar_estadisticas(
+    request: EstadisticaCreateRequest,
+    background_tasks: BackgroundTasks
+):
     try:
-        await database.connect()
-        logger.info("Database connection established.")
+        background_tasks.add_task(StatsAlumnoService.procesar_estadistica_init, request.dict())
+        return {"message": "Solicitud recibida, procesando en segundo plano"}
     except Exception as e:
-        logger.error(f"Error connecting to database: {e}")
-        raise HTTPException(status_code=500, detail="Database connection failed")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.on_event("shutdown")
-async def shutdown():
+@app.post("/estadisticas/progreso", status_code=202)
+async def registrar_progreso(
+    event: ProgresoEvent,
+    background_tasks: BackgroundTasks
+):
     try:
-        await database.disconnect()
-        logger.info("Database connection closed.")
+        background_tasks.add_task(StatsAlumnoService.procesar_progreso_event, event.dict())
+        return {"message": "Evento recibido, actualizando estadísticas"}
     except Exception as e:
-        logger.error(f"Error disconnecting from database: {e}")
-        raise HTTPException(status_code=500, detail="Database disconnection failed")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/totales", response_model=dict)
-async def totales():
+@app.get("/estadisticas/alumno/{alumno_id}")
+async def obtener_estadisticas_alumno(alumno_id: str):
     try:
-        return await obtener_totales_postgres()
+        result = await StatsAlumnoService.obtener_por_alumno_id(alumno_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Alumno no encontrado")
+        return result
     except Exception as e:
-        logger.error(f"Error in /totales endpoint: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch totals")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/progreso/{alumno_id}", response_model=ProgresoEstadistica)
-async def progreso(alumno_id: str):
+@app.get("/estadisticas/alumno/{alumno_id}/tema/{tema_id}")
+async def obtener_estadisticas_tema(alumno_id: str, tema_id: str):
     try:
-        return await estadisticas_progreso_por_alumno(alumno_id)
+        result = await StatsAlumnoService.obtener_por_tema_id(alumno_id, tema_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Tema no encontrado")
+        return result
     except Exception as e:
-        logger.error(f"Error fetching progress for alumno_id {alumno_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch progress for alumno {alumno_id}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/reporte/{alumno_id}", response_model=ReporteEstadistica)
-async def reporte(alumno_id: str):
+@app.get("/estadisticas/alumno/{alumno_id}/tema/{tema_id}/subtema/{subtema_id}")
+async def obtener_estadisticas_subtema(alumno_id: str, tema_id: str, subtema_id: str):
     try:
-        return await estadisticas_reportes_por_alumno(alumno_id)
+        result = await StatsAlumnoService.obtener_por_subtema_id(alumno_id, tema_id, subtema_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Subtema no encontrado")
+        return result
     except Exception as e:
-        logger.error(f"Error fetching report for alumno_id {alumno_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch report for alumno {alumno_id}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/estadisticas/alumno/{alumno_id}/tema/{tema_id}/subtema/{subtema_id}/nivel/{nivel}")
+async def obtener_estadisticas_nivel(alumno_id: str, tema_id: str, subtema_id: str, nivel: str):
+    try:
+        result = await StatsAlumnoService.obtener_por_subtema_y_nivel(alumno_id, tema_id, subtema_id, nivel)
+        if not result:
+            raise HTTPException(status_code=404, detail="Nivel no encontrado")
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/dominados/alumno/{alumno_id}/temas")
+async def get_temas_dominados_alumno(alumno_id: str):
+    try:
+        result = await StatsAlumnoService.get_temas_dominados_alumno(alumno_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/dominados/alumno/{alumno_id}/subtemas")
+async def get_subtemas_dominados_alumno(alumno_id: str):
+    try:
+        result = await StatsAlumnoService.get_subtemas_dominados_alumno(alumno_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/dominados/salon/{salon_id}/temas")
+async def get_temas_dominados_salon(salon_id: str):
+    try:
+        result = await StatsAlumnoService.get_temas_dominados_salon(salon_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/dominados/salon/{salon_id}/subtemas")
+async def get_subtemas_dominados_salon(salon_id: str):
+    try:
+        result = await StatsAlumnoService.get_subtemas_dominados_salon(salon_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/dominados/alumno/{alumno_id}/tema/{tema_id}")
+async def eliminar_tema_dominado_alumno(alumno_id: str, tema_id: str):
+    try:
+        await StatsAlumnoService.eliminar_tema_dominado_alumno(alumno_id, tema_id)
+        return {"detail": "Tema dominado eliminado para alumno"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/dominados/alumno/{alumno_id}/tema/{tema_id}/subtema/{subtema_id}")
+async def eliminar_subtema_dominado_alumno(alumno_id: str, tema_id: str, subtema_id: str):
+    try:
+        await StatsAlumnoService.eliminar_subtema_dominado_alumno(alumno_id, tema_id, subtema_id)
+        return {"detail": "Subtema dominado eliminado para alumno"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/dominados/salon/{salon_id}/tema/{tema_id}")
+async def eliminar_tema_dominado_salon(salon_id: str, tema_id: str):
+    try:
+        await StatsAlumnoService.eliminar_tema_dominado_salon(salon_id, tema_id)
+        return {"detail": "Tema dominado eliminado para salón"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/dominados/salon/{salon_id}/tema/{tema_id}/subtema/{subtema_id}")
+async def eliminar_subtema_dominado_salon(salon_id: str, tema_id: str, subtema_id: str):
+    try:
+        await StatsAlumnoService.eliminar_subtema_dominado_salon(salon_id, tema_id, subtema_id)
+        return {"detail": "Subtema dominado eliminado para salón"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
