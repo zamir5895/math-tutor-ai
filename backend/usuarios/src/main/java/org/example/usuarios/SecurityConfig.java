@@ -86,17 +86,22 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Configuración personalizada para CORS
-    private UrlBasedCorsConfigurationSource corsConfigurationSource() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    @Bean
+    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173", "http://frontend-matemix.s3-website-us-east-1.amazonaws.com"));  // Permitir solicitudes desde múltiples orígenes
-        config.addAllowedMethod("*");  // Permitir todos los métodos HTTP
-        config.addAllowedHeader("*");  // Permitir todos los encabezados
-        config.setAllowCredentials(true);  // Permitir el uso de cookies o credenciales
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "http://frontend-matemix.s3-website-us-east-1.amazonaws.com"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L); // Caché de preflight
 
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+
 
 }
