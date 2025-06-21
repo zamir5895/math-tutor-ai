@@ -17,6 +17,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -88,7 +90,7 @@ public class SecurityConfig {
     private UrlBasedCorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://localhost:5173");  // Permitir solicitudes desde el frontend en localhost:3000
+        config.setAllowedOrigins(List.of("http://localhost:5173", "http://frontend-matemix.s3-website-us-east-1.amazonaws.com"));  // Permitir solicitudes desde múltiples orígenes
         config.addAllowedMethod("*");  // Permitir todos los métodos HTTP
         config.addAllowedHeader("*");  // Permitir todos los encabezados
         config.setAllowCredentials(true);  // Permitir el uso de cookies o credenciales
