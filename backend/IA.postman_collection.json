@@ -1,0 +1,622 @@
+{
+	"info": {
+		"_postman_id": "df17e7dc-bf78-4abf-8938-5952ec19896a",
+		"name": "IA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34027217"
+	},
+	"item": [
+		{
+			"name": "health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://math-tutor-elb-494669186.us-east-1.elb.amazonaws.com:8000/",
+					"protocol": "http",
+					"host": [
+						"math-tutor-elb-494669186",
+						"us-east-1",
+						"elb",
+						"amazonaws",
+						"com"
+					],
+					"port": "8000",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CrearTema",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"nombre\": \"ecuaciones\",\n  \"descripcion\": \"Diferencia de fracciones\",\n  \"classroom_id\": \"123\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/topics/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"topics",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Temas By Classroom_id",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/topics/2f369b3c-09d2-4374-a548-4eca8473962a",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"topics",
+						"2f369b3c-09d2-4374-a548-4eca8473962a"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get Tema by Id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/topics/topic/temas/683fcbf4238bc1be0e5abfaa",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"topics",
+						"topic",
+						"temas",
+						"683fcbf4238bc1be0e5abfaa"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create Subtema",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/ejercicios/suma",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"ejercicios",
+						"suma"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "generar_subtemas_by_tema_name",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/subtopics/generate/ecuaciones",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"subtopics",
+						"generate",
+						"ecuaciones"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CrearSubtopico",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n     \"titulo\": \"suma de fracciones\",\n        \"descripcion\": \"Sustitución de valores en la ecuación original para comprobar si la solución encontrada satisface la igualdad.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/subtopics/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"subtopics",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CrearSubtopicosApartirdeunaLista",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"titulo\": \"Ecuaciones de primer grado con una incógnita\",\n        \"descripcion\": \"Resolución de ecuaciones lineales simples con una sola variable, identificando incógnitas y aplicando operaciones básicas para encontrar la solución.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Propiedades de la igualdad\",\n        \"descripcion\": \"Uso de las propiedades de la igualdad (adición, sustracción, multiplicación y división) para transformar y resolver ecuaciones manteniendo la equivalencia.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Traducción de problemas verbales a ecuaciones\",\n        \"descripcion\": \"Interpretación de situaciones cotidianas o problemas escritos y su representación mediante una ecuación de primer grado.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Verificación de soluciones\",\n        \"descripcion\": \"Sustitución de valores en la ecuación original para comprobar si la solución encontrada satisface la igualdad.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Ecuaciones con paréntesis y términos semejantes\",\n        \"descripcion\": \"Resolución de ecuaciones que incluyen agrupaciones, paréntesis y términos semejantes, mediante la simplificación y reducción de la ecuación.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    }\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/subtopics/list",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"subtopics",
+						"list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getsubtopicsByTopicId",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/subtopics/topic/subtemas/683fcc537e93a6d947711680",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"subtopics",
+						"topic",
+						"subtemas",
+						"683fcc537e93a6d947711680"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GenerateVideoIdeas",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/subtopics/generate/video/684b3034b0831bce65310059",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"subtopics",
+						"generate",
+						"video",
+						"684b3034b0831bce65310059"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GenerateExcercise",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"titulo\": \"Ecuaciones de primer grado con una incógnita\",\n        \"descripcion\": \"Resolución de ecuaciones lineales simples con una sola variable, identificando incógnitas y aplicando operaciones básicas para encontrar la solución.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Propiedades de la igualdad\",\n        \"descripcion\": \"Uso de las propiedades de la igualdad (adición, sustracción, multiplicación y división) para transformar y resolver ecuaciones manteniendo la equivalencia.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Traducción de problemas verbales a ecuaciones\",\n        \"descripcion\": \"Interpretación de situaciones cotidianas o problemas escritos y su representación mediante una ecuación de primer grado.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Verificación de soluciones\",\n        \"descripcion\": \"Sustitución de valores en la ecuación original para comprobar si la solución encontrada satisface la igualdad.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Ecuaciones con paréntesis y términos semejantes\",\n        \"descripcion\": \"Resolución de ecuaciones que incluyen agrupaciones, paréntesis y términos semejantes, mediante la simplificación y reducción de la ecuación.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    }\n]"
+				},
+				"url": {
+					"raw": "http://localhost:8000/exercises/generar/6844eb7d0e4cb28deb65a7db",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"exercises",
+						"generar",
+						"6844eb7d0e4cb28deb65a7db"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetEjerciciosBySubtemaId",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"titulo\": \"Ecuaciones de primer grado con una incógnita\",\n        \"descripcion\": \"Resolución de ecuaciones lineales simples con una sola variable, identificando incógnitas y aplicando operaciones básicas para encontrar la solución.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Propiedades de la igualdad\",\n        \"descripcion\": \"Uso de las propiedades de la igualdad (adición, sustracción, multiplicación y división) para transformar y resolver ecuaciones manteniendo la equivalencia.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Traducción de problemas verbales a ecuaciones\",\n        \"descripcion\": \"Interpretación de situaciones cotidianas o problemas escritos y su representación mediante una ecuación de primer grado.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Verificación de soluciones\",\n        \"descripcion\": \"Sustitución de valores en la ecuación original para comprobar si la solución encontrada satisface la igualdad.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    },\n    {\n        \"titulo\": \"Ecuaciones con paréntesis y términos semejantes\",\n        \"descripcion\": \"Resolución de ecuaciones que incluyen agrupaciones, paréntesis y términos semejantes, mediante la simplificación y reducción de la ecuación.\",\n        \"tema_id\": \"683fcc537e93a6d947711680\"\n    }\n]"
+				},
+				"url": {
+					"raw": "http://localhost:8000/exercises/684b82f82acbb91e0bacd730",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"exercises",
+						"684b82f82acbb91e0bacd730"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "InfoBySubtemaId",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/exercises/info/6840b800ff1b5ec56c1e73cb",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"exercises",
+						"info",
+						"6840b800ff1b5ec56c1e73cb"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getInfoByTemaId",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/exercises/info/tema/683fcc537e93a6d947711680",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"exercises",
+						"info",
+						"tema",
+						"683fcc537e93a6d947711680"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GuardarVideos",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"videos\": [\n    {\n      \"id\": \"srQqFpJggwg\",\n      \"title\": \"Propiedades de la potenciación y radicación (números racionales)\",\n      \"url\": \"https://www.youtube.com/watch?v=srQqFpJggwg\",\n      \"thumbnail\": \"https://img.youtube.com/vi/srQqFpJggwg/hqdefault.jpg\"\n    },\n    {\n      \"id\": \"CUMfZc_zfAo\",\n      \"title\": \"Propiedades de la potenciación y la radicación #matemática #algebra #educación #parati\",\n      \"url\": \"https://www.youtube.com/watch?v=CUMfZc_zfAo\",\n      \"thumbnail\": \"https://img.youtube.com/vi/CUMfZc_zfAo/hqdefault.jpg\"\n    }\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/subtopics/videos/save/684b798879d5cbd1049e9bda",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"subtopics",
+						"videos",
+						"save",
+						"684b798879d5cbd1049e9bda"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getSubTema",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/subtopics/6844eb7d0e4cb28deb65a7db",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"subtopics",
+						"6844eb7d0e4cb28deb65a7db"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetInfoByProfessorToken",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb2huZG9ldzciLCJyb2xlIjoiVEVBQ0hFUiIsInVzZXJJZCI6IjMzMmVjNjZlLWJiNWQtNGM2OS1hODc5LTUwM2NmMTYyZmY4OCIsImlhdCI6MTc0OTkxOTA2NywiZXhwIjoxNzQ5OTIyNjY3fQ.vmcss41fIIfGdsxG7TmSeYRFieLmRcCI0TKmoZmpaQLUKVsXxnKsWFc-yHicMg70jhO9odj2OWdsGvoagxNhww",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"johndoew7\",\n  \"password\": \"password123\"\n}\n"
+				},
+				"url": {
+					"raw": "http://localhost:8000/topics/info/profesor",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"topics",
+						"info",
+						"profesor"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getInfoOfAllSalones",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb2huZG9ldzciLCJyb2xlIjoiVEVBQ0hFUiIsInVzZXJJZCI6IjMzMmVjNjZlLWJiNWQtNGM2OS1hODc5LTUwM2NmMTYyZmY4OCIsImlhdCI6MTc0OTkxOTA2NywiZXhwIjoxNzQ5OTIyNjY3fQ.vmcss41fIIfGdsxG7TmSeYRFieLmRcCI0TKmoZmpaQLUKVsXxnKsWFc-yHicMg70jhO9odj2OWdsGvoagxNhww",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/topics/info/salones/profesor",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"topics",
+						"info",
+						"salones",
+						"profesor"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetInfoSalonId",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb2huZG9ldzciLCJyb2xlIjoiVEVBQ0hFUiIsInVzZXJJZCI6IjMzMmVjNjZlLWJiNWQtNGM2OS1hODc5LTUwM2NmMTYyZmY4OCIsImlhdCI6MTc1MDEzMzk4OCwiZXhwIjoxNzUwMTM3NTg4fQ.4tZKxZJTOgpb5F6nittzPG5W45lWnQQXGR4QElHJANmAAm9u-tkaRwPzQ4kExrQ2ulWxDNFqhjSk2nZijsKvLg",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/topics/info/salon/3057c030-e068-4ef6-a146-56463fe55f7d",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"topics",
+						"info",
+						"salon",
+						"3057c030-e068-4ef6-a146-56463fe55f7d"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getTemas",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb2huZG9ldzciLCJyb2xlIjoiVEVBQ0hFUiIsInVzZXJJZCI6IjMzMmVjNjZlLWJiNWQtNGM2OS1hODc5LTUwM2NmMTYyZmY4OCIsImlhdCI6MTc1MDEzMzk4OCwiZXhwIjoxNzUwMTM3NTg4fQ.4tZKxZJTOgpb5F6nittzPG5W45lWnQQXGR4QElHJANmAAm9u-tkaRwPzQ4kExrQ2ulWxDNFqhjSk2nZijsKvLg",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/topics/info/all",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"topics",
+						"info",
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getTemasForStudent",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhc2RzZmVmZXNkIiwicm9sZSI6IlNUVURFTlQiLCJ1c2VySWQiOiIyZjM2OWIzYy0wOWQyLTQzNzQtYTU0OC00ZWNhODQ3Mzk2MmEiLCJpYXQiOjE3NTAxMzMwNTUsImV4cCI6MTc1MDEzNjY1NX0.sr2fHJMXVTa7AP1pdKTdlLJ9BNfuXROV3IJWIIZb-InUFJvZF5LgrJpVrcriE-l-F9a-e0JMjjPYcTcNaeutQA",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/topics/info/student",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"topics",
+						"info",
+						"student"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getSubtemasForStudent",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhc2RzZmVmZXNkIiwicm9sZSI6IlNUVURFTlQiLCJ1c2VySWQiOiIyZjM2OWIzYy0wOWQyLTQzNzQtYTU0OC00ZWNhODQ3Mzk2MmEiLCJpYXQiOjE3NTAxMzMwNTUsImV4cCI6MTc1MDEzNjY1NX0.sr2fHJMXVTa7AP1pdKTdlLJ9BNfuXROV3IJWIIZb-InUFJvZF5LgrJpVrcriE-l-F9a-e0JMjjPYcTcNaeutQA",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/subtopics/student/684b76b34c6f9d06ab08b68d",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"subtopics",
+						"student",
+						"684b76b34c6f9d06ab08b68d"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetExcerciseForStudent",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhc2RzZmVmZXNkIiwicm9sZSI6IlNUVURFTlQiLCJ1c2VySWQiOiIyZjM2OWIzYy0wOWQyLTQzNzQtYTU0OC00ZWNhODQ3Mzk2MmEiLCJpYXQiOjE3NTAxMzMwNTUsImV4cCI6MTc1MDEzNjY1NX0.sr2fHJMXVTa7AP1pdKTdlLJ9BNfuXROV3IJWIIZb-InUFJvZF5LgrJpVrcriE-l-F9a-e0JMjjPYcTcNaeutQA",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"subtema_id\":\"684b82f82acbb91e0bacd730\",\n    \"nivel\":\"facil\",\n    \"alumno_id\":\"a5cb3c03-2722-497a-a1ca-a487e1ffdd43\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/exercises/student/info",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"exercises",
+						"student",
+						"info"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

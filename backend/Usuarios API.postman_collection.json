@@ -1,0 +1,1032 @@
+{
+	"info": {
+		"_postman_id": "7c807b51-f4c3-48e7-b52c-57fe1d3e8891",
+		"name": "Usuarios API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34027217"
+	},
+	"item": [
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Listar Admins",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/admin",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"admin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin37\",\n  \"password\": \"securepassword123\",\n  \"role\": \"ADMIN\"\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/admin/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"admin",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "NO estan terminados los de arriba",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "pero tampoco son muy utiles xd",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Alumno",
+			"item": [
+				{
+					"name": "Crear Alumno",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"Jorge Melgarejo\",\n  \"password\": \"Hola123\",\n  \"dni\": \"12345675\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8090/alumno/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"alumno",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/alumno/student/profile",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"student",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "byId as Admin o TEACHER",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/alumno/student/profile",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"student",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Alumno Salon",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/alumno/student/salon",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"student",
+								"salon"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ObtenerALLAlumnos en Salon",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/alumno/salon/039687d4-6bf1-4dd5-bb76-d516b4c3547f",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"salon",
+								"039687d4-6bf1-4dd5-bb76-d516b4c3547f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ObtenerALLAlumnos As Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/alumno/admin_only/all",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"admin_only",
+								"all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Alumno as Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"55319682-05d7-4ca2-8747-5303373822e8\",\n  \"salon\": {\"id\": \"cdfc80e1-410c-439d-b9c7-2654797db6bf\"}\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/alumno/admin_only/d9cd680a-5679-4f4f-9eba-d274821e5f04",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"admin_only",
+								"d9cd680a-5679-4f4f-9eba-d274821e5f04"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Alumno as Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/alumno/admin_only/55319682-05d7-4ca2-8747-5303373822e8",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"alumno",
+								"admin_only",
+								"55319682-05d7-4ca2-8747-5303373822e8"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PostAlumnoCSV",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb2huZG9ldzciLCJyb2xlIjoiVEVBQ0hFUiIsInVzZXJJZCI6IjMzMmVjNjZlLWJiNWQtNGM2OS1hODc5LTUwM2NmMTYyZmY4OCIsImlhdCI6MTc0OTc5MTE4MywiZXhwIjoxNzQ5Nzk0NzgzfQ.qmsHI8iYyxZRko-cdhrhPWtx4604JLc3CrLifYS7othndZaSL7sFk03ILO3vAdaGDuelHncaDMy1n5pxtLeykA",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/home/zamirlm/Documents/csvPrueba.csv"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8090/alumno/register/3057c030-e068-4ef6-a146-56463fe55f7d",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"alumno",
+								"register",
+								"3057c030-e068-4ef6-a146-56463fe55f7d"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Profesor",
+			"item": [
+				{
+					"name": "Crear Profesor",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"johndoew7\",\n    \"password\": \"password123\",\n    \"telefono\": \"123456789\"\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8090/profesor/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"profesor",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/profesor/profile",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"profesor",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"johndoew4\",\n    \"password\": \"password123\",\n    \"telefono\": \"123456783\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/profesor/profile",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"profesor",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Profesores as Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/profesor/admin_only/all",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"profesor",
+								"admin_only",
+								"all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Profile as Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"johndoewgod\",\n    \"password\": \"password124\",\n    \"telefono\": \"123456783\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/profesor/admin_only/0b904dcc-1ad4-4f29-9379-ea746e89cbbc",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"profesor",
+								"admin_only",
+								"0b904dcc-1ad4-4f29-9379-ea746e89cbbc"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Teacher as Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/profesor/admin_only/0b904dcc-1ad4-4f29-9379-ea746e89cbbc",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"profesor",
+								"admin_only",
+								"0b904dcc-1ad4-4f29-9379-ea746e89cbbc"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Salon",
+			"item": [
+				{
+					"name": "Crear Salon as Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"seccion\": \"A\",\n  \"grado\": \"5\",\n  \"turno\": \"Mañana\",\n  \"profesorId\": \"0343f28e-c980-43ca-86dd-873406b6e0de\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/salon",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"salon"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Salon as Teacher",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb2huZG9ldzciLCJyb2xlIjoiVEVBQ0hFUiIsInVzZXJJZCI6IjMzMmVjNjZlLWJiNWQtNGM2OS1hODc5LTUwM2NmMTYyZmY4OCIsImlhdCI6MTc0OTU5NTA3MSwiZXhwIjoxNzQ5NTk4NjcxfQ.bCI5xJlo5RCEV640sdjzt7uS9_SlSA1FGNXTFOtKpVVnsidvByYw0VJ7bb3Q781S1ciVI3TR-p-k7-ZQVYs-lA",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"seccion\": \"A\",\n  \"grado\": 1,\n  \"turno\": \"Mañana\",\n  \"descripcion\":\"Salon de prueba\",\n  \"nombre\":\"Matematica 1ª A\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8090/salon",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"salon"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ALL Salones as Teacher",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb2huZG9ldzciLCJyb2xlIjoiVEVBQ0hFUiIsInVzZXJJZCI6IjMzMmVjNjZlLWJiNWQtNGM2OS1hODc5LTUwM2NmMTYyZmY4OCIsImlhdCI6MTc1MDEzMzk4OCwiZXhwIjoxNzUwMTM3NTg4fQ.4tZKxZJTOgpb5F6nittzPG5W45lWnQQXGR4QElHJANmAAm9u-tkaRwPzQ4kExrQ2ulWxDNFqhjSk2nZijsKvLg",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8090/salon/profesor/my-salons",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"salon",
+								"profesor",
+								"my-salons"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ALL Salones as Admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/salon/admin_only/all",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"salon",
+								"admin_only",
+								"all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Editar Salon as Admin or TEACHER",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n        \"seccion\": \"A\",\n        \"grado\": \"5\",\n        \"turno\": \"Tarde\",\n        \"profesorId\": \"090da07e-03e3-42c2-949e-f9784018376d\",\n        \"alumnos\": [\"783be8ad-fa5a-4605-b614-c9ca5339be92\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/salon/fa7a19ff-00ff-4307-8106-1f3e631bcd04",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"salon",
+								"fa7a19ff-00ff-4307-8106-1f3e631bcd04"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Salon as Admin or Teacher",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/salon/c09feaa9-1396-47f6-815e-903b8265c82",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"salon",
+								"c09feaa9-1396-47f6-815e-903b8265c82"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetAlumnosBySalonId",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb2huZG9ldzciLCJyb2xlIjoiVEVBQ0hFUiIsInVzZXJJZCI6IjMzMmVjNjZlLWJiNWQtNGM2OS1hODc5LTUwM2NmMTYyZmY4OCIsImlhdCI6MTc0OTkxNDY5NSwiZXhwIjoxNzQ5OTE4Mjk1fQ._ncxv6GjRHimZVuVelc7IIRDyohdjYVkMG1K5wnsuUiLHsNDwcNXcbwZfAZNsj8391g0H17zs88CIsXg2It45Q",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8090/salon/alumnos/3057c030-e068-4ef6-a146-56463fe55f7d",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"salon",
+								"alumnos",
+								"3057c030-e068-4ef6-a146-56463fe55f7d"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetInfoSalon",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb2huZG9ldzciLCJyb2xlIjoiVEVBQ0hFUiIsInVzZXJJZCI6IjMzMmVjNjZlLWJiNWQtNGM2OS1hODc5LTUwM2NmMTYyZmY4OCIsImlhdCI6MTc0OTgxNzAzNCwiZXhwIjoxNzQ5ODIwNjM0fQ.exmxIPFlXLhsHjmmP3XBoWbkKLu8qUZqxvAQWiyp5xt80zdatc-Sv3NPk3UqCHdnmDHdibsruAIMlNZsMPX7rw",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8090/salon/3057c030-e068-4ef6-a146-56463fe55f7d",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"salon",
+								"3057c030-e068-4ef6-a146-56463fe55f7d"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/user/profile",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"user",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify_Token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhc2RzZmVmZXNkIiwicm9sZSI6IlNUVURFTlQiLCJ1c2VySWQiOiIyZjM2OWIzYy0wOWQyLTQzNzQtYTU0OC00ZWNhODQ3Mzk2MmEiLCJpYXQiOjE3NTAwOTIwNzgsImV4cCI6MTc1MDA5NTY3OH0.y7S_RVNiVc7rGu_yT5sZa9VXr3Ra5YVQy8ok7qEewzUUt1QjQLNUz8LfqyF99YfJsDpdHCJgDzG_tgJb5e6V8A",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8090/auth/verify-token",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"auth",
+								"verify-token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register Usuario",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"mva2\",\n  \"password\": \"mva2\",\n  \"role\": \"ADMIN\"\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/auth/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"johndoew7\",\n  \"password\": \"password123\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8090/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8090",
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "health",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{Token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://math-tutor-elb-494669186.us-east-1.elb.amazonaws.com:8090/health",
+					"protocol": "http",
+					"host": [
+						"math-tutor-elb-494669186",
+						"us-east-1",
+						"elb",
+						"amazonaws",
+						"com"
+					],
+					"port": "8090",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,32 @@
+{
+	"info": {
+		"_postman_id": "cbb1f6db-620f-48d7-9212-4f62699adc49",
+		"name": "chat",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34027217"
+	},
+	"item": [
+		{
+			"name": "health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://54.221.74.124:8030/",
+					"protocol": "http",
+					"host": [
+						"54",
+						"221",
+						"74",
+						"124"
+					],
+					"port": "8030",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
