@@ -91,7 +91,9 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "http://frontend-matemix.s3-website-us-east-1.amazonaws.com"
+                "http://frontend-matemix.s3-website-us-east-1.amazonaws.com",
+                "https://frontend-matemix-dn8rvqqt7-zamir5895s-projects.vercel.app/",
+                "https://frontend-matemix-pink.vercel.app/"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
