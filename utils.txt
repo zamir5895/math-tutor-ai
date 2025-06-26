@@ -29,3 +29,5 @@ docker run -d \
 
 docker volume create mongo-data
 
+
+docker run -d --restart unless-stopped --name adminer_c -p 8080:8080 adminer

@@ -264,7 +264,7 @@ public class AlumnoService {
     }
 
     private String generarUsername(String nombre, String apellido) {
-        return (nombre.substring(0, 4) + apellido).toLowerCase();
+        return (nombre.substring(0, 4) + "." + apellido.substring(0,4)).toLowerCase();
     }
 
     private String generarPasswordSimple(String nombre, String apellido, String dni) {

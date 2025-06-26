@@ -93,7 +93,8 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "http://frontend-matemix.s3-website-us-east-1.amazonaws.com",
                 "https://frontend-matemix-dn8rvqqt7-zamir5895s-projects.vercel.app/",
-                "https://frontend-matemix-pink.vercel.app/"
+                "https://frontend-matemix-pink.vercel.app/",
+                "http://52.206.13.161:5173"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
