@@ -264,10 +264,16 @@ public class AlumnoService {
     }
 
     private String generarUsername(String nombre, String apellido) {
-        return (nombre.substring(0, 4) + "." + apellido.substring(0,4)).toLowerCase();
+        nombre = sanitize(nombre);
+        apellido = sanitize(apellido);
+        return (nombre.substring(0, 4) + "." + apellido.substring(0, 4)).toLowerCase();
     }
 
     private String generarPasswordSimple(String nombre, String apellido, String dni) {
+        nombre = sanitize(nombre);
+        apellido = sanitize(apellido);
+        dni = sanitize(dni);
+
         String parteNombre = nombre.length() >= 4 ?
                 nombre.substring(0, 4).toLowerCase() :
                 nombre.toLowerCase();
@@ -280,7 +286,6 @@ public class AlumnoService {
                 dni.substring(dni.length() - 4) :
                 dni;
 
-
         return (parteNombre + parteApellido + parteDni).toLowerCase();
     }
 
@@ -290,29 +295,40 @@ public class AlumnoService {
              BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
 
             return br.lines()
-                    .skip(1) // Saltar encabezados
+                    .skip(1)
                     .map(line -> {
                         String[] values = line.split(",");
                         return new AlumnoCSVRecord(
-                                values[0].trim(),
-                                values[1].trim(),
-                                values[2].trim()
+                                sanitize(values[0]),
+                                sanitize(values[1]),
+                                sanitize(values[2])
                         );
                     })
                     .collect(Collectors.toList());
         }
     }
+
+    private String sanitize(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.replaceAll("[^a-zA-Z0-9\\s]", "").trim();
+    }
     private String getCellValue(Cell cell) {
         if (cell == null) return "";
 
+        String value;
         switch (cell.getCellType()) {
             case STRING:
-                return cell.getStringCellValue().trim();
+                value = cell.getStringCellValue().trim();
+                break;
             case NUMERIC:
-                return String.valueOf((int) cell.getNumericCellValue());
+                value = String.valueOf((int) cell.getNumericCellValue());
+                break;
             default:
-                return "";
+                value = "";
         }
+        return sanitize(value);
     }
     private List<AlumnoCSVRecord> leerExcel(MultipartFile file) throws Exception {
         List<AlumnoCSVRecord> records = new ArrayList<>();
