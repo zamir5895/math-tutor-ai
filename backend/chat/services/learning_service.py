@@ -32,9 +32,9 @@ class LearningService:
             "level": level,
             "session_type": "teaching",
             "concepts_covered": [],
-            "session_history": [],  # Historial completo de interacciones
-            "exercises_completed": [],  # Lista de ejercicios realizados
-            "questions_asked": [],  # Preguntas libres realizadas
+            "session_history": [],
+            "exercises_completed": [],
+            "questions_asked": [], 
             "status": "active",
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
@@ -106,7 +106,6 @@ class LearningService:
         """Obtiene estadísticas de ejercicios del usuario"""
         query = {"user_id": user_id}
         if topic:
-            # Necesitaríamos hacer un join con exercises para filtrar por tema
             pass
         
         total = self.responses.count_documents(query)
@@ -122,7 +121,7 @@ class LearningService:
         """Agrega una interacción al historial de la sesión"""
         interaction = {
             "timestamp": datetime.utcnow(),
-            "type": interaction_type,  # "question", "explanation", "exercise", "answer", "concept"
+            "type": interaction_type,
             "content": content,
             "metadata": metadata or {}
         }
@@ -254,12 +253,11 @@ class LearningService:
         correct_exercises = sum(1 for ex in exercises if ex.get("is_correct", False))
         accuracy = (correct_exercises / total_exercises * 100) if total_exercises > 0 else 0
         
-        # Calcular tiempo total de estudio
         created_at = session.get("created_at")
         last_accessed = session.get("last_accessed", session.get("updated_at"))
         total_time = None
         if created_at and last_accessed:
-            total_time = (last_accessed - created_at).total_seconds() / 60  # en minutos
+            total_time = (last_accessed - created_at).total_seconds() / 60 
         
         return {
             "session_id": session_id,
@@ -278,10 +276,8 @@ class LearningService:
 
     def complete_exercise_with_analysis(self, user_id: str, session_id: str, exercise_data: Dict, user_answer: str, is_correct: bool, time_taken: int = None):
         """Completa un ejercicio y actualiza el análisis de progreso"""
-        # Guardar ejercicio en la sesión
         self.add_exercise_to_session(session_id, exercise_data, user_answer, is_correct)
         
-        # Actualizar contexto de progreso en Qdrant
         from services.ai_service import ai
         ai.update_user_progress_context(
             user_id, 
@@ -297,7 +293,6 @@ class LearningService:
             }
         )
         
-        # Actualizar métricas del usuario
         session = self.get_session(session_id)
         if session:
             from services.qdrant_service import qdrant
@@ -315,13 +310,10 @@ class LearningService:
 
     def learn_concept_with_tracking(self, user_id: str, session_id: str, concept: str, explanation: str):
         """Aprende un concepto y actualiza el seguimiento"""
-        # Agregar concepto a la sesión
         self.update_session_concepts(session_id, [concept])
         
-        # Agregar al historial de la sesión
         self.add_session_interaction(session_id, "concept", f"Concepto aprendido: {concept}")
         
-        # Actualizar contexto de progreso
         from services.ai_service import ai
         session = self.get_session(session_id)
         ai.update_user_progress_context(
@@ -350,13 +342,8 @@ class LearningService:
         """Obtiene recomendaciones personalizadas para el usuario"""
         from services.ai_service import ai
         
-        # Obtener análisis de progreso
         progress = ai.analyze_student_progress(user_id)
-        
-        # Obtener consejos personalizados
-        advice = ai.generate_personalized_advice(user_id)
-        
-        # Obtener siguiente tema recomendado
+        advice = ai.generate_personalized_advice(user_id)        
         next_topic = ai.get_next_recommended_topic(user_id)
         
         return {
