@@ -2,20 +2,87 @@
 
 ## Descripción General
 
-Matemix AI es un microservicio completo de tutoría de matemáticas que utiliza inteligencia artificial para proporcionar una experiencia de aprendizaje personalizada y adaptativa. El sistema gestiona contexto de usuario en Qdrant, permite sesiones de aprendizaje persistentes, genera ejercicios adaptativos, crea reportes PDF y proporciona análisis de progreso con recomendaciones personalizadas.
+Matemix AI es un microservicio especializado en tutoría de matemáticas que utiliza inteligencia artificial para proporcionar una experiencia de aprendizaje personalizada. El sistema está diseñado con **separación clara de responsabilidades**: chat general para consultas rápidas y sesiones de aprendizaje para experiencias estructuradas con ejercicios.
 
-## 🚀 Características Principales
+## 🎯 Arquitectura: Separación de Responsabilidades
 
-- **🧠 Chat inteligente con filtro matemático avanzado**
-- **📚 Sesiones de aprendizaje persisten### 📊 4. Estadísticas y Análisises y contextuales**
-- **🎯 Ejercicios adaptativos basados en progreso individual**
-- **📊 Análisis completo de progreso y debilidades**
-- **💡 Recomendaciones personalizadas con IA**
-- **🔄 Seguimiento continuo en Qdrant Vector DB**
-- **📊 Dashboard completo para estudiantes**
-- **🎨 Consejos y motivación personalizada**
-- **📄 Reportes PDF detallados de aprendizaje**
-- **⚡ API completa para integración frontend**
+### 💬 Chat General (`/chat-stream`)
+- **Propósito**: Consultas, explicaciones y orientación matemática
+- **Características**: 
+  - Solo responde preguntas relacionadas con matemáticas
+  - Proporciona explicaciones conceptuales
+  - Orienta sobre temas y niveles
+  - **NO genera ejercicios ni maneja lógica de sesiones**
+
+### 📚 Sesiones de Aprendizaje (`/learning/session/{id}/chat`)
+- **Propósito**: Experiencia de aprendizaje estructurada y completa
+- **Características**:
+  - Genera ejercicios organizados por dificultad (3 fáciles, 4 intermedios, 3 difíciles)
+  - Seguimiento de progreso individual
+  - Contexto personalizado basado en la sesión
+  - Reportes PDF detallados
+
+## 🚀 Flujo de Sesiones de Aprendizaje
+
+### 1. 🎯 Crear Sesión
+```bash
+POST /learning/session/create
+```
+```json
+{
+  "user_id": "user123",
+  "topic": "Álgebra básica",
+  "subtopic": "Ecuaciones lineales",
+  "level": "basico"
+}
+```
+
+### 2. 💬 Chat en la Sesión
+```bash
+POST /learning/session/{session_id}/chat
+```
+```json
+{
+  "user_id": "user123", 
+  "message": "Quiero ejercicios de álgebra básica"
+}
+```
+
+**El sistema automáticamente:**
+- ✅ Detecta la intención de generar ejercicios
+- ✅ Genera 10 ejercicios organizados por dificultad
+- ✅ Los guarda vinculados a la sesión
+- ✅ Proporciona respuesta contextual sin mostrar todos los ejercicios
+
+### 3. 📝 Obtener Ejercicios Generados
+```bash
+GET /learning/session/{session_id}/exercises
+```
+```json
+{
+  "session_id": "session_789",
+  "topic": "Álgebra básica",
+  "exercises": [
+    {
+      "exercise_id": "ex1",
+      "pregunta": "Resuelve: 2x + 5 = 13",
+      "nivel": "facil",
+      "respuesta_correcta": "x = 4"
+    }
+  ],
+  "count": 10
+}
+```
+
+### 4. 📊 Seguimiento de Progreso
+```bash
+GET /learning/session/{session_id}/stats
+```
+
+### 5. 📄 Generar Reporte PDF
+```bash
+GET /learning/session/{session_id}/pdf-report
+```
 
 ## 🛠️ Instalación y Configuración
 
@@ -23,7 +90,7 @@ Matemix AI es un microservicio completo de tutoría de matemáticas que utiliza 
 - Python 3.8+
 - MongoDB
 - Qdrant Vector Database
-- Redis (opcional para cache)
+- Google Gemini API
 
 ### Dependencias
 ```bash
@@ -31,11 +98,12 @@ pip install -r requirements.txt
 ```
 
 ### Variables de Entorno
-Configura las siguientes variables en `config.py`:
-- `MONGODB_URL`: URL de conexión a MongoDB
-- `QDRANT_URL`: URL de conexión a Qdrant
-- `GOOGLE_API_KEY`: Clave API de Google Gemini
-- `REDIS_URL`: URL de Redis (opcional)
+```python
+# config.py
+MONGODB_URL = "mongodb://localhost:27017"
+QDRANT_URL = "http://localhost:6333"
+GEMINI_API_KEY = "your-gemini-api-key"
+```
 
 ### Ejecutar el Servicio
 ```bash
@@ -44,88 +112,45 @@ uvicorn main:app --reload --port 8000
 
 ## 📋 Documentación de Endpoints
 
-### 💬 1. Chat General
+### 💬 1. Chat General (Solo Consultas)
 
 #### `POST /chat-stream`
-Chat inteligente con detección automática de intención y contexto.
+Chat para consultas generales, explicaciones y orientación matemática. **NO genera ejercicios**.
 
 **Request JSON:**
 ```json
 {
   "user_id": "user123",
-  "conversation_id": "conv456", // opcional, se genera automáticamente
-  "message": "¿Puedes explicarme las ecuaciones lineales?"
+  "conversation_id": "conv456", // opcional
+  "message": "¿Qué son las ecuaciones lineales?"
 }
 ```
 
 **Response (Server-Sent Events):**
 ```json
 {
-  "text": "Las ecuaciones lineales son expresiones matemáticas...",
-  "conversation_id": "conv456",
-  "session_active": true
+  "text": "Las ecuaciones lineales son expresiones matemáticas de primer grado...",
+  "conversation_id": "conv456"
 }
 ```
 
-**Funcionalidades:**
-- Detección automática de intención del estudiante
-- Filtro matemático (solo responde preguntas de matemáticas)
-- Integración con sesiones de aprendizaje activas
-- Generación automática de títulos para conversaciones
-- Streaming de respuestas en tiempo real
+**Casos de uso:**
+- ✅ "¿Qué son las fracciones?"
+- ✅ "Explícame la geometría básica"
+- ✅ "¿Cómo resolver ecuaciones?"
+- ❌ "Quiero ejercicios" → Se orienta a crear sesión
+- ❌ No genera ejercicios ni maneja lógica de sesiones
 
 #### `GET /conversations/{user_id}`
-Obtiene la lista de conversaciones del usuario.
-
-**Response JSON:**
-```json
-[
-  {
-    "id": "conv123",
-    "title": "Ecuaciones lineales - Conceptos básicos",
-    "last_message": "Excelente, ahora entiendo mejor...",
-    "updated_at": "2024-01-15T10:30:00Z"
-  }
-]
-```
+Lista todas las conversaciones del chat general.
 
 #### `GET /conversation/{user_id}/{conversation_id}`
-Obtiene una conversación específica con todo su historial.
-
-**Response JSON:**
-```json
-{
-  "conversation_id": "conv123",
-  "user_id": "user123",
-  "title": "Ecuaciones lineales - Conceptos básicos",
-  "messages": [
-    {
-      "role": "user",
-      "content": "¿Puedes explicarme las ecuaciones lineales?",
-      "timestamp": "2024-01-15T10:00:00Z"
-    },
-    {
-      "role": "assistant",
-      "content": "Las ecuaciones lineales son...",
-      "timestamp": "2024-01-15T10:01:00Z"
-    }
-  ],
-  "created_at": "2024-01-15T10:00:00Z",
-  "updated_at": "2024-01-15T10:30:00Z"
-}
-```
+Obtiene una conversación específica.
 
 #### `DELETE /conversation/{user_id}/{conversation_id}`
-Elimina una conversación específica.
+Elimina una conversación.
 
-**Response JSON:**
-```json
-{
-  "message": "Conversación eliminada correctamente"
-}
-```
-
-### 📚 2. Sesiones de Aprendizaje
+### 📚 2. Sesiones de Aprendizaje (Con Ejercicios)
 
 #### `POST /learning/session/create`
 Crea una nueva sesión de aprendizaje estructurada.
@@ -135,8 +160,8 @@ Crea una nueva sesión de aprendizaje estructurada.
 {
   "user_id": "user123",
   "topic": "Álgebra básica",
-  "subtopic": "Ecuaciones lineales", // opcional
-  "level": "basico" // basico, intermedio, avanzado
+  "subtopic": "Ecuaciones lineales",
+  "level": "basico"
 }
 ```
 
@@ -145,151 +170,87 @@ Crea una nueva sesión de aprendizaje estructurada.
 {
   "session_id": "session_789",
   "topic": "Álgebra básica",
-  "subtopic": "Ecuaciones lineales",
-  "level": "basico",
   "teaching_plan": [
     "Variables y constantes",
-    "Operaciones básicas con variables",
-    "Resolución de ecuaciones simples"
+    "Operaciones básicas",
+    "Resolución de ecuaciones"
   ],
-  "message": "Sesión de aprendizaje creada para Álgebra básica. Comenzaremos con 3 conceptos."
+  "status": "active",
+  "chat_endpoint": "/learning/session/session_789/chat"
 }
 ```
 
 #### `POST /learning/session/{session_id}/chat`
-Chat interactivo dentro de una sesión de aprendizaje específica.
+Chat interactivo dentro de la sesión que **SÍ puede generar ejercicios**.
 
 **Request JSON:**
 ```json
 {
   "user_id": "user123",
-  "message": "¿Puedes generar algunos ejercicios de práctica?"
+  "message": "Quiero ejercicios de práctica"
 }
 ```
 
 **Response (Server-Sent Events):**
 ```json
 {
-  "text": "¡Perfecto! He generado algunos ejercicios de Álgebra básica para ti:\n\n**Ejercicio 1:**\nResuelve: 2x + 5 = 13\n\n**Ejercicio 2:**\nSi x - 3 = 7, ¿cuál es el valor de x?",
+  "text": "¡Perfecto! He generado 10 ejercicios organizados por dificultad...",
   "session_id": "session_789",
-  "topic": "Álgebra básica"
+  "topic": "Álgebra básica",
+  "exercises_generated": 10
 }
 ```
 
-#### `GET /learning/session/{session_id}`
-Obtiene información básica de una sesión de aprendizaje.
+**Generación automática de ejercicios:**
+- 🟢 3 ejercicios fáciles
+- 🟡 4 ejercicios intermedios  
+- 🔴 3 ejercicios difíciles
+- Se guardan automáticamente vinculados a la sesión
+
+#### `GET /learning/session/{session_id}/exercises`
+Obtiene todos los ejercicios generados en la sesión.
 
 **Response JSON:**
 ```json
 {
   "session_id": "session_789",
-  "user_id": "user123",
   "topic": "Álgebra básica",
-  "subtopic": "Ecuaciones lineales",
-  "concepts_covered": [
-    "Variables y constantes",
-    "Operaciones básicas con variables"
+  "exercises": [
+    {
+      "exercise_id": "ex1",
+      "pregunta": "Resuelve: 2x + 5 = 13",
+      "respuesta_correcta": "x = 4",
+      "nivel": "facil",
+      "solucion": ["Resta 5 de ambos lados", "Divide entre 2"],
+      "pistas": ["Aísla la variable x"]
+    }
   ],
-  "status": "active",
-  "created_at": "2024-01-15T09:00:00Z",
-  "updated_at": "2024-01-15T10:30:00Z"
+  "count": 10
 }
 ```
 
 #### `GET /learning/session/{session_id}/history`
-Obtiene el historial completo de una sesión con todas las interacciones.
-
-**Response JSON:**
-```json
-{
-  "session_info": {
-    "session_id": "session_789",
-    "topic": "Álgebra básica",
-    "status": "active"
-  },
-  "concepts_covered": [
-    "Variables y constantes",
-    "Operaciones básicas con variables"
-  ],
-  "session_history": [
-    {
-      "timestamp": "2024-01-15T09:30:00Z",
-      "type": "question",
-      "content": "¿Qué es una variable?",
-      "metadata": {"intent": "pregunta_concepto"}
-    },
-    {
-      "timestamp": "2024-01-15T09:31:00Z",
-      "type": "answer",
-      "content": "Una variable es un símbolo...",
-      "metadata": {"response_type": "general"}
-    }
-  ],
-  "exercises_completed": [
-    {
-      "exercise_id": "ex123",
-      "pregunta": "Resuelve: 2x + 5 = 13",
-      "respuesta_usuario": "x = 4",
-      "es_correcto": true,
-      "timestamp": "2024-01-15T10:00:00Z"
-    }
-  ],
-  "questions_asked": [
-    {
-      "pregunta": "¿Qué es una variable?",
-      "respuesta": "Una variable es un símbolo...",
-      "timestamp": "2024-01-15T09:30:00Z"
-    }
-  ]
-}
-```
+Historial completo de la sesión con todas las interacciones.
 
 #### `GET /learning/session/{session_id}/stats`
-Obtiene estadísticas resumidas de una sesión.
+Estadísticas resumidas de la sesión.
 
-**Response JSON:**
-```json
-{
-  "session_id": "session_789",
-  "topic": "Álgebra básica",
-  "subtopic": "Ecuaciones lineales",
-  "concepts_learned": 3,
-  "concepts_list": [
-    "Variables y constantes",
-    "Operaciones básicas con variables",
-    "Resolución de ecuaciones simples"
-  ],
-  "total_exercises": 8,
-  "correct_exercises": 6,
-  "accuracy_percentage": 75.0,
-  "free_questions_asked": 12,
-  "total_study_time_minutes": 45.5,
-  "status": "active",
-  "last_accessed": "2024-01-15T10:30:00Z"
-}
-```
+#### `GET /learning/session/{session_id}/pdf-report`
+Genera y descarga reporte PDF completo.
 
-#### `POST /learning/session/{session_id}/reactivate`
-Reactiva una sesión pausada o completada.
+#### `GET /learning/session/{session_id}/pdf-exercises`
+Genera y descarga PDF solo con ejercicios.
 
-**Response JSON:**
-```json
-{
-  "message": "Sesión reactivada exitosamente",
-  "session_id": "session_789"
-}
-```
+### 📊 3. Gestión de Sesiones
+
+#### `GET /learning/sessions/{user_id}`
+Obtiene todas las sesiones del usuario (activas, pausadas, completadas).
 
 #### `POST /learning/session/{session_id}/pause`
 Pausa una sesión activa.
 
-**Response JSON:**
-```json
-{
-  "message": "Sesión pausada exitosamente",
-  "session_id": "session_789"
-}
-```
+#### `POST /learning/session/{session_id}/reactivate`
+Reactiva una sesión pausada.
 
 #### `POST /learning/session/{session_id}/complete`
 Marca una sesión como completada.
@@ -617,297 +578,449 @@ Registra el aprendizaje de un concepto con seguimiento.
 }
 ```
 
-### � 4. Estadísticas y Análisis
+### 🎯 4. Análisis de Progreso y Recomendaciones
 
-#### `GET /analytics/user/{user_id}/progress`
-Obtiene estadísticas de ejercicios del usuario.
+#### `GET /tutor/dashboard/{user_id}`
+Dashboard completo del estudiante con progreso y recomendaciones.
+
+**Response JSON:**
+```json
+{
+  "user_id": "user123",
+  "active_sessions": [
+    {
+      "session_id": "session_789",
+      "topic": "Álgebra básica",
+      "status": "active"
+    }
+  ],
+  "progress_summary": {
+    "nivel_actual": "intermedio",
+    "total_sessions": 5,
+    "accuracy_percentage": 78.5
+  },
+  "quick_recommendations": {
+    "next_topic": "Geometría básica",
+    "daily_advice": "Practica 15 minutos diarios",
+    "motivation": "¡Vas muy bien! Sigue así."
+  }
+}
+```
+
+#### `GET /tutor/progress/{user_id}`
+Análisis detallado del progreso del usuario.
+
+**Response JSON:**
+```json
+{
+  "nivel_actual": "intermedio",
+  "areas_fuertes": [
+    "Ecuaciones lineales simples",
+    "Operaciones con variables",
+    "Resolución de sistemas 2x2"
+  ],
+  "areas_debiles": [
+    "Factorización de polinomios",
+    "Ecuaciones cuadráticas",
+    "Problemas de aplicación"
+  ],
+  "siguiente_tema_recomendado": "Geometría básica",
+  "dificultad_recomendada": "intermedio",
+  "consejos_mejora": [
+    "Practica más ejercicios de factorización",
+    "Revisa los conceptos de ecuaciones cuadráticas",
+    "Trabaja en problemas de aplicación paso a paso"
+  ],
+  "motivacion": "¡Excelente progreso! Has dominado el 75% del álgebra básica.",
+  "tiempo_estudio_sugerido": "30-45 minutos diarios",
+  "estadisticas_reales": {
+    "overall_accuracy": 78.5,
+    "total_exercises": 45,
+    "correct_exercises": 35,
+    "study_sessions": 8,
+    "avg_session_duration": 32.5
+  }
+}
+```
+
+#### `GET /tutor/recommendations/{user_id}`
+Recomendaciones personalizadas completas.
+
+**Response JSON:**
+```json
+{
+  "progress_analysis": {
+    "nivel_actual": "intermedio",
+    "areas_fuertes": ["Ecuaciones lineales", "Variables"],
+    "areas_debiles": ["Factorización", "Ecuaciones cuadráticas"],
+    "siguiente_tema_recomendado": "Geometría básica",
+    "dificultad_recomendada": "intermedio"
+  },
+  "personalized_advice": {
+    "consejo_principal": "Enfócate en practicar factorización durante los próximos días",
+    "estrategias_estudio": [
+      "Dedica 15 minutos diarios a ejercicios de factorización",
+      "Usa diagramas visuales para ecuaciones cuadráticas",
+      "Practica problemas de aplicación en pasos pequeños"
+    ],
+    "ejercicios_recomendados": [
+      "Factorización de trinomios",
+      "Diferencia de cuadrados",
+      "Problemas de aplicación básicos"
+    ],
+    "habitos_sugeridos": [
+      "Estudia a la misma hora cada día",
+      "Toma descansos de 5 minutos cada 25 minutos",
+      "Revisa conceptos anteriores semanalmente"
+    ],
+    "mensaje_motivacional": "¡Estás progresando genial! Cada error es una oportunidad de aprender.",
+    "proximos_pasos": [
+      "Completar 5 ejercicios de factorización",
+      "Repasar fórmula cuadrática",
+      "Practicar un problema de aplicación"
+    ],
+    "tiempo_estudio_diario": "30-45 minutos",
+    "frecuencia_recomendada": "5-6 días por semana"
+  },
+  "next_topic_recommendation": {
+    "tema_recomendado": "Geometría básica",
+    "razon": "Has dominado suficiente álgebra para avanzar",
+    "prerequisitos": [
+      "Ecuaciones lineales",
+      "Operaciones básicas",
+      "Resolución de problemas"
+    ],
+    "dificultad_estimada": "intermedio",
+    "tiempo_estimado": "2-3 semanas",
+    "conceptos_clave": [
+      "Perímetros y áreas",
+      "Ángulos y triángulos",
+      "Teorema de Pitágoras"
+    ]
+  },
+  "generated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+#### `POST /tutor/exercises/adaptive`
+Genera ejercicios adaptativos basados en el progreso del usuario.
+
+**Request JSON:**
+```json
+{
+  "user_id": "user123",
+  "topic": "Álgebra básica",
+  "cantidad": 5
+}
+```
+
+**Response JSON:**
+```json
+{
+  "user_id": "user123",
+  "topic": "Álgebra básica",
+  "exercises": [
+    {
+      "exercise_id": "ex456",
+      "pregunta": "Resuelve la ecuación: 3x - 7 = 14",
+      "respuesta_correcta": "x = 7",
+      "tema": "Álgebra básica",
+      "subtema": "Ecuaciones lineales",
+      "es_multiple_choice": false,
+      "opciones": null,
+      "solucion": [
+        "3x - 7 = 14",
+        "3x = 14 + 7",
+        "3x = 21",
+        "x = 21/3",
+        "x = 7"
+      ],
+      "pistas": [
+        "Suma 7 a ambos lados",
+        "Divide entre 3"
+      ],
+      "concepto_principal": "Ecuaciones lineales",
+      "nivel": "intermedio"
+    }
+  ],
+  "adaptation_info": "Ejercicios generados basados en tu progreso personal",
+  "count": 5
+}
+```
+
+#### `GET /tutor/exercises/{user_id}/next-batch`
+Obtiene el siguiente lote de ejercicios recomendados.
 
 **Query Parameters:**
-- `topic` (opcional): Filtra por tema específico
+- `topic` (requerido): El tema para generar ejercicios
+- `count` (opcional): Número de ejercicios (default: 3)
 
 **Response JSON:**
 ```json
 {
   "user_id": "user123",
   "topic": "Álgebra básica",
-  "stats": {
-    "total_exercises": 25,
-    "correct_exercises": 18,
-    "accuracy_percentage": 72.0,
-    "avg_time_per_exercise": 135.5,
-    "topics_practiced": [
-      "Ecuaciones lineales",
-      "Factorización",
-      "Sistemas de ecuaciones"
-    ]
+  "exercises": [
+    {
+      "exercise_id": "ex789",
+      "pregunta": "Factoriza: x² - 9",
+      "respuesta_correcta": "(x+3)(x-3)",
+      "nivel": "intermedio"
+    }
+  ],
+  "difficulty_level": "intermedio",
+  "personalized_note": "Estos ejercicios están adaptados a tu nivel actual: intermedio",
+  "tips": [
+    "Recuerda la fórmula de diferencia de cuadrados",
+    "Verifica tu respuesta expandiendo el resultado"
+  ]
+}
+```
+
+#### `POST /tutor/exercise/complete`
+Completa un ejercicio con seguimiento de progreso.
+
+**Request JSON:**
+```json
+{
+  "user_id": "user123",
+  "session_id": "session_789",
+  "exercise_id": "ex456",
+  "user_answer": "x = 7",
+  "is_correct": true,
+  "time_taken": 120 // segundos, opcional
+}
+```
+
+**Response JSON (si es correcto):**
+```json
+{
+  "message": "¡Excelente! Ejercicio completado correctamente",
+  "result": "correcto",
+  "motivation": "¡Sigue así! Estás progresando muy bien."
+}
+```
+
+**Response JSON (si es incorrecto):**
+```json
+{
+  "message": "Ejercicio completado",
+  "result": "incorrecto",
+  "advice": "Enfócate en practicar factorización durante los próximos días",
+  "motivation": "¡No te desanimes! Cada error es una oportunidad de aprender.",
+  "next_steps": [
+    "Revisa los pasos de factorización",
+    "Practica con ejercicios más simples",
+    "Pide ayuda si lo necesitas"
+  ]
+}
+```
+
+#### `POST /tutor/concept/learn`
+Registra el aprendizaje de un concepto con seguimiento.
+
+**Request JSON:**
+```json
+{
+  "user_id": "user123",
+  "session_id": "session_789",
+  "concept": "Variables y constantes",
+  "explanation": "Una variable es un símbolo que representa un número desconocido"
+}
+```
+
+**Response JSON:**
+```json
+{
+  "message": "Concepto 'Variables y constantes' aprendido y registrado",
+  "session_id": "session_789",
+  "progress_updated": true
+}
+```
+
+## ⚙️ Configuración Técnica
+
+### Base de Datos
+
+#### MongoDB Collections
+```javascript
+// Conversaciones del chat general
+conversations: {
+  user_id: String,
+  conversation_id: String,
+  title: String,
+  messages: Array,
+  created_at: Date,
+  updated_at: Date
+}
+
+// Sesiones de aprendizaje
+learning_sessions: {
+  session_id: String,
+  user_id: String,
+  topic: String,
+  subtopic: String,
+  level: String,
+  concepts_covered: Array,
+  status: String,
+  interaction_history: Array,
+  created_at: Date,
+  updated_at: Date
+}
+
+// Ejercicios generados
+exercises: {
+  exercise_id: String,
+  session_id: String,
+  conversation_id: String,
+  pregunta: String,
+  respuesta_correcta: String,
+  nivel: String,
+  tema: String,
+  generated_at: Date
+}
+```
+
+#### Qdrant Collections
+```python
+# Contexto de conversaciones generales
+general_context: {
+  user_id: String,
+  text: String,
+  embedding: Vector,
+  conversation_id: String,
+  context_type: "conversation",
+  metadata: {
+    type: "general_math_chat",
+    topic: "conversacion_general"
+  }
+}
+
+# Contexto de sesiones de aprendizaje
+session_context: {
+  user_id: String,
+  text: String,
+  embedding: Vector,
+  conversation_id: String,
+  context_type: "conversation",
+  metadata: {
+    type: "learning_interaction",
+    session_id: String,
+    topic: String,
+    exercises_generated: Number
   }
 }
 ```
 
-### 📄 5. Reportes PDF
-
-#### `GET /learning/session/{session_id}/pdf-report`
-Genera y descarga el reporte PDF completo de una sesión.
-
-**Response:** Archivo PDF descargable
-
-**Nombre del archivo:** `reporte_aprendizaje_{topic}_{session_id}.pdf`
-
-**Contenido del PDF:**
-- Resumen de la sesión
-- Conceptos aprendidos
-- Ejercicios completados
-- Estadísticas de progreso
-- Recomendaciones personalizadas
-
-#### `GET /learning/session/{session_id}/pdf-exercises`
-Genera y descarga un PDF solo con los ejercicios de una sesión.
-
-**Response:** Archivo PDF descargable
-
-**Nombre del archivo:** `ejercicios_{topic}_{session_id}.pdf`
-
-**Contenido del PDF:**
-- Lista de ejercicios resueltos
-- Respuestas del usuario
-- Soluciones correctas
-- Comentarios y retroalimentación
-
-#### `GET /learning/report/{session_id}`
-Genera reporte JSON de una sesión de aprendizaje.
-
-**Response JSON:**
-```json
-{
-  "session_id": "session_789",
-  "user_id": "user123",
-  "topic": "Álgebra básica",
-  "subtopic": "Ecuaciones lineales",
-  "concepts_learned": [
-    "Variables y constantes",
-    "Operaciones básicas con variables",
-    "Resolución de ecuaciones simples"
-  ],
-  "level": "basico",
-  "status": "completed",
-  "created_at": "2024-01-15T09:00:00Z",
-  "updated_at": "2024-01-15T11:30:00Z",
-  "exercise_stats": {
-    "total_exercises": 12,
-    "correct_exercises": 9,
-    "accuracy_percentage": 75.0
-  },
-  "message": "Reporte generado exitosamente"
-}
+### Variables de Entorno
+```bash
+# config.py
+MONGODB_URL=mongodb://localhost:27017/matemix
+QDRANT_URL=http://localhost:6333
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-1.5-flash
+EMBEDDING_MODEL=models/embedding-001
+REDIS_URL=redis://localhost:6379  # opcional para cache
 ```
 
-### 🎮 6. Demo y Testing
+### Docker Compose
+```yaml
+version: '3.8'
+services:
+  matemix-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://mongo:27017/matemix
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - mongo
+      - qdrant
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+volumes:
+  mongo_data:
+  qdrant_data:
+```
+
+## 🧪 Testing
+
+### Endpoints de Prueba
 
 #### `GET /test/tutor-demo/{user_id}`
-Endpoint de demostración que ejecuta todas las funcionalidades del tutor.
-
-**Response JSON:**
-```json
-{
-  "message": "🎓 Demo del Tutor Completo ejecutada exitosamente",
-  "user_id": "user123",
-  "demo_results": {
-    "session_created": "session_demo_123",
-    "adaptive_exercises": 2,
-    "progress_analysis": {
-      "nivel": "principiante",
-      "consejos": 3
-    },
-    "recommendations": {
-      "next_topic": "Geometría básica",
-      "advice": "Practica ecuaciones lineales diariamente"
-    }
-  },
-  "next_steps": [
-    "Ver dashboard: GET /tutor/dashboard/user123",
-    "Chatear en sesión: POST /learning/session/session_demo_123/chat",
-    "Obtener más ejercicios: GET /tutor/exercises/user123/next-batch?topic=Álgebra básica",
-    "Generar PDF: GET /learning/session/session_demo_123/pdf-report"
-  ],
-  "status": "success"
-}
-```
-
-### ⚡ 7. Endpoints de Sistema
-
-#### `GET /`
-Información general del microservicio y documentación de endpoints.
-
-**Response JSON:**
-```json
-{
-  "message": "🎓 Matemix AI - Tutor Completo de Matemáticas con IA Avanzada",
-  "version": "4.0.0",
-  "description": "Sistema completo de tutoría matemática con IA...",
-  "features": [
-    "🧠 Chat inteligente con filtro matemático avanzado",
-    "📚 Sesiones de aprendizaje persistentes y contextuales",
-    "🎯 Ejercicios adaptativos basados en progreso individual"
-  ],
-  "api_sections": {
-    "🎯 Tutor IA Completo": {...},
-    "📚 Sesiones de Aprendizaje": {...},
-    "📄 Reportes y Análisis": {...}
-  }
-}
-```
+Endpoint de demostración que muestra el flujo completo:
+- Crea una sesión de aprendizaje
+- Simula el flujo correcto: chat general vs sesiones
+- Genera ejercicios automáticamente
+- Muestra análisis de progreso
 
 #### `GET /health`
-Verificación de estado del servicio.
+Health check del servicio.
 
-**Response JSON:**
-```json
-{
-  "status": "healthy"
-}
+### Pruebas Manuales
+
+```bash
+# 1. Verificar que chat general NO genera ejercicios
+curl -X POST "http://localhost:8000/chat-stream" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "test", "message": "Quiero ejercicios"}'
+
+# 2. Crear sesión y verificar generación de ejercicios
+curl -X POST "http://localhost:8000/learning/session/create" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "test", "topic": "Álgebra", "level": "basico"}'
+
+# 3. Generar ejercicios en sesión
+curl -X POST "http://localhost:8000/learning/session/{session_id}/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "test", "message": "Quiero ejercicios"}'
 ```
 
-## 🔄 Flujos de Integración Frontend
+## 📝 Changelog
 
-### Flujo Completo Recomendado
+### v4.0.0 - Separación de Responsabilidades
+- ✅ Chat general (`/chat-stream`) limitado a consultas y explicaciones
+- ✅ Sesiones de aprendizaje como único lugar para generar ejercicios
+- ✅ Eliminación de lógica especial e intenciones del chat general
+- ✅ Clarificación de responsabilidades en documentación
 
-1. **Obtener Dashboard:**
-   ```
-   GET /tutor/dashboard/{user_id}
-   ```
+### v3.x.x - Versiones Anteriores
+- Chat inteligente con generación de ejercicios mixta
+- Lógica de intenciones en chat general
+- Responsabilidades mezcladas entre endpoints
 
-2. **Ver Recomendaciones:**
-   ```
-   GET /tutor/recommendations/{user_id}
-   ```
+## 🤝 Contribución
 
-3. **Crear/Reactivar Sesión:**
-   ```
-   POST /learning/session/create
-   ```
+1. Fork el repositorio
+2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit tus cambios (`git commit -am 'Agregar nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Crea un Pull Request
 
-4. **Chatear en la Sesión:**
-   ```
-   POST /learning/session/{session_id}/chat
-   ```
+## 📜 Licencia
 
-5. **Solicitar Ejercicios Adaptativos:**
-   ```
-   POST /tutor/exercises/adaptive
-   ```
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
 
-6. **Completar Ejercicios:**
-   ```
-   POST /tutor/exercise/complete
-   ```
+## 📞 Soporte
 
-7. **Ver Progreso Actualizado:**
-   ```
-   GET /tutor/progress/{user_id}
-   ```
-
-8. **Generar Reportes PDF:**
-   ```
-   GET /learning/session/{session_id}/pdf-report
-   ```
-
-### Flujo para Chat Libre
-
-1. **Iniciar Chat:**
-   ```
-   POST /chat-stream
-   ```
-
-2. **Listar Conversaciones:**
-   ```
-   GET /conversations/{user_id}
-   ```
-
-3. **Ver Conversación Específica:**
-   ```
-   GET /conversation/{user_id}/{conversation_id}
-   ```
-
-## 🛡️ Manejo de Errores
-
-Todos los endpoints pueden retornar los siguientes códigos de error:
-
-- **400 Bad Request:** Datos de entrada inválidos
-- **404 Not Found:** Recurso no encontrado
-- **403 Forbidden:** Acceso denegado
-- **500 Internal Server Error:** Error interno del servidor
-
-**Formato de respuesta de error:**
-```json
-{
-  "detail": "Descripción del error"
-}
-```
-
-## 🎯 Arquitectura de Contexto
-
-El sistema utiliza **Qdrant Vector Database** para gestionar tres tipos de contexto:
-
-1. **Contexto de Conversación:** Interacciones específicas por conversación
-2. **Contexto de Sesión:** Aprendizaje dentro de sesiones estructuradas  
-3. **Contexto General:** Progreso y conocimiento global del usuario
-
-### Metadatos de Contexto
-
-Cada entrada en Qdrant incluye metadatos que permiten:
-- Filtrar por usuario, conversación o sesión
-- Identificar el tipo de interacción
-- Rastrear el progreso temporal
-- Asociar con temas específicos
-
-## 📊 Análisis de Progreso
-
-El sistema proporciona análisis detallado que incluye:
-
-- **Nivel actual del estudiante**
-- **Áreas fuertes y débiles**
-- **Siguiente tema recomendado**
-- **Consejos personalizados de mejora**
-- **Estadísticas de rendimiento**
-- **Motivación personalizada**
-- **Tiempo de estudio sugerido**
-
-## 🎨 Personalización con IA
-
-La IA del sistema proporciona:
-
-- **Detección automática de nivel de competencia**
-- **Adaptación de dificultad en tiempo real**
-- **Generación de ejercicios personalizados**
-- **Consejos motivacionales específicos**
-- **Recomendaciones de estudio personalizadas**
-- **Análisis de patrones de aprendizaje**
-
-## 📱 Consideraciones para Frontend
-
-### Endpoints Críticos para UI
-
-- **Dashboard:** `/tutor/dashboard/{user_id}`
-- **Chat en Tiempo Real:** `/chat-stream` (Server-Sent Events)
-- **Ejercicios Adaptativos:** `/tutor/exercises/adaptive`
-- **Progreso:** `/tutor/progress/{user_id}`
-
-### Gestión de Estado
-
-Se recomienda mantener en el frontend:
-- ID de usuario activo
-- Sesión de aprendizaje activa
-- Conversación actual
-- Estado de progreso
-
-### Optimización
-
-- Cachear respuestas del dashboard
-- Implementar loading states para PDFs
-- Manejar reconexión para SSE
-- Implementar retry logic para errores
-
----
+Para soporte técnico o preguntas sobre la integración:
+- Documentación API: `http://localhost:8000/docs`
+- Endpoint de demo: `http://localhost:8000/test/tutor-demo/{user_id}`
+- Health check: `http://localhost:8000/health`
 
 ## 🚀 Próximos Pasos
 
