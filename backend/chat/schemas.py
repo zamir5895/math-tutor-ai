@@ -15,6 +15,13 @@ class AIResponse(BaseModel):
 class Conversation(BaseModel):
     user_id: str
     conversation_id: str
+    title: str
     messages: List[dict]
     created_at: datetime
     updated_at: datetime
+
+class ConversationSummary(BaseModel):
+    id: str
+    title: str
+    last_message: str
+    updated_at: str
