@@ -375,9 +375,11 @@ async def get_learning_session(session_id: str):
     session.pop("_id", None)
     return session
 
+
+
 @app.post("/learning/session/{session_id}/teach/{concept_index}")
 async def teach_concept(session_id: str, concept_index: int):
-    """Enseña un concepto específico de la sesión"""
+    """Enseña un concepto específico de la sesión (compatible con EventSource/SSE)"""
     try:
         session = learning_service.get_session(session_id)
         if not session:
@@ -388,23 +390,24 @@ async def teach_concept(session_id: str, concept_index: int):
             raise HTTPException(status_code=400, detail="Índice de concepto inválido")
         
         concept = concepts[concept_index]
-        
+
+        # Si tu IA soporta streaming, puedes hacer chunk por chunk aquí.
+        # Si no, simplemente envía todo como un solo evento.
         explanation = ai.explain_concept(
             concept=concept,
             topic=session["topic"],
             user_context=f"Sesión de aprendizaje de {session['topic']}"
         )
-        
-        return {
-            "session_id": session_id,
-            "concept_index": concept_index,
-            "concept": concept,
-            "explanation": explanation,
-            "progress": f"{concept_index + 1}/{len(concepts)}"
-        }
+
+        def event_stream():
+            yield f"data: {json.dumps({'session_id': session_id, 'concept_index': concept_index, 'concept': concept, 'explanation': explanation, 'progress': f'{concept_index + 1}/{len(concepts)}'})}\n\n"
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
     except Exception as e:
         logger.error(f"Error teaching concept: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        def error_stream():
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
 
 @app.post("/learning/session/{session_id}/complete")
 async def complete_learning_session(session_id: str):
