@@ -146,4 +146,93 @@ class QdrantService:
             )
         )
 
+    def get_user_learning_progress(self, user_id: str, limit: int = 100):
+        """Obtiene el historial de progreso de aprendizaje del usuario"""
+        try:
+            results = self.client.scroll(
+                collection_name=self.collection,
+                scroll_filter=Filter(
+                    must=[
+                        FieldCondition(key="user_id", match=MatchValue(value=user_id)),
+                        FieldCondition(key="context_type", match=MatchValue(value="learning_progress"))
+                    ]
+                ),
+                limit=limit,
+                with_payload=True
+            )[0]
+            
+            return [{"payload": point.payload} for point in results]
+        except Exception as e:
+            print(f"Error obteniendo progreso de usuario: {e}")
+            return []
+
+    def get_user_topic_history(self, user_id: str, topic: str = None):
+        """Obtiene el historial de un usuario en un tema específico"""
+        try:
+            filter_conditions = [
+                FieldCondition(key="user_id", match=MatchValue(value=user_id))
+            ]
+            
+            if topic:
+                filter_conditions.append(
+                    FieldCondition(key="topic", match=MatchValue(value=topic))
+                )
+            
+            results = self.client.scroll(
+                collection_name=self.collection,
+                scroll_filter=Filter(must=filter_conditions),
+                limit=50,
+                with_payload=True
+            )[0]
+            
+            return [{"payload": point.payload, "text": point.payload.get("text")} for point in results]
+        except Exception as e:
+            print(f"Error obteniendo historial de tema: {e}")
+            return []
+
+    def search_similar_learning_patterns(self, user_id: str, current_topic: str, query_embedding, limit: int = 10):
+        """Busca patrones de aprendizaje similares para recomendaciones"""
+        try:
+            results = self.client.search(
+                collection_name=self.collection,
+                query_vector=query_embedding,
+                query_filter=Filter(
+                    must=[
+                        FieldCondition(key="context_type", match=MatchValue(value="learning_progress")),
+                        FieldCondition(key="topic", match=MatchValue(value=current_topic))
+                    ],
+                    must_not=[
+                        FieldCondition(key="user_id", match=MatchValue(value=user_id))
+                    ]
+                ),
+                limit=limit,
+                with_payload=True
+            )
+            
+            return [{"payload": hit.payload, "score": hit.score} for hit in results]
+        except Exception as e:
+            print(f"Error buscando patrones similares: {e}")
+            return []
+
+    def update_user_learning_metrics(self, user_id: str, metrics: dict):
+        """Actualiza métricas de aprendizaje del usuario"""
+        try:
+            from services.ai_service import ai
+            
+            metrics_text = f"Métricas de usuario {user_id}: " + ", ".join([f"{k}={v}" for k, v in metrics.items()])
+            
+            self.upsert_context(
+                user_id=user_id,
+                text=metrics_text,
+                embedding=ai.get_embedding(metrics_text),
+                conversation_id=f"metrics_{user_id}",
+                context_type="user_metrics",
+                metadata={
+                    "type": "learning_metrics",
+                    **metrics
+                }
+            )
+        except Exception as e:
+            print(f"Error actualizando métricas: {e}")
+
 qdrant = QdrantService()
