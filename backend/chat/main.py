@@ -10,7 +10,7 @@ from schemas import (
     ExerciseRequest, ExerciseResponse, DifficultyLevel, SessionHistoryResponse, 
     SessionSummaryStats, ReactivateSessionRequest, SessionChatMessage, ProgressAnalysis,
     PersonalizedAdvice, TopicRecommendation, UserRecommendations, AdaptiveExerciseRequest,
-    ExerciseCompletion, ConceptLearning
+    ExerciseCompletion, ConceptLearning, SessionExercisesResponse, ConversationExercisesResponse
 )
 from datetime import datetime
 import uuid
@@ -66,16 +66,11 @@ async def generate_context_prompt(user_id: str, message: str, conversation_id: s
 
 @app.post("/chat-stream")
 async def chat_stream(message: UserMessage):
-    """Endpoint de chat inteligente con soporte para sesiones de aprendizaje"""
+    """Chat general de matemáticas para consultas, explicaciones y orientación - SIN generación de ejercicios ni lógica de sesiones"""
     conversation_id = message.conversation_id or str(uuid.uuid4())
-    
     is_first_message = message.conversation_id is None
     
-    active_session = ai.is_learning_session_active(message.user_id)
-    
-    student_intent = ai.analyze_student_intent(message.message)
-    
-    if not ai.is_math_related(message.message) and not active_session:
+    if not ai.is_math_related(message.message):
         non_math_response = """Lo siento, soy un tutor especializado en matemáticas y solo puedo ayudarte con temas relacionados a esta materia. 
 
 ¿Te gustaría que te ayude con alguno de estos temas?
@@ -83,9 +78,7 @@ async def chat_stream(message: UserMessage):
 - Geometría 
 - Fracciones
 - Ecuaciones
-- O cualquier otro tema de matemáticas
-
-También puedo crear una sesión de aprendizaje personalizada para ti. ¿Qué te interesa aprender?"""
+- O cualquier otro tema de matemáticas"""
         
         mongo.save_message(message.user_id, conversation_id, "user", message.message)
         mongo.save_message(message.user_id, conversation_id, "assistant", non_math_response)
@@ -101,75 +94,16 @@ También puedo crear una sesión de aprendizaje personalizada para ti. ¿Qué te
         title = ai.generate_title(message.message)
         mongo.set_conversation_title(message.user_id, conversation_id, title)
     
-    special_response = None
-    if student_intent.get("intent") == "pedir_ejercicios":
-        topic = student_intent.get("topic_mentioned") or (active_session.get("topic") if active_session else None)
-        if topic:
-            if active_session:
-                exercises = learning_service.get_adaptive_exercises_for_user(message.user_id, topic, 3)
-                difficulty_note = "adaptativos basados en tu progreso"
-            else:
-                exercises = ai.generate_exercises(topic, nivel="facil", cantidad=3)
-                difficulty_note = "nivel básico"
-            
-            special_response = f"""¡Perfecto! He generado ejercicios {difficulty_note} de {topic} para ti.
-            
-Tienes varias opciones:
-1. **Usar el endpoint `/tutor/exercises/{message.user_id}/next-batch?topic={topic}`** para ejercicios personalizados
-2. **Crear una sesión de aprendizaje** con `/learning/session/create` para un seguimiento completo
-3. **Ver tu dashboard** en `/tutor/dashboard/{message.user_id}` para análisis de progreso
-
-¿Prefieres que te explique algún concepto primero o quieres empezar directamente con los ejercicios?"""
-            
-    elif student_intent.get("intent") == "crear_sesion":
-        topic = student_intent.get("topic_mentioned", "matemáticas")
-        special_response = f"""¡Excelente idea crear una sesión de aprendizaje de {topic}! 
-
-**Para el frontend, usa estos endpoints:**
-- `POST /learning/session/create` - Crear la sesión
-- `GET /tutor/progress/{message.user_id}` - Ver tu progreso actual
-- `GET /tutor/recommendations/{message.user_id}` - Obtener recomendaciones personalizadas
-
-Una vez creada la sesión, podrás:
-✅ Chatear libremente dentro de la sesión
-✅ Generar ejercicios adaptativos automáticamente  
-✅ Recibir consejos personalizados basados en tu progreso
-✅ Exportar reportes PDF completos
-
-¿Quieres que te recomiende el mejor tema para empezar basado en tu nivel?"""
-    
-    elif active_session and student_intent.get("intent") == "pregunta_concepto":
-        topic = active_session.get("topic")
-        progress = learning_service.get_user_progress_analysis(message.user_id)
-        
-        special_response = f"""Perfecto, estás en tu sesión de {topic}. 
-
-**Tu progreso actual:**
-- Nivel: {progress.get('nivel_actual', 'principiante')}
-- Precisión: {progress.get('estadisticas_reales', {}).get('overall_accuracy', 0):.1f}%
-
-Basándome en tu progreso, voy a explicarte esto de manera personalizada..."""
-    
-    if special_response:
-        response_text = special_response
-    else:
-        response_text = ai.generate_contextual_response(message.message, active_session)
+    context_prompt = await generate_context_prompt(message.user_id, message.message, conversation_id)
     
     def event_stream():
-        if special_response:
-            full_response = response_text
-            yield f"data: {json.dumps({'text': response_text, 'conversation_id': conversation_id, 'session_active': bool(active_session)})}\n\n"
-        else:
-            response = ai.model.generate_content(
-                response_text,
-                stream=True 
-            )
-            
-            full_response = ""
-            for chunk in response:
-                chunk_text = chunk.text
-                full_response += chunk_text
-                yield f"data: {json.dumps({'text': chunk_text, 'conversation_id': conversation_id, 'session_active': bool(active_session)})}\n\n"
+        response = ai.model.generate_content(context_prompt, stream=True)
+        
+        full_response = ""
+        for chunk in response:
+            chunk_text = chunk.text
+            full_response += chunk_text
+            yield f"data: {json.dumps({'text': chunk_text, 'conversation_id': conversation_id})}\n\n"
 
         mongo.save_message(message.user_id, conversation_id, "assistant", full_response)
         
@@ -181,22 +115,12 @@ Basándome en tu progreso, voy a explicarte esto de manera personalizada..."""
             conversation_id=conversation_id,
             context_type="conversation",
             metadata={
-                "type": "interaction", 
-                "session_id": active_session.get("session_id") if active_session else None,
-                "topic": active_session.get("topic") if active_session else None
+                "type": "general_math_chat",
+                "topic": "conversacion_general"
             }
         )
-        
-        if active_session and len(full_response) > 50:
-            learning_service.update_session_concepts(
-                active_session["session_id"], 
-                [f"Concepto discutido: {message.message[:100]}"]
-            )
 
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream"
-    )
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 @app.get("/conversation/{user_id}/{conversation_id}")
 async def get_conversation(user_id: str, conversation_id: str):
@@ -234,6 +158,7 @@ async def list_conversations(user_id: str):
     except Exception as e:
         logger.error(f"Error listing conversations: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/")
 async def root():
     return {
@@ -241,16 +166,16 @@ async def root():
         "version": "4.0.0",
         "description": "Sistema completo de tutoría matemática con IA que adapta ejercicios, analiza progreso y proporciona recomendaciones personalizadas",
         "features": [
-            "🧠 Chat inteligente con filtro matemático avanzado",
-            "📚 Sesiones de aprendizaje persistentes y contextuales",
-            "🎯 Ejercicios adaptativos basados en progreso individual",
+            "🧠 Chat general para consultas y orientación matemática",
+            "📚 Sesiones de aprendizaje especializadas con chat propio", 
+            "🎯 Generación de ejercicios SOLO en sesiones: 10 por set (3 fáciles, 4 intermedios, 3 difíciles)",
             "📊 Análisis completo de progreso y debilidades",
-            "� Recomendaciones personalizadas con IA",
+            "💡 Recomendaciones personalizadas con IA",
             "🔄 Seguimiento continuo en Qdrant Vector DB",
-            "� Dashboard completo para estudiantes",
-            "🎨 Consejos y motivación personalizada",
+            "🎨 Dashboard completo para estudiantes",
+            "💬 Separación clara: chat general vs chat de sesión",
             "📄 Reportes PDF detallados de aprendizaje",
-            "⚡ API completa para integración frontend"
+            "⚡ API bien estructurada con responsabilidades claras"
         ],
         "api_sections": {
             "🎯 Tutor IA Completo": {
@@ -276,8 +201,12 @@ async def root():
                 "conversaciones": "/conversations/{user_id}"
             },
             "💬 Chat General": {
-                "chat_libre": "/chat-stream",
+                "chat_consultas": "/chat-stream (solo consultas y orientación)",
                 "eliminar_conversacion": "/conversation/{user_id}/{conversation_id}"
+            },
+            "🎯 Chat de Sesiones": {
+                "chat_con_ejercicios": "/learning/session/{session_id}/chat (genera ejercicios)",
+                "obtener_ejercicios": "/learning/session/{session_id}/exercises"
             }
         },
         "frontend_integration": {
@@ -299,21 +228,21 @@ async def root():
             }
         },
         "ai_capabilities": [
-            "🎯 Detección automática de nivel de estudiante",
-            "📊 Análisis de patrones de aprendizaje",
-            "🎨 Generación de ejercicios personalizados",
-            "💡 Consejos adaptativos basados en errores",
+            "🎯 Detección automática de intenciones en el chat (ejercicios, conceptos, sesiones)",
+            "📊 Análisis de patrones de aprendizaje individualizados",
+            "🎨 Generación inteligente de sets de 10 ejercicios (3-4-3 por dificultad)",
+            "💡 Consejos adaptativos basados en errores y progreso",
             "🔄 Seguimiento de progreso en vector database",
-            "🎓 Recomendaciones de temas siguientes",
-            "❤️ Motivación personalizada"
+            "🎓 Recomendaciones de temas siguientes personalizadas",
+            "❤️ Motivación y retroalimentación personalizada"
         ],
-        "documentation": "/docs",
-        "ejemplo_uso": {
-            "descripcion": "Ejemplo de flujo para el frontend",
-            "paso_1": "GET /tutor/dashboard/user123 - Obtener estado actual",
-            "paso_2": "POST /tutor/exercises/adaptive - Generar ejercicios personalizados",
-            "paso_3": "POST /tutor/exercise/complete - Enviar respuesta con tracking",
-            "paso_4": "GET /tutor/recommendations/user123 - Ver nuevas recomendaciones"
+        "documentation": "/docs", 
+        "ejemplo_uso_simplificado": {
+            "descripcion": "Responsabilidades separadas: Chat general vs Sesiones",
+            "chat_general": "POST /chat-stream con 'explícame álgebra' → Solo explica conceptos y orienta",
+            "crear_sesion": "POST /learning/session/create → Crear sesión para generar ejercicios",
+            "chat_sesion": "POST /learning/session/{id}/chat con 'quiero ejercicios' → Genera 10 ejercicios",
+            "obtener_ejercicios": "GET /learning/session/{id}/exercises → Ver ejercicios generados"
         }
     }
 
@@ -338,7 +267,7 @@ async def delete_conversation(user_id: str, conversation_id: str):
 
 @app.post("/learning/session/create")
 async def create_learning_session(request: CreateLearningSessionRequest):
-    """Crea una nueva sesión de aprendizaje estructurada (compatible con EventSource/SSE)"""
+    """Crea una nueva sesión de aprendizaje estructurada"""
     try:
         session_id = learning_service.create_learning_session(
             user_id=request.user_id,
@@ -351,19 +280,20 @@ async def create_learning_session(request: CreateLearningSessionRequest):
         learning_service.update_session_concepts(session_id, teaching_plan)
         logger.info(f"Created learning session {session_id} for user {request.user_id}")
 
-        def event_stream():
-            # Puedes emitir varios eventos si quieres mostrar progreso paso a paso
-            yield f"data: {json.dumps({'status': 'created', 'session_id': session_id})}\n\n"
-            yield f"data: {json.dumps({'status': 'teaching_plan', 'teaching_plan': teaching_plan})}\n\n"
-            yield f"data: {json.dumps({'status': 'done', 'session_id': session_id, 'topic': request.topic, 'subtopic': request.subtopic, 'level': request.level, 'teaching_plan': teaching_plan, 'message': f'Sesión de aprendizaje creada para {request.topic}. Comenzaremos con {len(teaching_plan)} conceptos.'})}\n\n"
-
-        return StreamingResponse(event_stream(), media_type="text/event-stream")
+        return {
+            "session_id": session_id,
+            "topic": request.topic,
+            "subtopic": request.subtopic,
+            "level": request.level,
+            "teaching_plan": teaching_plan,
+            "status": "active",
+            "message": f"Sesión de aprendizaje creada para {request.topic}. Comenzaremos con {len(teaching_plan)} conceptos.",
+            "chat_endpoint": f"/learning/session/{session_id}/chat"
+        }
 
     except Exception as e:
         logger.error(f"Error creating learning session: {str(e)}")
-        def error_stream():
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
-        return StreamingResponse(error_stream(), media_type="text/event-stream")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/learning/session/{session_id}")
 async def get_learning_session(session_id: str):
@@ -379,7 +309,7 @@ async def get_learning_session(session_id: str):
 
 @app.post("/learning/session/{session_id}/teach/{concept_index}")
 async def teach_concept(session_id: str, concept_index: int):
-    """Enseña un concepto específico de la sesión (compatible con EventSource/SSE)"""
+    """Enseña un concepto específico de la sesión"""
     try:
         session = learning_service.get_session(session_id)
         if not session:
@@ -390,24 +320,22 @@ async def teach_concept(session_id: str, concept_index: int):
             raise HTTPException(status_code=400, detail="Índice de concepto inválido")
         
         concept = concepts[concept_index]
-
-        # Si tu IA soporta streaming, puedes hacer chunk por chunk aquí.
-        # Si no, simplemente envía todo como un solo evento.
         explanation = ai.explain_concept(
             concept=concept,
             topic=session["topic"],
             user_context=f"Sesión de aprendizaje de {session['topic']}"
         )
 
-        def event_stream():
-            yield f"data: {json.dumps({'session_id': session_id, 'concept_index': concept_index, 'concept': concept, 'explanation': explanation, 'progress': f'{concept_index + 1}/{len(concepts)}'})}\n\n"
-
-        return StreamingResponse(event_stream(), media_type="text/event-stream")
+        return {
+            "session_id": session_id,
+            "concept_index": concept_index,
+            "concept": concept,
+            "explanation": explanation,
+            "progress": f"{concept_index + 1}/{len(concepts)}"
+        }
     except Exception as e:
         logger.error(f"Error teaching concept: {str(e)}")
-        def error_stream():
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
-        return StreamingResponse(error_stream(), media_type="text/event-stream")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/learning/session/{session_id}/complete")
 async def complete_learning_session(session_id: str):
@@ -423,94 +351,45 @@ async def complete_learning_session(session_id: str):
             "session_id": session_id,
             "message": "Sesión completada exitosamente",
             "concepts_learned": len(session.get("concepts_covered", [])),
+            "status": "completed",
             "next_steps": "Puedes generar ejercicios o un reporte de tu aprendizaje"
         }
     except Exception as e:
         logger.error(f"Error completing session: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
-@app.post("/exercises/generate")
-async def generate_exercises(request: ExerciseRequest):
-    """Genera ejercicios para un tema específico"""
+@app.post("/learning/session/{session_id}/pause")
+async def pause_session(session_id: str):
+    """Pausa una sesión activa"""
     try:
-        exercises = ai.generate_exercises(
-            topic=request.topic,
-            subtopic=request.subtopic,
-            nivel=request.nivel.value,
-            cantidad=request.cantidad
-        )
-        
-        exercise_ids = []
-        for exercise in exercises:
-            exercise_id = learning_service.save_exercise(exercise)
-            exercise_ids.append(exercise_id)
-        
-        logger.info(f"Generated {len(exercises)} exercises for topic {request.topic}")
-        
+        learning_service.pause_session(session_id)
         return {
-            "topic": request.topic,
-            "subtopic": request.subtopic,
-            "nivel": request.nivel,
-            "exercises": exercises,
-            "message": f"Se generaron {len(exercises)} ejercicios de {request.topic}"
+            "message": "Sesión pausada exitosamente", 
+            "session_id": session_id,
+            "status": "paused"
         }
     except Exception as e:
-        logger.error(f"Error generating exercises: {str(e)}")
+        logger.error(f"Error pausing session: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/exercises/topic/{topic}")
-async def get_exercises_by_topic(topic: str, nivel: str = None, limit: int = 5):
-    """Obtiene ejercicios guardados por tema"""
-    exercises = learning_service.get_exercises_by_topic(topic, nivel, limit)
-    return {
-        "topic": topic,
-        "nivel": nivel,
-        "exercises": exercises,
-        "count": len(exercises)
-    }
-
-@app.post("/exercises/submit")
-async def submit_exercise_response(response: ExerciseResponse):
-    """Envía respuesta a un ejercicio"""
+@app.post("/learning/session/{session_id}/reactivate")
+async def reactivate_session(session_id: str):
+    """Reactiva una sesión pausada o completada"""
     try:
-        exercise = learning_service.exercises.find_one({"exercise_id": response.exercise_id})
-        if not exercise:
-            raise HTTPException(status_code=404, detail="Ejercicio no encontrado")
-        
-        es_correcto = response.respuesta_usuario.strip().lower() == exercise["respuesta_correcta"].strip().lower()
-        
-        learning_service.save_exercise_response(
-            user_id=response.user_id,
-            exercise_id=response.exercise_id,
-            respuesta_usuario=response.respuesta_usuario,
-            es_correcto=es_correcto,
-            tiempo_respuesta=response.tiempo_respuesta
-        )
-        
-        feedback = "¡Correcto! Excelente trabajo." if es_correcto else f"Incorrecto. La respuesta correcta es: {exercise['respuesta_correcta']}"
-        
+        success = learning_service.reactivate_session(session_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Sesión no encontrada")
         return {
-            "exercise_id": response.exercise_id,
-            "es_correcto": es_correcto,
-            "respuesta_correcta": exercise["respuesta_correcta"],
-            "feedback": feedback,
-            "solucion": exercise.get("solucion", []),
-            "pistas": exercise.get("pistas", []) if not es_correcto else []
+            "message": "Sesión reactivada exitosamente", 
+            "session_id": session_id,
+            "status": "active"
         }
     except Exception as e:
-        logger.error(f"Error submitting exercise response: {str(e)}")
+        logger.error(f"Error reactivating session: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/exercises/stats/{user_id}")
-async def get_exercise_stats(user_id: str, topic: str = None):
-    """Obtiene estadísticas de ejercicios del usuario"""
-    stats = learning_service.get_user_exercise_stats(user_id, topic)
-    return {
-        "user_id": user_id,
-        "topic": topic,
-        "stats": stats
-    }
+
+
 
 
 @app.get("/learning/report/{session_id}")
@@ -562,7 +441,7 @@ async def get_user_learning_sessions(user_id: str, status: str = None):
 
 @app.post("/learning/session/{session_id}/chat")
 async def learning_session_chat(session_id: str, message: UserMessage):
-    """Chat interactivo dentro de una sesión de aprendizaje"""
+    """Chat interactivo dentro de una sesión de aprendizaje con generación inteligente de ejercicios"""
     try:
         session = learning_service.get_session(session_id)
         if not session:
@@ -573,36 +452,76 @@ async def learning_session_chat(session_id: str, message: UserMessage):
         
         conversation_id = f"learning_{session_id}"
         
+        # SIEMPRE guardar el mensaje del usuario
         mongo.save_message(message.user_id, conversation_id, "user", message.message)
         
         intent = ai.analyze_student_intent(message.message)
         
         def event_stream():
+            exercises_generated = []
+            
             if intent.get("intent") == "pedir_ejercicios":
-                exercises = ai.generate_exercises(
-                    topic=session["topic"],
-                    subtopic=session.get("subtopic"),
+                # Generar ejercicios inteligentemente basados en la sesión
+                topic = session["topic"]
+                subtopic = session.get("subtopic")
+                level = session.get("level", "basico")
+                
+                # Mapear nivel de sesión a dificultades
+                difficulty_map = {"basico": "facil", "intermedio": "intermedio", "avanzado": "dificil"}
+                
+                # Generar 10 ejercicios: 3 fáciles, 4 intermedios, 3 difíciles
+                all_exercises = []
+                
+                # 3 ejercicios fáciles
+                easy_exercises = ai.generate_exercises(
+                    topic=topic,
+                    subtopic=subtopic,
                     nivel="facil",
                     cantidad=3
                 )
+                all_exercises.extend(easy_exercises)
                 
-                response_text = f"""¡Perfecto! He generado algunos ejercicios de {session['topic']} para ti:
+                # 4 ejercicios intermedios
+                medium_exercises = ai.generate_exercises(
+                    topic=topic,
+                    subtopic=subtopic,
+                    nivel="intermedio",
+                    cantidad=4
+                )
+                all_exercises.extend(medium_exercises)
+                
+                # 3 ejercicios difíciles
+                hard_exercises = ai.generate_exercises(
+                    topic=topic,
+                    subtopic=subtopic,
+                    nivel="dificil",
+                    cantidad=3
+                )
+                all_exercises.extend(hard_exercises)
+                
+                # Guardar todos los ejercicios en la base de datos con metadatos de la sesión
+                for ex in all_exercises:
+                    ex["session_id"] = session_id
+                    ex["conversation_id"] = conversation_id
+                    ex["generated_at"] = datetime.utcnow()
+                    exercise_id = learning_service.save_exercise(ex)
+                    ex["exercise_id"] = exercise_id
+                    exercises_generated.append(ex)
+                
+                # Respuesta del chat SIN mostrar los ejercicios
+                response_text = f"""¡Perfecto! He generado un set completo de ejercicios de **{topic}** para ti.
 
-"""
-                for i, ex in enumerate(exercises, 1):
-                    response_text += f"""**Ejercicio {i}:**
-{ex['pregunta']}
+**Detalles del set generado:**
+- Tema: {topic}
+- Subtema: {subtopic if subtopic else "General"}
+- **Total: 10 ejercicios**
+  - 🟢 3 ejercicios fáciles
+  - 🟡 4 ejercicios intermedios  
+  - 🔴 3 ejercicios difíciles
 
-"""
-                    if ex.get('opciones'):
-                        for j, opcion in enumerate(ex['opciones'], 1):
-                            response_text += f"{j}. {opcion}\n"
-                    response_text += "\n"
-                
-                response_text += "¿Quieres intentar resolverlos? Puedes escribir tus respuestas y te ayudo a verificarlas."
-                
-                for ex in exercises:
-                    learning_service.save_exercise(ex)
+Los ejercicios están listos y organizados por dificultad. Puedes verlos usando el endpoint `/learning/session/{session_id}/exercises` y empezar con los que prefieras.
+
+¿Te gustaría que te explique algún concepto antes de empezar, o prefieres ir directo a practicar?"""
                 
             elif intent.get("intent") == "continuar_leccion":
                 concepts = session.get("concepts_covered", [])
@@ -617,13 +536,50 @@ async def learning_session_chat(session_id: str, message: UserMessage):
                     )
                     response_text = f"**Siguiente concepto: {next_concept}**\n\n{explanation}"
                 else:
-                    response_text = "¡Excelente! Has completado todos los conceptos de esta sesión. ¿Te gustaría hacer algunos ejercicios de práctica o generar un reporte de tu aprendizaje?"
+                    response_text = "¡Excelente! Has completado todos los conceptos de esta sesión. ¿Te gustaría que genere algunos ejercicios de práctica o prefieres generar un reporte de tu aprendizaje?"
+            
+            elif intent.get("intent") == "aprender_mas" or intent.get("intent") == "ampliar_conocimiento":
+                # El usuario quiere aprender más sobre el tema actual o explorar subtemas
+                topic = session["topic"]
+                current_subtopic = session.get("subtopic")
+                
+                # Generar temas relacionados y conceptos avanzados
+                related_topics = ai.get_related_topics(topic, current_subtopic)
+                advanced_concepts = ai.get_advanced_concepts(topic, current_subtopic)
+                
+                response_text = f"""¡Perfecto! Te ayudo a expandir tus conocimientos en **{topic}**.
+
+**Conceptos avanzados que puedes explorar:**
+{chr(10).join([f"• {concept}" for concept in advanced_concepts[:4]])}
+
+**Temas relacionados interesantes:**
+{chr(10).join([f"• {related}" for related in related_topics[:4]])}
+
+**¿Qué te gustaría hacer?**
+1. 📚 Aprender un concepto avanzado específico
+2. 🎯 Generar ejercicios del tema actual pero más difíciles  
+3. 🔄 Explorar un tema relacionado
+4. 📈 Ver mi progreso y recomendaciones personalizadas
+
+Solo dime qué prefieres y profundizaremos en ello."""
+                
+                # Actualizar conceptos de la sesión con temas explorados
+                learning_service.update_session_concepts(
+                    session_id,
+                    [f"Exploración: Temas relacionados con {topic}"]
+                )
             
             else:
+                # Respuesta general con contexto de la sesión
                 response_text = ai.generate_contextual_response(message.message, session)
-            mongo.save_message(message.user_id, conversation_id, "assistant", response_text)
-            yield f"data: {json.dumps({'text': response_text, 'session_id': session_id, 'topic': session['topic']})}\n\n"
             
+            # SIEMPRE guardar la respuesta del asistente
+            mongo.save_message(message.user_id, conversation_id, "assistant", response_text)
+            
+            # Enviar respuesta al frontend
+            yield f"data: {json.dumps({'text': response_text, 'session_id': session_id, 'topic': session['topic'], 'exercises_generated': len(exercises_generated)})}\n\n"
+            
+            # Guardar interacciones en el historial de la sesión
             learning_service.add_session_interaction(
                 session_id, 
                 "question", 
@@ -635,10 +591,10 @@ async def learning_session_chat(session_id: str, message: UserMessage):
                 session_id, 
                 "answer", 
                 response_text,
-                {"response_type": intent.get("intent", "general")}
+                {"response_type": intent.get("intent", "general"), "exercises_count": len(exercises_generated)}
             )
             
-            # Actualizar contexto de la sesión
+            # Actualizar contexto en Qdrant
             interaction_text = f"P: {message.message}\nR: {response_text}"
             qdrant.upsert_context(
                 user_id=message.user_id,
@@ -649,23 +605,32 @@ async def learning_session_chat(session_id: str, message: UserMessage):
                 metadata={
                     "type": "learning_interaction",
                     "session_id": session_id,
-                    "topic": session["topic"]
+                    "topic": session["topic"],
+                    "exercises_generated": len(exercises_generated)
                 }
             )
             
-            if intent.get("intent") == "pedir_ejercicios" and 'exercises' in locals():
-                for ex in exercises:
+            # Si se generaron ejercicios, registrar cada uno en el historial
+            if exercises_generated:
+                for ex in exercises_generated:
                     learning_service.add_session_interaction(
                         session_id,
-                        "exercise",
-                        f"Ejercicio generado: {ex['pregunta']}",
-                        {"exercise_id": ex.get('exercise_id'), "difficulty": ex.get('nivel')}
+                        "exercise_generated",
+                        f"Ejercicio generado: {ex['pregunta'][:100]}...",
+                        {
+                            "exercise_id": ex.get('exercise_id'), 
+                            "difficulty": ex.get('nivel'),
+                            "topic": ex.get('tema'),
+                            "subtopic": ex.get('subtema')
+                        }
                     )
             
-            learning_service.update_session_concepts(
-                session_id,
-                [f"Discusión: {message.message[:50]}..."]
-            )
+            # Actualizar conceptos de la sesión
+            if len(message.message) > 10:  # Solo si es una pregunta sustancial
+                learning_service.update_session_concepts(
+                    session_id,
+                    [f"Discusión: {message.message[:50]}..."]
+                )
 
         return StreamingResponse(event_stream(), media_type="text/event-stream")
         
@@ -695,28 +660,6 @@ async def get_session_stats(session_id: str):
         return stats
     except Exception as e:
         logger.error(f"Error getting session stats: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/learning/session/{session_id}/reactivate")
-async def reactivate_session(session_id: str):
-    """Reactiva una sesión pausada o completada para continuar el aprendizaje"""
-    try:
-        success = learning_service.reactivate_session(session_id)
-        if not success:
-            raise HTTPException(status_code=404, detail="Sesión no encontrada")
-        return {"message": "Sesión reactivada exitosamente", "session_id": session_id}
-    except Exception as e:
-        logger.error(f"Error reactivating session: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/learning/session/{session_id}/pause")
-async def pause_session(session_id: str):
-    """Pausa una sesión activa"""
-    try:
-        learning_service.pause_session(session_id)
-        return {"message": "Sesión pausada exitosamente", "session_id": session_id}
-    except Exception as e:
-        logger.error(f"Error pausing session: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/learning/sessions/{user_id}/active")
@@ -787,16 +730,6 @@ async def get_session_exercises_pdf(session_id: str):
         
     except Exception as e:
         logger.error(f"Error generating exercises PDF: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/learning/session/{session_id}/interaction")
-async def add_session_interaction(session_id: str, interaction_type: str, content: str, metadata: dict = None):
-    """Agrega una interacción manual al historial de la sesión"""
-    try:
-        learning_service.add_session_interaction(session_id, interaction_type, content, metadata)
-        return {"message": "Interacción agregada exitosamente", "session_id": session_id}
-    except Exception as e:
-        logger.error(f"Error adding session interaction: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -967,10 +900,11 @@ async def get_next_exercise_batch(user_id: str, topic: str, count: int = 3):
 
 @app.get("/test/tutor-demo/{user_id}")
 async def demo_tutor_completo(user_id: str):
-    """Endpoint de demostración para probar todas las funcionalidades del tutor"""
+    """Endpoint de demostración del flujo simplificado con chat inteligente"""
     try:
         demo_results = {}
         
+        # 1. Crear sesión de aprendizaje
         session_id = learning_service.create_learning_session(
             user_id=user_id,
             topic="Álgebra básica",
@@ -978,26 +912,61 @@ async def demo_tutor_completo(user_id: str):
         )
         demo_results["session_created"] = session_id
         
-        learning_service.learn_concept_with_tracking(
-            user_id, session_id, 
-            "Variables y constantes", 
-            "Las variables son símbolos que representan números desconocidos"
-        )
+        # 2. Simular flujo correcto: Chat general NO genera ejercicios
+        demo_results["chat_general_simulation"] = {
+            "user_message": "Quiero ejercicios de álgebra básica", 
+            "chat_response": "Te oriento a crear una sesión de aprendizaje",
+            "no_exercises_generated": "El chat general solo orienta, no genera ejercicios"
+        }
         
-        exercises = learning_service.get_adaptive_exercises_for_user(user_id, "Álgebra básica", 2)
-        demo_results["adaptive_exercises"] = len(exercises)
+        # 3. Simular chat de sesión que SÍ genera ejercicios
+        demo_results["session_chat_simulation"] = {
+            "endpoint": f"/learning/session/{session_id}/chat",
+            "user_message": "Quiero ejercicios de álgebra básica",
+            "detected_intent": "pedir_ejercicios", 
+            "auto_generated": "10 ejercicios (3 fáciles, 4 intermedios, 3 difíciles)",
+            "storage": "automático en la base de datos vinculado a la sesión"
+        }
         
-        if exercises:
-            learning_service.complete_exercise_with_analysis(
-                user_id, session_id, exercises[0], "x = 5", True, 120
-            )
+        # 4. Simular generación de ejercicios EN LA SESIÓN (no en chat general)
+        topic = "Álgebra básica"
+        all_exercises = []
         
+        # Generar el set completo
+        easy_exercises = ai.generate_exercises(topic, nivel="facil", cantidad=3)
+        medium_exercises = ai.generate_exercises(topic, nivel="intermedio", cantidad=4) 
+        hard_exercises = ai.generate_exercises(topic, nivel="dificil", cantidad=3)
+        
+        all_exercises.extend(easy_exercises)
+        all_exercises.extend(medium_exercises)
+        all_exercises.extend(hard_exercises)
+        
+        # Guardar ejercicios
+        exercise_ids = []
+        for ex in all_exercises:
+            ex["session_id"] = session_id
+            ex["generated_via"] = "demo_auto_detection"
+            ex["generated_at"] = datetime.utcnow()
+            exercise_id = learning_service.save_exercise(ex)
+            exercise_ids.append(exercise_id)
+        
+        demo_results["exercises_generated"] = {
+            "total": len(all_exercises),
+            "faciles": len(easy_exercises),
+            "intermedios": len(medium_exercises), 
+            "dificiles": len(hard_exercises),
+            "exercise_ids": exercise_ids[:3]  # Solo mostrar algunos IDs
+        }
+        
+        # 4. Obtener análisis de progreso
         progress = learning_service.get_user_progress_analysis(user_id)
         demo_results["progress_analysis"] = {
             "nivel": progress.get("nivel_actual"),
-            "consejos": len(progress.get("consejos_mejora", []))
+            "areas_fuertes": len(progress.get("areas_fuertes", [])),
+            "areas_debiles": len(progress.get("areas_debiles", []))
         }
         
+        # 5. Obtener recomendaciones
         recommendations = learning_service.get_personalized_recommendations(user_id)
         demo_results["recommendations"] = {
             "next_topic": recommendations.get("next_topic_recommendation", {}).get("tema_recomendado"),
@@ -1005,22 +974,35 @@ async def demo_tutor_completo(user_id: str):
         }
         
         return {
-            "message": "🎓 Demo del Tutor Completo ejecutada exitosamente",
+            "message": "🎓 Demo del Flujo Correcto: Separación Chat General vs Sesiones",
             "user_id": user_id,
             "demo_results": demo_results,
-            "next_steps": [
-                f"Ver dashboard: GET /tutor/dashboard/{user_id}",
-                f"Chatear en sesión: POST /learning/session/{session_id}/chat",
-                f"Obtener más ejercicios: GET /tutor/exercises/{user_id}/next-batch?topic=Álgebra básica",
-                f"Generar PDF: GET /learning/session/{session_id}/pdf-report"
+            "flujo_correcto": {
+                "1_chat_general": f"POST /chat-stream → 'Quiero ejercicios' → Solo orienta, NO genera ejercicios",
+                "2_crear_sesion": f"POST /learning/session/create → Crear sesión para ejercicios",
+                "3_chat_sesion": f"POST /learning/session/{session_id}/chat → 'Quiero ejercicios' → SÍ genera 10 ejercicios",
+                "4_ver_ejercicios": f"GET /learning/session/{session_id}/exercises → Ver ejercicios generados",
+                "5_dashboard": f"GET /tutor/dashboard/{user_id} → Ver progreso actualizado"
+            },
+            "responsabilidades": {
+                "chat_general": "Consultas, explicaciones, orientación (NO ejercicios)",
+                "chat_sesion": "Aprendizaje estructurado + generación de ejercicios", 
+                "separacion_clara": "Cada endpoint tiene su propósito específico"
+            },
+            "ventajas": [
+                "✅ Responsabilidades claras y separadas",
+                "✅ Chat general para consultas rápidas",
+                "✅ Sesiones para aprendizaje estructurado con ejercicios", 
+                "✅ Mejor organización del código",
+                "✅ Más fácil de mantener y escalar"
             ],
             "status": "success"
         }
         
     except Exception as e:
-        logger.error(f"Error in tutor demo: {str(e)}")
+        logger.error(f"Error in simplified tutor demo: {str(e)}")
         return {
-            "message": "Error en demo del tutor",
+            "message": "Error en demo del flujo simplificado",
             "error": str(e),
             "status": "error"
         }
@@ -1028,3 +1010,56 @@ async def demo_tutor_completo(user_id: str):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.get("/learning/session/{session_id}/exercises", response_model=SessionExercisesResponse)
+async def get_session_exercises(session_id: str):
+    """Obtiene todos los ejercicios generados en una sesión específica"""
+    try:
+        session = learning_service.get_session(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Sesión no encontrada")
+        
+        # Buscar ejercicios generados en esta sesión
+        exercises = learning_service.get_exercises_by_session(session_id)
+        
+        return {
+            "session_id": session_id,
+            "topic": session["topic"],
+            "subtopic": session.get("subtopic"),
+            "level": session.get("level"),
+            "exercises": exercises,
+            "count": len(exercises),
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting session exercises: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/learning/conversation/{conversation_id}/exercises", response_model=ConversationExercisesResponse)
+async def get_conversation_exercises(conversation_id: str):
+    """Obtiene todos los ejercicios generados en una conversación específica - DEPRECATED: El chat general ya no genera ejercicios"""
+    try:
+        # Buscar ejercicios generados en esta conversación
+        exercises = learning_service.get_exercises_by_conversation(conversation_id)
+        
+        # Mensaje informativo sobre el cambio de arquitectura
+        if not exercises:
+            return {
+                "conversation_id": conversation_id,
+                "exercises": [],
+                "count": 0,
+                "generated_at": datetime.utcnow().isoformat(),
+                "notice": "El chat general ya no genera ejercicios. Usa sesiones de aprendizaje para generar ejercicios."
+            }
+        
+        return {
+            "conversation_id": conversation_id,
+            "exercises": exercises,
+            "count": len(exercises),
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting conversation exercises: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

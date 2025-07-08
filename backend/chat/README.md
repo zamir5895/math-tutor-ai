@@ -7,7 +7,7 @@ Matemix AI es un microservicio completo de tutoría de matemáticas que utiliza 
 ## 🚀 Características Principales
 
 - **🧠 Chat inteligente con filtro matemático avanzado**
-- **📚 Sesiones de aprendizaje persistentes y contextuales**
+- **📚 Sesiones de aprendizaje persisten### 📊 4. Estadísticas y Análisises y contextuales**
 - **🎯 Ejercicios adaptativos basados en progreso individual**
 - **📊 Análisis completo de progreso y debilidades**
 - **💡 Recomendaciones personalizadas con IA**
@@ -617,90 +617,9 @@ Registra el aprendizaje de un concepto con seguimiento.
 }
 ```
 
-### 📝 4. Ejercicios Tradicionales
+### � 4. Estadísticas y Análisis
 
-#### `POST /exercises/generate`
-Genera ejercicios para un tema específico (método tradicional).
-
-**Request JSON:**
-```json
-{
-  "user_id": "user123",
-  "topic": "Álgebra básica",
-  "subtopic": "Ecuaciones lineales", // opcional
-  "nivel": "intermedio", // facil, intermedio, dificil
-  "cantidad": 5
-}
-```
-
-**Response JSON:**
-```json
-{
-  "topic": "Álgebra básica",
-  "subtopic": "Ecuaciones lineales",
-  "nivel": "intermedio",
-  "exercises": [
-    {
-      "exercise_id": "ex123",
-      "pregunta": "Resuelve: 2x + 5 = 13",
-      "respuesta_correcta": "x = 4",
-      "solucion": ["2x = 13 - 5", "2x = 8", "x = 4"],
-      "pistas": ["Resta 5 de ambos lados", "Divide entre 2"]
-    }
-  ],
-  "message": "Se generaron 5 ejercicios de Álgebra básica"
-}
-```
-
-#### `GET /exercises/topic/{topic}`
-Obtiene ejercicios guardados por tema.
-
-**Query Parameters:**
-- `nivel` (opcional): Filtra por nivel de dificultad
-- `limit` (opcional): Número máximo de ejercicios (default: 5)
-
-**Response JSON:**
-```json
-{
-  "topic": "Álgebra básica",
-  "nivel": "intermedio",
-  "exercises": [
-    {
-      "exercise_id": "ex123",
-      "pregunta": "Resuelve: 2x + 5 = 13",
-      "respuesta_correcta": "x = 4"
-    }
-  ],
-  "count": 3
-}
-```
-
-#### `POST /exercises/submit`
-Envía respuesta a un ejercicio (método tradicional).
-
-**Request JSON:**
-```json
-{
-  "user_id": "user123",
-  "exercise_id": "ex123",
-  "respuesta_usuario": "x = 4",
-  "tiempo_respuesta": 120 // segundos, opcional
-}
-```
-
-**Response JSON:**
-```json
-{
-  "exercise_id": "ex123",
-  "es_correcto": true,
-  "respuesta_correcta": "x = 4",
-  "feedback": "¡Correcto! Excelente trabajo.",
-  "solucion": ["2x = 13 - 5", "2x = 8", "x = 4"],
-  "pistas": [] // vacío si es correcto
-}
-```
-
-#### `GET /exercises/stats/{user_id}`
+#### `GET /analytics/user/{user_id}/progress`
 Obtiene estadísticas de ejercicios del usuario.
 
 **Query Parameters:**
@@ -909,23 +828,6 @@ Verificación de estado del servicio.
    GET /conversation/{user_id}/{conversation_id}
    ```
 
-### Flujo para Ejercicios Tradicionales
-
-1. **Generar Ejercicios:**
-   ```
-   POST /exercises/generate
-   ```
-
-2. **Enviar Respuestas:**
-   ```
-   POST /exercises/submit
-   ```
-
-3. **Ver Estadísticas:**
-   ```
-   GET /exercises/stats/{user_id}
-   ```
-
 ## 🛡️ Manejo de Errores
 
 Todos los endpoints pueden retornar los siguientes códigos de error:
@@ -1018,3 +920,61 @@ Para comenzar a usar el API:
 5. Utiliza `/docs` para explorar la documentación interactiva de Swagger
 
 ¡El sistema está listo para proporcionar una experiencia de tutoría matemática completa y personalizada!.
+
+## 🚀 Arquitectura Separada: Chat General vs Sesiones de Aprendizaje
+
+### 💬 Chat General (`/chat-stream`)
+**Propósito:** Consultas, explicaciones y orientación matemática
+
+**Funcionalidades:**
+- ✅ Responder preguntas de matemáticas
+- ✅ Explicar conceptos teóricos
+- ✅ Orientar al usuario sobre qué estudiar
+- ✅ Recomendar crear sesiones de aprendizaje
+- ❌ **NO genera ejercicios** (solo orienta al usuario)
+
+**Cuando el usuario pide ejercicios:**
+- Si tiene sesión activa → Lo dirige al chat de la sesión
+- Si no tiene sesión → Le recomienda crear una sesión de aprendizaje
+
+### 📚 Chat de Sesiones (`/learning/session/{session_id}/chat`)
+**Propósito:** Aprendizaje estructurado con generación de ejercicios
+
+**Funcionalidades:**
+- ✅ Todo lo del chat general + contexto de sesión
+- ✅ **Generación automática de ejercicios** (10 por set: 3-4-3)
+- ✅ Seguimiento de progreso en la sesión  
+- ✅ Ejercicios adaptativos al nivel de la sesión
+- ✅ Conceptos contextualizados al tema de la sesión
+
+### 🔄 Flujo Recomendado
+
+#### Para Consultas Generales:
+```http
+POST /chat-stream
+{
+  "user_id": "user123",
+  "message": "¿Qué es una derivada?"
+}
+```
+
+#### Para Ejercicios:
+```http
+# 1. Crear sesión
+POST /learning/session/create
+{
+  "user_id": "user123", 
+  "topic": "Cálculo",
+  "level": "intermedio"
+}
+
+# 2. Pedir ejercicios en la sesión
+POST /learning/session/{session_id}/chat
+{
+  "user_id": "user123",
+  "message": "Quiero ejercicios de derivadas"
+}
+
+# 3. Obtener ejercicios generados
+GET /learning/session/{session_id}/exercises
+```

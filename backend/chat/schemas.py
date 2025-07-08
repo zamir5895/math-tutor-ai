@@ -183,3 +183,18 @@ class ConceptLearning(BaseModel):
     session_id: str
     concept: str
     explanation: str
+
+class SessionExercisesResponse(BaseModel):
+    session_id: str
+    topic: str
+    subtopic: Optional[str]
+    level: str
+    exercises: List[Exercise]
+    count: int
+    generated_at: str
+
+class ConversationExercisesResponse(BaseModel):
+    conversation_id: str
+    exercises: List[Exercise]
+    count: int
+    generated_at: str
