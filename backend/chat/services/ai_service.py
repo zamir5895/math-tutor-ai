@@ -28,14 +28,11 @@ class AIService:
     
     def is_math_related(self, message: str) -> bool:
         """Determina si el mensaje está relacionado con matemáticas usando IA + palabras clave + lógica avanzada"""
-        # Primero verifica si el mensaje está vacío o es muy corto
         if not message or len(message.strip()) < 3:
             return False
 
-        # Limpieza del mensaje
         clean_msg = message.lower().strip()
         
-        # 1. Detección rápida con palabras clave mejoradas
         math_keywords = {
             'álgebra', 'algebra', 'geometría', 'geometria', 'cálculo', 'calculo', 
             'trigonometría', 'trigonometria', 'estadística', 'estadistica', 
@@ -50,22 +47,17 @@ class AIService:
             'raíz', 'raiz', 'cuadrática', 'cuadratica', 'aritmética', 'aritmetica'
         }
         
-        # Símbolos matemáticos y expresiones comunes
         math_symbols = {'+', '-', '*', '/', '=', '²', '³', '√', '∫', '∑', 'π', '^', '∞', '≈', '≠', '≤', '≥'}
         
-        # Verificación rápida con palabras clave
         if any(keyword in clean_msg for keyword in math_keywords):
             return True
         
-        # Verificación de símbolos matemáticos
         if any(symbol in message for symbol in math_symbols):
             return True
         
-        # Patrones numéricos (ecuaciones simples, operaciones)
-        if re.search(r'\d+[\+\-\*\/]\d+', message):  # Ej: "5+3", "10/2"
+        if re.search(r'\d+[\+\-\*\/]\d+', message):
             return True
         
-        # 2. Si no se detectó nada claro, usar IA para análisis semántico
         try:
             classification_prompt = f"""
             Eres un clasificador experto en identificar mensajes relacionados con matemáticas.
