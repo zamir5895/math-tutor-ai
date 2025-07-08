@@ -1,342 +1,121 @@
-# 🎓 Matemix AI - Guía de Integración Frontend
+# 📚 Matemix AI - Guía de Integración Frontend
 
-## Sistema de Tutor Completo con IA Avanzada
+## Endpoints Principales y Flujos
 
-### 🚀 Características Principales
+### 1. Chat General
+- `POST /chat-stream` — Chat inteligente con IA, detecta intención, recomienda crear sesión, genera ejercicios, etc.
+- `GET /conversation/{user_id}/{conversation_id}` — Obtener una conversación específica.
+- `GET /conversations/{user_id}` — Listar todas las conversaciones del usuario.
+- `DELETE /conversation/{user_id}/{conversation_id}` — Eliminar una conversación.
 
-1. **Análisis de Progreso Inteligente**: Seguimiento automático del rendimiento del estudiante
-2. **Ejercicios Adaptativos**: Generación automática basada en nivel y debilidades
-3. **Recomendaciones Personalizadas**: Consejos y motivación adaptados al estudiante
-4. **Sesiones Persistentes**: Continúa aprendiendo días después
-5. **Seguimiento en Vector DB**: Contexto completo del estudiante en Qdrant
+### 2. Sesiones de Aprendizaje
+- `POST /learning/session/create` — Crear una nueva sesión de aprendizaje.
+- `GET /learning/session/{session_id}` — Obtener detalles de una sesión.
+- `POST /learning/session/{session_id}/teach/{concept_index}` — Explicar un concepto específico de la sesión.
+- `POST /learning/session/{session_id}/complete` — Marcar una sesión como completada.
+- `POST /learning/session/{session_id}/chat` — Chat dentro de una sesión de aprendizaje.
+- `GET /learning/session/{session_id}/history` — Historial completo de la sesión (para mostrar todo lo aprendido).
+- `GET /learning/session/{session_id}/stats` — Estadísticas resumidas de la sesión.
+- `POST /learning/session/{session_id}/reactivate` — Reactivar una sesión pausada/completada.
+- `POST /learning/session/{session_id}/pause` — Pausar una sesión activa.
+- `GET /learning/sessions/{user_id}` — Listar todas las sesiones del usuario.
+- `GET /learning/sessions/{user_id}/active` — Listar solo sesiones activas/pausadas.
+- `POST /learning/session/{session_id}/interaction` — Agregar interacción manual al historial de la sesión.
 
----
+### 3. Ejercicios
+- `POST /exercises/generate` — Generar ejercicios para un tema específico.
+- `GET /exercises/topic/{topic}` — Obtener ejercicios guardados por tema.
+- `POST /exercises/submit` — Enviar respuesta a un ejercicio (básico).
+- `GET /exercises/stats/{user_id}` — Estadísticas de ejercicios del usuario.
+- `POST /tutor/exercises/adaptive` — Generar ejercicios adaptativos según el progreso del usuario.
+- `POST /tutor/exercise/complete` — Completar un ejercicio con tracking y feedback personalizado.
+- `GET /tutor/exercises/{user_id}/next-batch?topic=...` — Obtener el siguiente lote de ejercicios recomendados.
 
-## 📊 Dashboard Principal del Estudiante
+### 4. Reportes y PDFs
+- `GET /learning/report/{session_id}` — Reporte JSON de la sesión (resumen).
+- `GET /learning/session/{session_id}/pdf-report` — Descargar PDF completo de la sesión (historial, conceptos, ejercicios, progreso).
+- `GET /learning/session/{session_id}/pdf-exercises` — Descargar PDF solo con los ejercicios de la sesión.
 
-### Endpoint: `GET /tutor/dashboard/{user_id}`
+### 5. Progreso, Recomendaciones y Dashboard
+- `GET /tutor/dashboard/{user_id}` — Dashboard completo del estudiante (progreso, sesiones, recomendaciones, etc).
+- `GET /tutor/progress/{user_id}` — Análisis completo del progreso del usuario.
+- `GET /tutor/recommendations/{user_id}` — Recomendaciones personalizadas (consejos, próximos pasos, motivación).
 
-**Respuesta de ejemplo:**
-```json
-{
-  "user_id": "estudiante123",
-  "active_sessions": [
-    {
-      "session_id": "sess_001",
-      "topic": "Álgebra básica",
-      "status": "active",
-      "last_accessed": "2025-07-08T15:30:00"
-    }
-  ],
-  "progress_summary": {
-    "nivel_actual": "intermedio",
-    "total_sessions": 5,
-    "total_study_time_minutes": 180,
-    "total_concepts_learned": 15,
-    "accuracy_percentage": 78.5
-  },
-  "quick_recommendations": {
-    "next_topic": "Ecuaciones lineales",
-    "daily_advice": "Practica 15 minutos diarios para consolidar el álgebra",
-    "motivation": "¡Excelente progreso! Ya dominas el 78% de los ejercicios."
-  },
-  "areas_to_improve": ["Factorización", "Sistemas de ecuaciones"],
-  "strong_areas": ["Operaciones básicas", "Simplificación"]
-}
-```
-
-### 🎯 Uso en Frontend:
-```javascript
-// Cargar dashboard al inicio
-const loadDashboard = async (userId) => {
-  const response = await fetch(`/tutor/dashboard/${userId}`);
-  const dashboard = await response.json();
-  
-  // Mostrar progreso
-  updateProgressBar(dashboard.progress_summary.accuracy_percentage);
-  showRecommendations(dashboard.quick_recommendations);
-  displayActiveSessions(dashboard.active_sessions);
-}
-```
+### 6. Demo y Salud
+- `GET /test/tutor-demo/{user_id}` — Ejecuta un flujo de demo completo para pruebas.
+- `GET /health` — Health check del backend.
 
 ---
 
-## 🎯 Ejercicios Adaptativos
+## Ejemplo de Flujo Frontend
 
-### Endpoint: `POST /tutor/exercises/adaptive`
+1. **Inicio:**
+   - Llama a `GET /tutor/dashboard/{user_id}` para mostrar el estado general, sesiones activas, progreso y recomendaciones.
+2. **Crear sesión:**
+   - `POST /learning/session/create` con `{ user_id, topic, subtopic, level }`.
+   - Muestra el plan de enseñanza y permite iniciar chat en la sesión.
+3. **Chat en sesión:**
+   - `POST /learning/session/{session_id}/chat` para interactuar y aprender conceptos, pedir ejercicios, etc.
+   - Muestra historial con `GET /learning/session/{session_id}/history`.
+4. **Ejercicios:**
+   - Genera ejercicios adaptativos con `POST /tutor/exercises/adaptive` o por tema con `POST /exercises/generate`.
+   - Envía respuestas con `POST /tutor/exercise/complete` (tracking completo) o `POST /exercises/submit` (básico).
+   - Muestra feedback y consejos personalizados.
+5. **Progreso y recomendaciones:**
+   - Muestra análisis con `GET /tutor/progress/{user_id}` y recomendaciones con `GET /tutor/recommendations/{user_id}`.
+6. **Reportes:**
+   - Permite descargar PDF de la sesión con `GET /learning/session/{session_id}/pdf-report` o solo ejercicios con `GET /learning/session/{session_id}/pdf-exercises`.
+7. **Demo:**
+   - Prueba todo el flujo con `GET /test/tutor-demo/{user_id}`.
 
-**Request:**
-```json
-{
-  "user_id": "estudiante123",
-  "topic": "Álgebra básica",
-  "cantidad": 5
-}
-```
+---
 
-**Respuesta:**
-```json
-{
-  "user_id": "estudiante123",
-  "topic": "Álgebra básica",
-  "exercises": [
-    {
-      "exercise_id": "adaptive_algebra_intermedio_1_4567",
-      "pregunta": "Resuelve para x: 2x + 5 = 13",
-      "respuesta_correcta": "4",
-      "es_multiple_choice": true,
-      "opciones": ["2", "3", "4", "5"],
-      "pistas": ["Aísla la variable x", "Resta 5 de ambos lados"],
-      "nivel": "intermedio",
-      "adaptation_level": "intermedio",
-      "user_accuracy_when_generated": 78.5
-    }
-  ],
-  "adaptation_info": "Ejercicios generados basados en tu progreso personal"
-}
-```
+## Ejemplo de llamadas desde el frontend (pseudo-código)
 
-### 🎯 Uso en Frontend:
-```javascript
-// Generar ejercicios adaptativos
-const getAdaptiveExercises = async (userId, topic) => {
-  const response = await fetch('/tutor/exercises/adaptive', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      user_id: userId,
-      topic: topic,
-      cantidad: 3
-    })
-  });
-  
-  const data = await response.json();
-  displayExercises(data.exercises);
-  showAdaptationInfo(data.adaptation_info);
-}
+```js
+// 1. Dashboard inicial
+const dashboard = await fetch(`/tutor/dashboard/${userId}`).then(r => r.json());
+
+// 2. Crear sesión
+const session = await fetch('/learning/session/create', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ user_id: userId, topic: 'Álgebra', level: 'basico' })
+}).then(r => r.json());
+
+// 3. Chat en sesión
+const chatResp = await fetch(`/learning/session/${session.session_id}/chat`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ user_id: userId, message: 'Explícame fracciones' })
+});
+
+// 4. Generar ejercicios adaptativos
+const exercises = await fetch('/tutor/exercises/adaptive', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ user_id: userId, topic: 'Álgebra', cantidad: 3 })
+}).then(r => r.json());
+
+// 5. Completar ejercicio
+const feedback = await fetch('/tutor/exercise/complete', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ user_id: userId, session_id: session.session_id, exercise_id: exercises.exercises[0].exercise_id, user_answer: '4', is_correct: true })
+}).then(r => r.json());
+
+// 6. Descargar PDF
+window.open(`/learning/session/${session.session_id}/pdf-report`);
 ```
 
 ---
 
-## ✅ Completar Ejercicios con Tracking
-
-### Endpoint: `POST /tutor/exercise/complete`
-
-**Request:**
-```json
-{
-  "user_id": "estudiante123",
-  "session_id": "sess_001",
-  "exercise_id": "adaptive_algebra_intermedio_1_4567",
-  "user_answer": "4",
-  "is_correct": true,
-  "time_taken": 45
-}
-```
-
-**Respuesta (Correcto):**
-```json
-{
-  "message": "¡Excelente! Ejercicio completado correctamente",
-  "result": "correcto",
-  "motivation": "¡Sigue así! Estás progresando muy bien."
-}
-```
-
-**Respuesta (Incorrecto):**
-```json
-{
-  "message": "Ejercicio completado",
-  "result": "incorrecto",
-  "advice": "Revisa el orden de operaciones algebraicas",
-  "motivation": "No te preocupes, los errores son parte del aprendizaje",
-  "next_steps": [
-    "Repasa la propiedad distributiva",
-    "Practica más ejercicios similares",
-    "Pide ayuda con conceptos específicos"
-  ]
-}
-```
-
-### 🎯 Uso en Frontend:
-```javascript
-// Enviar respuesta del ejercicio
-const submitExercise = async (userId, sessionId, exerciseId, answer, timeSpent) => {
-  const isCorrect = checkAnswer(answer, correctAnswer);
-  
-  const response = await fetch('/tutor/exercise/complete', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      user_id: userId,
-      session_id: sessionId,
-      exercise_id: exerciseId,
-      user_answer: answer,
-      is_correct: isCorrect,
-      time_taken: timeSpent
-    })
-  });
-  
-  const result = await response.json();
-  showFeedback(result);
-  
-  // Si es incorrecto, mostrar consejos
-  if (result.result === 'incorrecto') {
-    showAdviceModal(result.advice, result.next_steps);
-  }
-}
-```
+## Resumen de Integración
+- **Todos los endpoints están listos para integración directa.**
+- **El historial, progreso, ejercicios y reportes son accesibles por endpoints dedicados.**
+- **El chat IA y las sesiones están conectados y adaptan la experiencia automáticamente.**
+- **Puedes mostrar el dashboard, recomendaciones, historial y ejercicios en cualquier momento.**
 
 ---
 
-## 💡 Recomendaciones Personalizadas
-
-### Endpoint: `GET /tutor/recommendations/{user_id}`
-
-**Respuesta:**
-```json
-{
-  "progress_analysis": {
-    "nivel_actual": "intermedio",
-    "areas_fuertes": ["Operaciones básicas", "Simplificación"],
-    "areas_debiles": ["Factorización", "Sistemas de ecuaciones"],
-    "consejos_mejora": [
-      "Practica factorización 10 minutos diarios",
-      "Usa ejemplos visuales para sistemas de ecuaciones"
-    ],
-    "motivacion": "¡Estás mejorando constantemente! Ya dominas el álgebra básica."
-  },
-  "personalized_advice": {
-    "consejo_principal": "Enfócate en la factorización, es clave para ecuaciones avanzadas",
-    "estrategias_estudio": [
-      "Divide problemas complejos en pasos simples",
-      "Practica 15-20 minutos diarios",
-      "Revisa errores para identificar patrones"
-    ],
-    "mensaje_motivacional": "Cada error es una oportunidad de aprender algo nuevo"
-  },
-  "next_topic_recommendation": {
-    "tema_recomendado": "Ecuaciones cuadráticas",
-    "razon": "Tienes buena base en álgebra lineal",
-    "dificultad_estimada": "intermedio"
-  }
-}
-```
-
----
-
-## 🎮 Chat Inteligente Integrado
-
-### Endpoint: `POST /chat-stream`
-
-El chat ahora detecta automáticamente:
-- Si el usuario tiene sesiones activas
-- Su nivel actual de progreso  
-- Qué ejercicios necesita
-- Recomendaciones personalizadas
-
-**Ejemplo de conversación:**
-```
-Usuario: "Quiero hacer ejercicios de álgebra"
-
-IA: "¡Perfecto! Veo que estás en nivel intermedio con 78% de precisión. 
-He generado ejercicios adaptativos para ti.
-
-Opciones:
-🎯 Ejercicios personalizados: GET /tutor/exercises/estudiante123/next-batch?topic=álgebra
-📊 Ver tu progreso: GET /tutor/dashboard/estudiante123
-📚 Continuar tu sesión activa de álgebra básica
-
-¿Qué prefieres hacer?"
-```
-
----
-
-## 📄 Reportes PDF Completos
-
-### Endpoint: `GET /learning/session/{session_id}/pdf-report`
-
-Genera PDF con:
-- ✅ Información completa de la sesión
-- 📊 Estadísticas de progreso
-- 📚 Conceptos aprendidos
-- 📝 Ejercicios completados con respuestas
-- 💬 Preguntas realizadas
-- 📈 Cronología de aprendizaje
-
----
-
-## 🔄 Flujo Completo de Integración
-
-```javascript
-class MatemixTutor {
-  constructor(userId) {
-    this.userId = userId;
-  }
-  
-  // 1. Cargar estado inicial
-  async initialize() {
-    this.dashboard = await this.getDashboard();
-    this.recommendations = await this.getRecommendations();
-    this.setupUI();
-  }
-  
-  // 2. Obtener ejercicios adaptativos
-  async getNextExercises(topic) {
-    return await fetch(`/tutor/exercises/${this.userId}/next-batch?topic=${topic}`);
-  }
-  
-  // 3. Procesar respuesta del estudiante
-  async submitAnswer(exerciseId, sessionId, answer, timeSpent) {
-    const result = await this.completeExercise(exerciseId, sessionId, answer, timeSpent);
-    this.updateProgress();
-    return result;
-  }
-  
-  // 4. Actualizar estado
-  async updateProgress() {
-    this.dashboard = await this.getDashboard();
-    this.refreshUI();
-  }
-  
-  // 5. Chat inteligente
-  async chatWithAI(message) {
-    // El chat ahora incluye contexto automático del progreso
-    return await this.sendChatMessage(message);
-  }
-}
-
-// Uso
-const tutor = new MatemixTutor('estudiante123');
-await tutor.initialize();
-```
-
----
-
-## 🎯 Endpoints Clave para Frontend
-
-| Funcionalidad | Endpoint | Método | Descripción |
-|---------------|----------|---------|-------------|
-| **Dashboard** | `/tutor/dashboard/{user_id}` | GET | Estado completo del estudiante |
-| **Ejercicios Adaptativos** | `/tutor/exercises/adaptive` | POST | Ejercicios personalizados |
-| **Completar Ejercicio** | `/tutor/exercise/complete` | POST | Enviar respuesta con tracking |
-| **Recomendaciones** | `/tutor/recommendations/{user_id}` | GET | Consejos personalizados |
-| **Chat Inteligente** | `/chat-stream` | POST | Chat con contexto automático |
-| **Sesión Nueva** | `/learning/session/create` | POST | Crear sesión de aprendizaje |
-| **Chat en Sesión** | `/learning/session/{id}/chat` | POST | Chat dentro de sesión |
-| **Reporte PDF** | `/learning/session/{id}/pdf-report` | GET | Descargar progreso |
-
----
-
-## 🚀 ¡Tutor Completo Listo!
-
-El sistema ahora incluye:
-- ✅ **Análisis de progreso inteligente**
-- ✅ **Ejercicios adaptativos automáticos** 
-- ✅ **Recomendaciones personalizadas**
-- ✅ **Seguimiento continuo en Vector DB**
-- ✅ **Chat contextual avanzado**
-- ✅ **Reportes PDF completos**
-- ✅ **API completa para frontend**
-
-**¡Matemix AI es ahora un tutor completo con IA que se adapta a cada estudiante!** 🎓✨
+**¡Matemix AI es ahora un tutor completo, listo para usarse desde cualquier frontend moderno!**
