@@ -20,7 +20,6 @@ class QdrantService:
                 vectors_config=VectorParams(size=768, distance=Distance.COSINE)
             )
         
-        # Crear índices para filtrado eficiente
         try:
             self.client.create_payload_index(
                 collection_name=self.collection,
@@ -28,8 +27,7 @@ class QdrantService:
                 field_schema="keyword"
             )
         except Exception:
-            pass  # Índice ya existe
-        
+            pass         
         try:
             self.client.create_payload_index(
                 collection_name=self.collection,
@@ -37,7 +35,7 @@ class QdrantService:
                 field_schema="keyword"
             )
         except Exception:
-            pass  # Índice ya existe
+            pass  
             
         try:
             self.client.create_payload_index(
@@ -46,7 +44,7 @@ class QdrantService:
                 field_schema="keyword"
             )
         except Exception:
-            pass  # Índice ya existe
+            pass 
 
     def upsert_context(self, user_id: str, text: str, embedding: list, 
                       conversation_id: str = None, context_type: str = "general", 
@@ -68,9 +66,52 @@ class QdrantService:
             points=[point]
         )
 
+    def upsert_conversation_context(self, user_id: str, conversation_id: str, text: str, embedding: list, metadata: dict = None):
+        """Guarda contexto específico de una conversación de chat"""
+        self.upsert_context(
+            user_id=user_id,
+            text=text,
+            embedding=embedding,
+            conversation_id=conversation_id,
+            context_type="conversation",
+            metadata=metadata
+        )
+
+    def upsert_learning_session_context(self, user_id: str, session_id: str, text: str, embedding: list, metadata: dict = None):
+        """Guarda contexto específico de una sesión de aprendizaje"""
+        self.upsert_context(
+            user_id=user_id,
+            text=text,
+            embedding=embedding,
+            conversation_id=session_id,
+            context_type="learning_session",
+            metadata=metadata
+        )
+
+    def upsert_general_context(self, user_id: str, text: str, embedding: list, metadata: dict = None):
+        """Guarda contexto general del usuario (no ligado a chat ni sesión)"""
+        self.upsert_context(
+            user_id=user_id,
+            text=text,
+            embedding=embedding,
+            conversation_id=None,
+            context_type="general",
+            metadata=metadata
+        )
+
+    def upsert_learning_progress(self, user_id: str, text: str, embedding: list, metadata: dict = None):
+        """Guarda contexto de progreso global del usuario"""
+        self.upsert_context(
+            user_id=user_id,
+            text=text,
+            embedding=embedding,
+            conversation_id=None,
+            context_type="learning_progress",
+            metadata=metadata
+        )
+
     def search_context(self, user_id: str, query_embedding: list, 
                       conversation_id: str = None, limit: int = 5):
-        # Filtros base
         filters = [
             FieldCondition(
                 key="user_id",
@@ -78,7 +119,6 @@ class QdrantService:
             )
         ]
         
-        # Si hay conversation_id, buscar contexto específico de la conversación
         if conversation_id:
             filters.append(
                 FieldCondition(
@@ -87,6 +127,20 @@ class QdrantService:
                 )
             )
         
+        return self.client.search(
+            collection_name=self.collection,
+            query_vector=query_embedding,
+            query_filter=Filter(must=filters),
+            limit=limit
+        )
+
+    def search_learning_session_context(self, user_id: str, session_id: str, query_embedding: list, limit: int = 5):
+        """Busca contexto específico de una sesión de aprendizaje"""
+        filters = [
+            FieldCondition(key="user_id", match=MatchValue(value=user_id)),
+            FieldCondition(key="conversation_id", match=MatchValue(value=session_id)),
+            FieldCondition(key="context_type", match=MatchValue(value="learning_session"))
+        ]
         return self.client.search(
             collection_name=self.collection,
             query_vector=query_embedding,
@@ -142,6 +196,19 @@ class QdrantService:
                         key="user_id",
                         match=MatchValue(value=user_id)
                     )
+                ]
+            )
+        )
+
+    def delete_session_context(self, user_id: str, session_id: str):
+        """Elimina todo el contexto de una sesión de aprendizaje específica"""
+        self.client.delete(
+            collection_name=self.collection,
+            points_selector=Filter(
+                must=[
+                    FieldCondition(key="user_id", match=MatchValue(value=user_id)),
+                    FieldCondition(key="conversation_id", match=MatchValue(value=session_id)),
+                    FieldCondition(key="context_type", match=MatchValue(value="learning_session"))
                 ]
             )
         )

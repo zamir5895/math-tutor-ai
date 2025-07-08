@@ -38,12 +38,10 @@ class PDFService:
         questions = session_data.get('questions_asked', [])
         history = session_data.get('session_history', [])
         
-        # Título
         title = Paragraph(f"Reporte de Aprendizaje - {session_info.get('topic', 'Matemáticas')}", self.title_style)
         story.append(title)
         story.append(Spacer(1, 12))
         
-        # Información de la sesión
         session_info_data = [
             ["Usuario:", session_info.get('user_id', 'N/A')],
             ["Tema:", session_info.get('topic', 'N/A')],
@@ -68,7 +66,6 @@ class PDFService:
         story.append(session_table)
         story.append(Spacer(1, 20))
         
-        # Resumen de estadísticas
         stats_title = Paragraph("Resumen de Progreso", self.heading_style)
         story.append(stats_title)
         
@@ -97,7 +94,6 @@ class PDFService:
         story.append(stats_table)
         story.append(Spacer(1, 20))
         
-        # Conceptos aprendidos
         if concepts:
             concepts_title = Paragraph("Conceptos Aprendidos", self.heading_style)
             story.append(concepts_title)
@@ -107,7 +103,6 @@ class PDFService:
                 story.append(concept_text)
             story.append(Spacer(1, 20))
         
-        # Ejercicios completados
         if exercises:
             exercises_title = Paragraph("Ejercicios Realizados", self.heading_style)
             story.append(exercises_title)
@@ -124,7 +119,6 @@ class PDFService:
                 story.append(exercise_text)
             story.append(Spacer(1, 20))
         
-        # Preguntas libres realizadas
         if questions:
             questions_title = Paragraph("Preguntas Realizadas", self.heading_style)
             story.append(questions_title)
