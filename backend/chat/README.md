@@ -229,6 +229,36 @@ Obtiene todos los ejercicios generados en la sesión.
 }
 ```
 
+#### `GET /learning/session/{session_id}/conversation`
+Obtiene el historial completo de la conversación de la sesión de aprendizaje.
+
+**Response JSON:**
+```json
+{
+  "session_id": "session_789",
+  "conversation_id": "learning_session_789",
+  "user_id": "user123",
+  "topic": "Álgebra básica",
+  "level": "basico",
+  "title": "Chat de sesión: Álgebra básica",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Quiero ejercicios de álgebra",
+      "timestamp": "2024-01-15T10:00:00Z"
+    },
+    {
+      "role": "assistant", 
+      "content": "¡Perfecto! He generado 10 ejercicios organizados por dificultad...",
+      "timestamp": "2024-01-15T10:01:00Z"
+    }
+  ],
+  "session_status": "active",
+  "created_at": "2024-01-15T09:00:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
 #### `GET /learning/session/{session_id}/history`
 Historial completo de la sesión con todas las interacciones.
 
@@ -349,266 +379,6 @@ Dashboard completo del estudiante para el frontend.
 
 #### `GET /tutor/progress/{user_id}`
 Análisis completo del progreso del usuario.
-
-**Response JSON:**
-```json
-{
-  "nivel_actual": "intermedio",
-  "areas_fuertes": [
-    "Ecuaciones lineales simples",
-    "Operaciones con variables",
-    "Resolución de sistemas 2x2"
-  ],
-  "areas_debiles": [
-    "Factorización de polinomios",
-    "Ecuaciones cuadráticas",
-    "Problemas de aplicación"
-  ],
-  "siguiente_tema_recomendado": "Geometría básica",
-  "dificultad_recomendada": "intermedio",
-  "consejos_mejora": [
-    "Practica más ejercicios de factorización",
-    "Revisa los conceptos de ecuaciones cuadráticas",
-    "Trabaja en problemas de aplicación paso a paso"
-  ],
-  "motivacion": "¡Excelente progreso! Has dominado el 75% del álgebra básica.",
-  "tiempo_estudio_sugerido": "30-45 minutos diarios",
-  "estadisticas_reales": {
-    "overall_accuracy": 78.5,
-    "total_exercises": 45,
-    "correct_exercises": 35,
-    "study_sessions": 8,
-    "avg_session_duration": 32.5
-  }
-}
-```
-
-#### `GET /tutor/recommendations/{user_id}`
-Recomendaciones personalizadas completas.
-
-**Response JSON:**
-```json
-{
-  "progress_analysis": {
-    "nivel_actual": "intermedio",
-    "areas_fuertes": ["Ecuaciones lineales", "Variables"],
-    "areas_debiles": ["Factorización", "Ecuaciones cuadráticas"],
-    "siguiente_tema_recomendado": "Geometría básica",
-    "dificultad_recomendada": "intermedio"
-  },
-  "personalized_advice": {
-    "consejo_principal": "Enfócate en practicar factorización durante los próximos días",
-    "estrategias_estudio": [
-      "Dedica 15 minutos diarios a ejercicios de factorización",
-      "Usa diagramas visuales para ecuaciones cuadráticas",
-      "Practica problemas de aplicación en pasos pequeños"
-    ],
-    "ejercicios_recomendados": [
-      "Factorización de trinomios",
-      "Diferencia de cuadrados",
-      "Problemas de aplicación básicos"
-    ],
-    "habitos_sugeridos": [
-      "Estudia a la misma hora cada día",
-      "Toma descansos de 5 minutos cada 25 minutos",
-      "Revisa conceptos anteriores semanalmente"
-    ],
-    "mensaje_motivacional": "¡Estás progresando genial! Cada error es una oportunidad de aprender.",
-    "proximos_pasos": [
-      "Completar 5 ejercicios de factorización",
-      "Repasar fórmula cuadrática",
-      "Practicar un problema de aplicación"
-    ],
-    "tiempo_estudio_diario": "30-45 minutos",
-    "frecuencia_recomendada": "5-6 días por semana"
-  },
-  "next_topic_recommendation": {
-    "tema_recomendado": "Geometría básica",
-    "razon": "Has dominado suficiente álgebra para avanzar",
-    "prerequisitos": [
-      "Ecuaciones lineales",
-      "Operaciones básicas",
-      "Resolución de problemas"
-    ],
-    "dificultad_estimada": "intermedio",
-    "tiempo_estimado": "2-3 semanas",
-    "conceptos_clave": [
-      "Perímetros y áreas",
-      "Ángulos y triángulos",
-      "Teorema de Pitágoras"
-    ]
-  },
-  "generated_at": "2024-01-15T10:30:00Z"
-}
-```
-
-#### `POST /tutor/exercises/adaptive`
-Genera ejercicios adaptativos basados en el progreso del usuario.
-
-**Request JSON:**
-```json
-{
-  "user_id": "user123",
-  "topic": "Álgebra básica",
-  "cantidad": 5
-}
-```
-
-**Response JSON:**
-```json
-{
-  "user_id": "user123",
-  "topic": "Álgebra básica",
-  "exercises": [
-    {
-      "exercise_id": "ex456",
-      "pregunta": "Resuelve la ecuación: 3x - 7 = 14",
-      "respuesta_correcta": "x = 7",
-      "tema": "Álgebra básica",
-      "subtema": "Ecuaciones lineales",
-      "es_multiple_choice": false,
-      "opciones": null,
-      "solucion": [
-        "3x - 7 = 14",
-        "3x = 14 + 7",
-        "3x = 21",
-        "x = 21/3",
-        "x = 7"
-      ],
-      "pistas": [
-        "Suma 7 a ambos lados",
-        "Divide entre 3"
-      ],
-      "concepto_principal": "Ecuaciones lineales",
-      "nivel": "intermedio"
-    }
-  ],
-  "adaptation_info": "Ejercicios generados basados en tu progreso personal",
-  "count": 5
-}
-```
-
-#### `GET /tutor/exercises/{user_id}/next-batch`
-Obtiene el siguiente lote de ejercicios recomendados.
-
-**Query Parameters:**
-- `topic` (requerido): El tema para generar ejercicios
-- `count` (opcional): Número de ejercicios (default: 3)
-
-**Response JSON:**
-```json
-{
-  "user_id": "user123",
-  "topic": "Álgebra básica",
-  "exercises": [
-    {
-      "exercise_id": "ex789",
-      "pregunta": "Factoriza: x² - 9",
-      "respuesta_correcta": "(x+3)(x-3)",
-      "nivel": "intermedio"
-    }
-  ],
-  "difficulty_level": "intermedio",
-  "personalized_note": "Estos ejercicios están adaptados a tu nivel actual: intermedio",
-  "tips": [
-    "Recuerda la fórmula de diferencia de cuadrados",
-    "Verifica tu respuesta expandiendo el resultado"
-  ]
-}
-```
-
-#### `POST /tutor/exercise/complete`
-Completa un ejercicio con seguimiento de progreso.
-
-**Request JSON:**
-```json
-{
-  "user_id": "user123",
-  "session_id": "session_789",
-  "exercise_id": "ex456",
-  "user_answer": "x = 7",
-  "is_correct": true,
-  "time_taken": 120 // segundos, opcional
-}
-```
-
-**Response JSON (si es correcto):**
-```json
-{
-  "message": "¡Excelente! Ejercicio completado correctamente",
-  "result": "correcto",
-  "motivation": "¡Sigue así! Estás progresando muy bien."
-}
-```
-
-**Response JSON (si es incorrecto):**
-```json
-{
-  "message": "Ejercicio completado",
-  "result": "incorrecto",
-  "advice": "Enfócate en practicar factorización durante los próximos días",
-  "motivation": "¡No te desanimes! Cada error es una oportunidad de aprender.",
-  "next_steps": [
-    "Revisa los pasos de factorización",
-    "Practica con ejercicios más simples",
-    "Pide ayuda si lo necesitas"
-  ]
-}
-```
-
-#### `POST /tutor/concept/learn`
-Registra el aprendizaje de un concepto con seguimiento.
-
-**Request JSON:**
-```json
-{
-  "user_id": "user123",
-  "session_id": "session_789",
-  "concept": "Variables y constantes",
-  "explanation": "Una variable es un símbolo que representa un número desconocido"
-}
-```
-
-**Response JSON:**
-```json
-{
-  "message": "Concepto 'Variables y constantes' aprendido y registrado",
-  "session_id": "session_789",
-  "progress_updated": true
-}
-```
-
-### 🎯 4. Análisis de Progreso y Recomendaciones
-
-#### `GET /tutor/dashboard/{user_id}`
-Dashboard completo del estudiante con progreso y recomendaciones.
-
-**Response JSON:**
-```json
-{
-  "user_id": "user123",
-  "active_sessions": [
-    {
-      "session_id": "session_789",
-      "topic": "Álgebra básica",
-      "status": "active"
-    }
-  ],
-  "progress_summary": {
-    "nivel_actual": "intermedio",
-    "total_sessions": 5,
-    "accuracy_percentage": 78.5
-  },
-  "quick_recommendations": {
-    "next_topic": "Geometría básica",
-    "daily_advice": "Practica 15 minutos diarios",
-    "motivation": "¡Vas muy bien! Sigue así."
-  }
-}
-```
-
-#### `GET /tutor/progress/{user_id}`
-Análisis detallado del progreso del usuario.
 
 **Response JSON:**
 ```json
@@ -992,6 +762,13 @@ curl -X POST "http://localhost:8000/learning/session/{session_id}/chat" \
 
 ## 📝 Changelog
 
+### v4.1.0 - Mejor Integración Frontend
+- ✅ Nuevo endpoint `/learning/session/{session_id}/conversation` 
+- ✅ Acceso directo al historial de chat de cada sesión de aprendizaje
+- ✅ Relación 1:1 entre session_id y conversation_id
+- ✅ Respuesta enriquecida con metadatos de la sesión
+- ✅ Ejemplos de integración frontend detallados
+
 ### v4.0.0 - Separación de Responsabilidades
 - ✅ Chat general (`/chat-stream`) limitado a consultas y explicaciones
 - ✅ Sesiones de aprendizaje como único lugar para generar ejercicios
@@ -1091,3 +868,114 @@ POST /learning/session/{session_id}/chat
 # 3. Obtener ejercicios generados
 GET /learning/session/{session_id}/exercises
 ```
+
+### Ejemplo 2: Flujo Completo de Sesión de Aprendizaje
+
+#### Paso 1: Crear Sesión
+```bash
+curl -X POST "http://localhost:8000/learning/session/create" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "user123",
+    "topic": "Álgebra básica",
+    "subtopic": "Ecuaciones lineales",
+    "level": "basico"
+  }'
+```
+
+#### Paso 2: Chatear en la Sesión
+```bash
+curl -X POST "http://localhost:8000/learning/session/session_789/chat" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "user123",
+    "message": "Quiero ejercicios de álgebra básica"
+  }'
+```
+
+**Respuesta esperada:** Mensaje de confirmación y generación de ejercicios.
+
+#### Paso 3: Obtener Historial de la Conversación
+```bash
+curl "http://localhost:8000/learning/session/session_789/conversation"
+```
+
+**Respuesta:** Historial completo de mensajes de la sesión con información enriquecida.
+
+#### Paso 4: Obtener Ejercicios
+```bash
+curl "http://localhost:8000/learning/session/session_789/exercises"
+```
+
+#### Paso 5: Generar Reporte PDF
+```bash
+curl "http://localhost:8000/learning/session/session_789/pdf-report" \
+  --output reporte_algebra.pdf
+```
+
+### Ejemplo 3: Flujo Frontend para Chat de Sesión
+
+```javascript
+// 1. Lista de sesiones del usuario
+const sessions = await fetch(`/learning/sessions/${userId}/active`);
+
+// 2. Al hacer click en una sesión, obtener su conversación
+const sessionId = "session_789";
+const conversation = await fetch(`/learning/session/${sessionId}/conversation`);
+
+// 3. Mostrar historial en la UI
+const messages = conversation.messages;
+renderChatMessages(messages);
+
+// 4. Enviar nuevo mensaje en la sesión
+const response = await fetch(`/learning/session/${sessionId}/chat`, {
+  method: 'POST',
+  body: JSON.stringify({
+    user_id: userId,
+    message: 'Explícame las ecuaciones lineales'
+  })
+});
+
+// 5. Procesar respuesta streaming
+const reader = response.body.getReader();
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  
+  const text = new TextDecoder().decode(value);
+  const data = JSON.parse(text.replace('data: ', ''));
+  appendMessageToChat(data.text);
+}
+
+// 6. Si el usuario pide ejercicios, obtenerlos después
+if (userMessage.includes('ejercicios')) {
+  const exercises = await fetch(`/learning/session/${sessionId}/exercises`);
+  displayExercises(exercises.exercises);
+}
+```
+
+### Ejemplo 4: Diferencia Clara de Responsabilidades
+
+```javascript
+// ❌ INCORRECTO: Buscar ejercicios en chat general
+const chatResponse = await fetch('/chat-stream', {
+  body: JSON.stringify({ message: 'Quiero ejercicios' })
+});
+// → Solo recibirás orientación, no ejercicios
+
+// ✅ CORRECTO: Buscar ejercicios en sesión
+const sessionResponse = await fetch(`/learning/session/${sessionId}/chat`, {
+  body: JSON.stringify({ message: 'Quiero ejercicios' })
+});
+// → Se generan automáticamente 10 ejercicios organizados
+
+// ✅ CORRECTO: Obtener ejercicios ya generados
+const exercises = await fetch(`/learning/session/${sessionId}/exercises`);
+// → Lista completa de ejercicios de la sesión
+
+// ✅ CORRECTO: Obtener historial de la sesión
+const conversation = await fetch(`/learning/session/${sessionId}/conversation`);
+// → Historial completo de chat de la sesión
+```
+
+## 📝 Changelog

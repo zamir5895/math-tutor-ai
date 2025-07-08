@@ -189,6 +189,7 @@ async def root():
             " Sesiones de Aprendizaje": {
                 "crear_sesion": "/learning/session/create",
                 "chat_en_sesion": "/learning/session/{session_id}/chat",
+                "conversacion_sesion": "/learning/session/{session_id}/conversation",
                 "historial_completo": "/learning/session/{session_id}/history",
                 "estadisticas": "/learning/session/{session_id}/stats",
                 "reactivar": "/learning/session/{session_id}/reactivate",
@@ -205,6 +206,7 @@ async def root():
             },
             " Chat de Sesiones": {
                 "chat_con_ejercicios": "/learning/session/{session_id}/chat (genera ejercicios)",
+                "historial_conversacion": "/learning/session/{session_id}/conversation",
                 "obtener_ejercicios": "/learning/session/{session_id}/exercises"
             }
         },
@@ -642,6 +644,55 @@ Solo dime qué prefieres y profundizaremos en ello."""
         
     except Exception as e:
         logger.error(f"Error in learning session chat: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/learning/session/{session_id}/conversation")
+async def get_session_conversation(session_id: str):
+    """Obtiene el historial completo de la conversación de una sesión de aprendizaje"""
+    try:
+        # Verificar que la sesión existe
+        session = learning_service.get_session(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Sesión no encontrada")
+        
+        # El conversation_id de una sesión es siempre learning_{session_id}
+        conversation_id = f"learning_{session_id}"
+        user_id = session["user_id"]
+        
+        # Obtener la conversación usando el conversation_id estándar
+        conversation = mongo.get_conversation(user_id, conversation_id)
+        
+        if not conversation:
+            # Si no existe conversación, crear una respuesta vacía pero válida
+            return {
+                "session_id": session_id,
+                "conversation_id": conversation_id,
+                "user_id": user_id,
+                "topic": session["topic"],
+                "subtopic": session.get("subtopic"),
+                "level": session.get("level"),
+                "title": f"Chat de sesión: {session['topic']}",
+                "messages": [],
+                "created_at": session.get("created_at", datetime.utcnow()).isoformat(),
+                "updated_at": session.get("updated_at", datetime.utcnow()).isoformat(),
+                "session_status": session.get("status", "active")
+            }
+        
+        # Limpiar y preparar la respuesta
+        conversation.pop("_id", None)
+        
+        # Enriquecer con información de la sesión
+        conversation["session_id"] = session_id
+        conversation["topic"] = session["topic"]
+        conversation["subtopic"] = session.get("subtopic")
+        conversation["level"] = session.get("level")
+        conversation["session_status"] = session.get("status", "active")
+        
+        logger.info(f"Retrieved session conversation for session {session_id}")
+        return conversation
+        
+    except Exception as e:
+        logger.error(f"Error getting session conversation: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/learning/session/{session_id}/history", response_model=SessionHistoryResponse)
