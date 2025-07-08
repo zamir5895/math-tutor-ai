@@ -1,7 +1,7 @@
 # math-tutor-ai
 
 
-## Guia para ejecutar todos las base de datos
+## Guia para ejecutar todos las base de datos (local)
 
 ### Instalar MongoDB
 
