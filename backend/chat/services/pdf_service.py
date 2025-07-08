@@ -38,12 +38,10 @@ class PDFService:
         questions = session_data.get('questions_asked', [])
         history = session_data.get('session_history', [])
         
-        # Título
         title = Paragraph(f"Reporte de Aprendizaje - {session_info.get('topic', 'Matemáticas')}", self.title_style)
         story.append(title)
         story.append(Spacer(1, 12))
         
-        # Información de la sesión
         session_info_data = [
             ["Usuario:", session_info.get('user_id', 'N/A')],
             ["Tema:", session_info.get('topic', 'N/A')],
@@ -68,7 +66,6 @@ class PDFService:
         story.append(session_table)
         story.append(Spacer(1, 20))
         
-        # Resumen de estadísticas
         stats_title = Paragraph("Resumen de Progreso", self.heading_style)
         story.append(stats_title)
         
@@ -97,7 +94,6 @@ class PDFService:
         story.append(stats_table)
         story.append(Spacer(1, 20))
         
-        # Conceptos aprendidos
         if concepts:
             concepts_title = Paragraph("Conceptos Aprendidos", self.heading_style)
             story.append(concepts_title)
@@ -107,7 +103,6 @@ class PDFService:
                 story.append(concept_text)
             story.append(Spacer(1, 20))
         
-        # Ejercicios completados
         if exercises:
             exercises_title = Paragraph("Ejercicios Realizados", self.heading_style)
             story.append(exercises_title)
@@ -124,7 +119,6 @@ class PDFService:
                 story.append(exercise_text)
             story.append(Spacer(1, 20))
         
-        # Preguntas libres realizadas
         if questions:
             questions_title = Paragraph("Preguntas Realizadas", self.heading_style)
             story.append(questions_title)
@@ -139,12 +133,10 @@ class PDFService:
                 story.append(question_text)
             story.append(Spacer(1, 20))
         
-        # Cronología de aprendizaje
         if history:
             history_title = Paragraph("Cronología de Aprendizaje", self.heading_style)
             story.append(history_title)
             
-            # Limitar a las últimas 10 interacciones para no hacer el PDF muy largo
             recent_history = sorted(history, key=lambda x: x.get('timestamp', datetime.min), reverse=True)[:10]
             
             for item in recent_history:
@@ -167,7 +159,6 @@ class PDFService:
                 )
                 story.append(history_text)
         
-        # Generar PDF
         doc.build(story)
         buffer.seek(0)
         return buffer
@@ -203,12 +194,10 @@ class PDFService:
         session_info = session_data.get('session_info', {})
         exercises = session_data.get('exercises_completed', [])
         
-        # Título
         title = Paragraph(f"Ejercicios - {session_info.get('topic', 'Matemáticas')}", self.title_style)
         story.append(title)
         story.append(Spacer(1, 12))
         
-        # Información básica de la sesión
         basic_info = [
             ["Tema:", session_info.get('topic', 'N/A')],
             ["Subtema:", session_info.get('subtopic', 'N/A') or 'General'],
@@ -229,7 +218,6 @@ class PDFService:
         story.append(info_table)
         story.append(Spacer(1, 20))
         
-        # Lista de ejercicios
         if exercises:
             exercises_title = Paragraph("Lista de Ejercicios Completados", self.heading_style)
             story.append(exercises_title)
@@ -257,7 +245,6 @@ class PDFService:
             no_exercises = Paragraph("No hay ejercicios completados en esta sesión.", self.styles['Normal'])
             story.append(no_exercises)
         
-        # Generar PDF
         doc.build(story)
         buffer.seek(0)
         return buffer
