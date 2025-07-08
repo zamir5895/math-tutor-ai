@@ -20,7 +20,6 @@ class QdrantService:
                 vectors_config=VectorParams(size=768, distance=Distance.COSINE)
             )
         
-        # Crear índices para filtrado eficiente
         try:
             self.client.create_payload_index(
                 collection_name=self.collection,
@@ -28,7 +27,7 @@ class QdrantService:
                 field_schema="keyword"
             )
         except Exception:
-            pass  # Índice ya existe
+            pass
         
         try:
             self.client.create_payload_index(
@@ -37,7 +36,7 @@ class QdrantService:
                 field_schema="keyword"
             )
         except Exception:
-            pass  # Índice ya existe
+            pass
             
         try:
             self.client.create_payload_index(
@@ -46,7 +45,7 @@ class QdrantService:
                 field_schema="keyword"
             )
         except Exception:
-            pass  # Índice ya existe
+            pass
 
     def upsert_context(self, user_id: str, text: str, embedding: list, 
                       conversation_id: str = None, context_type: str = "general", 
@@ -58,7 +57,7 @@ class QdrantService:
             "payload": {
                 "user_id": user_id,
                 "conversation_id": conversation_id,
-                "context_type": context_type,  # "general" o "conversation"
+                "context_type": context_type,
                 "text": text,
                 "metadata": metadata or {}
             }
@@ -70,7 +69,6 @@ class QdrantService:
 
     def search_context(self, user_id: str, query_embedding: list, 
                       conversation_id: str = None, limit: int = 5):
-        # Filtros base
         filters = [
             FieldCondition(
                 key="user_id",
@@ -78,7 +76,6 @@ class QdrantService:
             )
         ]
         
-        # Si hay conversation_id, buscar contexto específico de la conversación
         if conversation_id:
             filters.append(
                 FieldCondition(
