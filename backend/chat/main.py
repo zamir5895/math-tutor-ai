@@ -38,20 +38,15 @@ async def generate_context_prompt(user_id: str, message: str, conversation_id: s
     """Genera el prompt con contexto específico del usuario y conversación"""
     query_embedding = ai.get_embedding(message)
     
-    # Buscar contexto específico de la conversación
     conversation_contexts = qdrant.search_context(user_id, query_embedding, conversation_id, limit=3)
     
-    # Buscar contexto general del usuario
     general_contexts = qdrant.search_general_context(user_id, query_embedding, limit=2)
     
-    # Combinar contextos
     context_texts = []
     
-    # Agregar contexto de la conversación actual
     for hit in conversation_contexts:
         context_texts.append(f"Contexto de conversación: {hit.payload['text']}")
     
-    # Agregar contexto general del usuario
     for hit in general_contexts:
         context_texts.append(f"Contexto general: {hit.payload['text']}")
     
@@ -74,18 +69,13 @@ async def chat_stream(message: UserMessage):
     """Endpoint de chat inteligente con soporte para sesiones de aprendizaje"""
     conversation_id = message.conversation_id or str(uuid.uuid4())
     
-    # Verificar si es la primera pregunta para generar título
     is_first_message = message.conversation_id is None
     
-    # Verificar si el usuario tiene una sesión de aprendizaje activa
     active_session = ai.is_learning_session_active(message.user_id)
     
-    # Analizar la intención del estudiante
     student_intent = ai.analyze_student_intent(message.message)
     
-    # Verificar si es tema matemático (más flexible si hay sesión activa)
     if not ai.is_math_related(message.message) and not active_session:
-        # Respuesta para temas no matemáticos
         non_math_response = """Lo siento, soy un tutor especializado en matemáticas y solo puedo ayudarte con temas relacionados a esta materia. 
 
 ¿Te gustaría que te ayude con alguno de estos temas?
@@ -105,20 +95,16 @@ También puedo crear una sesión de aprendizaje personalizada para ti. ¿Qué te
         
         return StreamingResponse(non_math_stream(), media_type="text/event-stream")
     
-    # Guardar mensaje del usuario
     mongo.save_message(message.user_id, conversation_id, "user", message.message)
     
-    # Generar título si es la primera pregunta
     if is_first_message:
         title = ai.generate_title(message.message)
         mongo.set_conversation_title(message.user_id, conversation_id, title)
     
-    # Manejar solicitudes especiales basadas en la intención
     special_response = None
     if student_intent.get("intent") == "pedir_ejercicios":
         topic = student_intent.get("topic_mentioned") or (active_session.get("topic") if active_session else None)
         if topic:
-            # Generar ejercicios adaptativos si hay contexto del usuario
             if active_session:
                 exercises = learning_service.get_adaptive_exercises_for_user(message.user_id, topic, 3)
                 difficulty_note = "adaptativos basados en tu progreso"
@@ -153,7 +139,6 @@ Una vez creada la sesión, podrás:
 ¿Quieres que te recomiende el mejor tema para empezar basado en tu nivel?"""
     
     elif active_session and student_intent.get("intent") == "pregunta_concepto":
-        # Si está en sesión activa y hace una pregunta conceptual
         topic = active_session.get("topic")
         progress = learning_service.get_user_progress_analysis(message.user_id)
         
@@ -165,19 +150,16 @@ Una vez creada la sesión, podrás:
 
 Basándome en tu progreso, voy a explicarte esto de manera personalizada..."""
     
-    # Generar respuesta contextual (considerando sesión activa)
     if special_response:
         response_text = special_response
     else:
         response_text = ai.generate_contextual_response(message.message, active_session)
     
     def event_stream():
-        # Si tenemos una respuesta especial, enviarla directamente
         if special_response:
             full_response = response_text
             yield f"data: {json.dumps({'text': response_text, 'conversation_id': conversation_id, 'session_active': bool(active_session)})}\n\n"
         else:
-            # Usar streaming normal para respuestas conversacionales
             response = ai.model.generate_content(
                 response_text,
                 stream=True 
@@ -189,10 +171,8 @@ Basándome en tu progreso, voy a explicarte esto de manera personalizada..."""
                 full_response += chunk_text
                 yield f"data: {json.dumps({'text': chunk_text, 'conversation_id': conversation_id, 'session_active': bool(active_session)})}\n\n"
 
-        # Guardar respuesta del asistente
         mongo.save_message(message.user_id, conversation_id, "assistant", full_response)
         
-        # Guardar contexto específico de la conversación
         interaction_text = f"P: {message.message}\nR: {full_response}"
         qdrant.upsert_context(
             user_id=message.user_id,
@@ -207,9 +187,7 @@ Basándome en tu progreso, voy a explicarte esto de manera personalizada..."""
             }
         )
         
-        # Si hay sesión activa, actualizar conceptos aprendidos
         if active_session and len(full_response) > 50:
-            # Extraer conceptos de la respuesta para actualizar la sesión
             learning_service.update_session_concepts(
                 active_session["session_id"], 
                 [f"Concepto discutido: {message.message[:100]}"]
@@ -226,7 +204,6 @@ async def get_conversation(user_id: str, conversation_id: str):
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
     
-    # Limpiar ObjectId si existe
     conversation.pop("_id", None)
     
     logger.info(f"Retrieved conversation for user {user_id} with ID {conversation_id}")
@@ -343,13 +320,11 @@ async def root():
 @app.delete("/conversation/{user_id}/{conversation_id}")
 async def delete_conversation(user_id: str, conversation_id: str):
     try:
-        # Eliminar conversación de MongoDB
         deleted = mongo.delete_conversation(user_id, conversation_id)
         
         if not deleted:
             raise HTTPException(status_code=404, detail="Conversación no encontrada")
         
-        # Eliminar contexto de Qdrant
         qdrant.delete_conversation_context(user_id, conversation_id)
         
         logger.info(f"Deleted conversation {conversation_id} for user {user_id}")
@@ -359,13 +334,11 @@ async def delete_conversation(user_id: str, conversation_id: str):
         logger.error(f"Error deleting conversation: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# ==================== ENDPOINTS DE SESIONES DE APRENDIZAJE ====================
 
 @app.post("/learning/session/create")
 async def create_learning_session(request: CreateLearningSessionRequest):
     """Crea una nueva sesión de aprendizaje estructurada"""
     try:
-        # Crear sesión
         session_id = learning_service.create_learning_session(
             user_id=request.user_id,
             topic=request.topic,
@@ -373,10 +346,8 @@ async def create_learning_session(request: CreateLearningSessionRequest):
             level=request.level
         )
         
-        # Generar plan de enseñanza
         teaching_plan = ai.generate_teaching_plan(request.topic, request.level)
         
-        # Actualizar sesión con conceptos
         learning_service.update_session_concepts(session_id, teaching_plan)
         
         logger.info(f"Created learning session {session_id} for user {request.user_id}")
@@ -417,7 +388,6 @@ async def teach_concept(session_id: str, concept_index: int):
         
         concept = concepts[concept_index]
         
-        # Generar explicación del concepto
         explanation = ai.explain_concept(
             concept=concept,
             topic=session["topic"],
@@ -455,13 +425,11 @@ async def complete_learning_session(session_id: str):
         logger.error(f"Error completing session: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# ==================== ENDPOINTS DE EJERCICIOS ====================
 
 @app.post("/exercises/generate")
 async def generate_exercises(request: ExerciseRequest):
     """Genera ejercicios para un tema específico"""
     try:
-        # Generar ejercicios con IA
         exercises = ai.generate_exercises(
             topic=request.topic,
             subtopic=request.subtopic,
@@ -469,7 +437,6 @@ async def generate_exercises(request: ExerciseRequest):
             cantidad=request.cantidad
         )
         
-        # Guardar ejercicios en la base de datos
         exercise_ids = []
         for exercise in exercises:
             exercise_id = learning_service.save_exercise(exercise)
@@ -503,14 +470,12 @@ async def get_exercises_by_topic(topic: str, nivel: str = None, limit: int = 5):
 async def submit_exercise_response(response: ExerciseResponse):
     """Envía respuesta a un ejercicio"""
     try:
-        # Verificar si la respuesta es correcta (esto podría mejorar con IA)
         exercise = learning_service.exercises.find_one({"exercise_id": response.exercise_id})
         if not exercise:
             raise HTTPException(status_code=404, detail="Ejercicio no encontrado")
         
         es_correcto = response.respuesta_usuario.strip().lower() == exercise["respuesta_correcta"].strip().lower()
         
-        # Guardar respuesta
         learning_service.save_exercise_response(
             user_id=response.user_id,
             exercise_id=response.exercise_id,
@@ -543,7 +508,6 @@ async def get_exercise_stats(user_id: str, topic: str = None):
         "stats": stats
     }
 
-# ==================== ENDPOINTS DE REPORTES ====================
 
 @app.get("/learning/report/{session_id}")
 async def generate_learning_report(session_id: str):
@@ -553,11 +517,8 @@ async def generate_learning_report(session_id: str):
         if not session:
             raise HTTPException(status_code=404, detail="Sesión no encontrada")
         
-        # Obtener estadísticas de ejercicios (si las hay)
         exercise_stats = learning_service.get_user_exercise_stats(session["user_id"])
         
-        # Simular generación de PDF (por ahora devolver datos JSON)
-        # En producción aquí usarías pdf_service.generate_learning_report()
         
         report_data = {
             "session_id": session_id,
@@ -584,7 +545,6 @@ async def generate_learning_report(session_id: str):
 async def get_user_learning_sessions(user_id: str, status: str = None):
     """Obtiene todas las sesiones de aprendizaje de un usuario"""
     sessions = learning_service.get_user_sessions(user_id, status)
-    # Limpiar _id de MongoDB
     for session in sessions:
         session.pop("_id", None)
     
@@ -595,13 +555,11 @@ async def get_user_learning_sessions(user_id: str, status: str = None):
         "count": len(sessions)
     }
 
-# ==================== CHAT DENTRO DE SESIONES DE APRENDIZAJE ====================
 
 @app.post("/learning/session/{session_id}/chat")
 async def learning_session_chat(session_id: str, message: UserMessage):
     """Chat interactivo dentro de una sesión de aprendizaje"""
     try:
-        # Verificar que la sesión existe y pertenece al usuario
         session = learning_service.get_session(session_id)
         if not session:
             raise HTTPException(status_code=404, detail="Sesión no encontrada")
@@ -611,16 +569,12 @@ async def learning_session_chat(session_id: str, message: UserMessage):
         
         conversation_id = f"learning_{session_id}"
         
-        # Guardar mensaje del usuario
         mongo.save_message(message.user_id, conversation_id, "user", message.message)
         
-        # Analizar intención del estudiante
         intent = ai.analyze_student_intent(message.message)
         
         def event_stream():
-            # Manejar diferentes tipos de solicitudes
             if intent.get("intent") == "pedir_ejercicios":
-                # Generar ejercicios del tema de la sesión
                 exercises = ai.generate_exercises(
                     topic=session["topic"],
                     subtopic=session.get("subtopic"),
@@ -643,12 +597,10 @@ async def learning_session_chat(session_id: str, message: UserMessage):
                 
                 response_text += "¿Quieres intentar resolverlos? Puedes escribir tus respuestas y te ayudo a verificarlas."
                 
-                # Guardar ejercicios para referencia
                 for ex in exercises:
                     learning_service.save_exercise(ex)
                 
             elif intent.get("intent") == "continuar_leccion":
-                # Continuar con el siguiente concepto
                 concepts = session.get("concepts_covered", [])
                 current_progress = len([c for c in concepts if "Concepto discutido:" not in c])
                 
@@ -664,14 +616,10 @@ async def learning_session_chat(session_id: str, message: UserMessage):
                     response_text = "¡Excelente! Has completado todos los conceptos de esta sesión. ¿Te gustaría hacer algunos ejercicios de práctica o generar un reporte de tu aprendizaje?"
             
             else:
-                # Respuesta contextual normal
                 response_text = ai.generate_contextual_response(message.message, session)
-            
-            # Enviar respuesta por streaming
             mongo.save_message(message.user_id, conversation_id, "assistant", response_text)
             yield f"data: {json.dumps({'text': response_text, 'session_id': session_id, 'topic': session['topic']})}\n\n"
             
-            # Guardar interacción en el historial de la sesión
             learning_service.add_session_interaction(
                 session_id, 
                 "question", 
@@ -701,7 +649,6 @@ async def learning_session_chat(session_id: str, message: UserMessage):
                 }
             )
             
-            # Si se generaron ejercicios, marcarlos en la sesión
             if intent.get("intent") == "pedir_ejercicios" and 'exercises' in locals():
                 for ex in exercises:
                     learning_service.add_session_interaction(
@@ -711,7 +658,6 @@ async def learning_session_chat(session_id: str, message: UserMessage):
                         {"exercise_id": ex.get('exercise_id'), "difficulty": ex.get('nivel')}
                     )
             
-            # Marcar progreso en la sesión
             learning_service.update_session_concepts(
                 session_id,
                 [f"Discusión: {message.message[:50]}..."]
@@ -722,8 +668,6 @@ async def learning_session_chat(session_id: str, message: UserMessage):
     except Exception as e:
         logger.error(f"Error in learning session chat: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
-# Nuevos endpoints mejorados para sesiones persistentes
 
 @app.get("/learning/session/{session_id}/history", response_model=SessionHistoryResponse)
 async def get_session_history(session_id: str):
@@ -789,16 +733,13 @@ async def get_active_sessions(user_id: str):
 async def get_session_pdf_report(session_id: str):
     """Genera y descarga el reporte PDF completo de una sesión"""
     try:
-        # Obtener historial completo de la sesión
         session_data = learning_service.get_session_full_history(session_id)
         if not session_data:
             raise HTTPException(status_code=404, detail="Sesión no encontrada")
         
-        # Generar PDF
         from services.pdf_service import pdf_service
         pdf_buffer = pdf_service.generate_learning_report(session_data)
         
-        # Crear archivo temporal
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
             tmp_file.write(pdf_buffer.read())
             tmp_file_path = tmp_file.name
@@ -820,16 +761,13 @@ async def get_session_pdf_report(session_id: str):
 async def get_session_exercises_pdf(session_id: str):
     """Genera y descarga un PDF solo con los ejercicios de una sesión"""
     try:
-        # Obtener historial completo de la sesión
         session_data = learning_service.get_session_full_history(session_id)
         if not session_data:
             raise HTTPException(status_code=404, detail="Sesión no encontrada")
         
-        # Generar PDF de ejercicios
         from services.pdf_service import pdf_service
         pdf_buffer = pdf_service.generate_exercises_pdf(session_data)
         
-        # Crear archivo temporal
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
             tmp_file.write(pdf_buffer.read())
             tmp_file_path = tmp_file.name
@@ -857,7 +795,6 @@ async def add_session_interaction(session_id: str, interaction_type: str, conten
         logger.error(f"Error adding session interaction: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# ENDPOINTS AVANZADOS PARA TUTOR COMPLETO CON IA
 
 @app.get("/tutor/progress/{user_id}", response_model=ProgressAnalysis)
 async def get_user_progress_analysis(user_id: str):
@@ -889,7 +826,6 @@ async def generate_adaptive_exercises(request: AdaptiveExerciseRequest):
             request.cantidad
         )
         
-        # Guardar los ejercicios generados para tracking
         for exercise in exercises:
             learning_service.save_exercise(exercise)
         
@@ -908,12 +844,10 @@ async def generate_adaptive_exercises(request: AdaptiveExerciseRequest):
 async def complete_exercise_with_tracking(completion: ExerciseCompletion):
     """Completa un ejercicio con seguimiento de progreso"""
     try:
-        # Obtener datos del ejercicio
         exercise_data = learning_service.exercises.find_one({"exercise_id": completion.exercise_id})
         if not exercise_data:
             raise HTTPException(status_code=404, detail="Ejercicio no encontrado")
         
-        # Completar ejercicio con análisis
         learning_service.complete_exercise_with_analysis(
             completion.user_id,
             completion.session_id,
@@ -923,7 +857,6 @@ async def complete_exercise_with_tracking(completion: ExerciseCompletion):
             completion.time_taken
         )
         
-        # Obtener recomendaciones actualizadas si el usuario quiere mejorar
         if not completion.is_correct:
             recommendations = ai.generate_personalized_advice(completion.user_id)
             return {
@@ -968,16 +901,12 @@ async def learn_concept_with_tracking(learning: ConceptLearning):
 async def get_student_dashboard(user_id: str):
     """Obtiene un dashboard completo del estudiante para el frontend"""
     try:
-        # Obtener sesiones activas
         active_sessions = learning_service.get_active_sessions(user_id)
         
-        # Obtener análisis de progreso
         progress = learning_service.get_user_progress_analysis(user_id)
         
-        # Obtener recomendaciones
         recommendations = learning_service.get_personalized_recommendations(user_id)
         
-        # Obtener estadísticas rápidas
         all_sessions = learning_service.get_user_sessions(user_id)
         total_time = 0
         total_concepts = 0
@@ -1016,10 +945,7 @@ async def get_student_dashboard(user_id: str):
 async def get_next_exercise_batch(user_id: str, topic: str, count: int = 3):
     """Obtiene el siguiente lote de ejercicios recomendados"""
     try:
-        # Analizar progreso para determinar dificultad
         progress = learning_service.get_user_progress_analysis(user_id)
-        
-        # Generar ejercicios adaptativos
         exercises = learning_service.get_adaptive_exercises_for_user(user_id, topic, count)
         
         return {
@@ -1028,7 +954,7 @@ async def get_next_exercise_batch(user_id: str, topic: str, count: int = 3):
             "exercises": exercises,
             "difficulty_level": progress.get("dificultad_recomendada", "facil"),
             "personalized_note": f"Estos ejercicios están adaptados a tu nivel actual: {progress.get('nivel_actual', 'principiante')}",
-            "tips": progress.get("consejos_mejora", [])[:2]  # Solo 2 consejos principales
+            "tips": progress.get("consejos_mejora", [])[:2]
         }
         
     except Exception as e:
@@ -1041,7 +967,6 @@ async def demo_tutor_completo(user_id: str):
     try:
         demo_results = {}
         
-        # 1. Crear una sesión de demostración
         session_id = learning_service.create_learning_session(
             user_id=user_id,
             topic="Álgebra básica",
@@ -1049,31 +974,26 @@ async def demo_tutor_completo(user_id: str):
         )
         demo_results["session_created"] = session_id
         
-        # 2. Simular aprendizaje de un concepto
         learning_service.learn_concept_with_tracking(
             user_id, session_id, 
             "Variables y constantes", 
             "Las variables son símbolos que representan números desconocidos"
         )
         
-        # 3. Generar ejercicios adaptativos
         exercises = learning_service.get_adaptive_exercises_for_user(user_id, "Álgebra básica", 2)
         demo_results["adaptive_exercises"] = len(exercises)
         
-        # 4. Simular completar un ejercicio
         if exercises:
             learning_service.complete_exercise_with_analysis(
                 user_id, session_id, exercises[0], "x = 5", True, 120
             )
         
-        # 5. Obtener análisis de progreso
         progress = learning_service.get_user_progress_analysis(user_id)
         demo_results["progress_analysis"] = {
             "nivel": progress.get("nivel_actual"),
             "consejos": len(progress.get("consejos_mejora", []))
         }
         
-        # 6. Obtener recomendaciones
         recommendations = learning_service.get_personalized_recommendations(user_id)
         demo_results["recommendations"] = {
             "next_topic": recommendations.get("next_topic_recommendation", {}).get("tema_recomendado"),
