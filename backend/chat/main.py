@@ -335,9 +335,10 @@ async def delete_conversation(user_id: str, conversation_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
 @app.post("/learning/session/create")
 async def create_learning_session(request: CreateLearningSessionRequest):
-    """Crea una nueva sesión de aprendizaje estructurada"""
+    """Crea una nueva sesión de aprendizaje estructurada (compatible con EventSource/SSE)"""
     try:
         session_id = learning_service.create_learning_session(
             user_id=request.user_id,
@@ -347,22 +348,22 @@ async def create_learning_session(request: CreateLearningSessionRequest):
         )
         
         teaching_plan = ai.generate_teaching_plan(request.topic, request.level)
-        
         learning_service.update_session_concepts(session_id, teaching_plan)
-        
         logger.info(f"Created learning session {session_id} for user {request.user_id}")
-        
-        return {
-            "session_id": session_id,
-            "topic": request.topic,
-            "subtopic": request.subtopic,
-            "level": request.level,
-            "teaching_plan": teaching_plan,
-            "message": f"Sesión de aprendizaje creada para {request.topic}. Comenzaremos con {len(teaching_plan)} conceptos."
-        }
+
+        def event_stream():
+            # Puedes emitir varios eventos si quieres mostrar progreso paso a paso
+            yield f"data: {json.dumps({'status': 'created', 'session_id': session_id})}\n\n"
+            yield f"data: {json.dumps({'status': 'teaching_plan', 'teaching_plan': teaching_plan})}\n\n"
+            yield f"data: {json.dumps({'status': 'done', 'session_id': session_id, 'topic': request.topic, 'subtopic': request.subtopic, 'level': request.level, 'teaching_plan': teaching_plan, 'message': f'Sesión de aprendizaje creada para {request.topic}. Comenzaremos con {len(teaching_plan)} conceptos.'})}\n\n"
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+
     except Exception as e:
         logger.error(f"Error creating learning session: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        def error_stream():
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
 
 @app.get("/learning/session/{session_id}")
 async def get_learning_session(session_id: str):
