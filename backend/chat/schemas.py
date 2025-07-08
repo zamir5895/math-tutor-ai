@@ -178,12 +178,6 @@ class ExerciseCompletion(BaseModel):
     is_correct: bool
     time_taken: Optional[int] = None
 
-class ConceptLearning(BaseModel):
-    user_id: str
-    session_id: str
-    concept: str
-    explanation: str
-
 class SessionExercisesResponse(BaseModel):
     session_id: str
     topic: str

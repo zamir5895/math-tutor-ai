@@ -6,7 +6,6 @@ import re
 import json
 
 genai.configure(api_key=settings.gemini_api_key)
-
 class AIService:
     def __init__(self):
         self.model = genai.GenerativeModel(settings.gemini_model)
@@ -173,6 +172,62 @@ class AIService:
         except Exception:
             return f"Explicación del concepto: {concept}"
 
+    def extract_math_concepts(self, message: str, session_topic: str) -> List[str]:
+        """Extrae conceptos matemáticos clave de un mensaje del usuario"""
+        try:
+            prompt = f"""
+            Eres un experto en identificar conceptos matemáticos. Extrae los conceptos matemáticos específicos que se están discutiendo en este mensaje del usuario.
+
+            Mensaje del usuario: "{message}"
+            Tema de la sesión: "{session_topic}"
+
+            Reglas:
+            1. Identifica solo conceptos matemáticos específicos y relevantes
+            2. No incluyas palabras vagas como "problema" o "ejercicio"
+            3. Enfócate en conceptos técnicos y procedimientos matemáticos
+            4. Considera el contexto del tema de la sesión
+            5. Si no hay conceptos específicos, responde con lista vacía
+
+            Ejemplos de conceptos válidos: "ecuaciones lineales", "factorización", "teorema de Pitágoras", "derivadas", "fracciones equivalentes"
+
+            Responde SOLO con un array JSON de strings con los conceptos identificados:
+            ["concepto1", "concepto2", ...]
+            """
+            
+            response = self.model.generate_content(prompt)
+            try:
+                concepts = json.loads(response.text)
+                # Validar que sea una lista de strings
+                if isinstance(concepts, list) and all(isinstance(c, str) for c in concepts):
+                    return [c.strip() for c in concepts if c.strip()]
+                return []
+            except json.JSONDecodeError:
+                # Fallback: buscar conceptos matemáticos básicos en el texto
+                basic_concepts = []
+                math_terms = {
+                    'ecuación': 'ecuaciones',
+                    'fracción': 'fracciones', 
+                    'derivada': 'derivadas',
+                    'integral': 'integrales',
+                    'límite': 'límites',
+                    'función': 'funciones',
+                    'polinomio': 'polinomios',
+                    'trigonometría': 'funciones trigonométricas',
+                    'logaritmo': 'logaritmos',
+                    'matriz': 'matrices'
+                }
+                
+                message_lower = message.lower()
+                for term, concept in math_terms.items():
+                    if term in message_lower:
+                        basic_concepts.append(concept)
+                
+                return basic_concepts
+                
+        except Exception as e:
+            print(f"Error extrayendo conceptos: {str(e)}")
+            return []
+
     def generate_exercises(self, topic: str, subtopic: str = None, nivel: str = "facil", cantidad: int = 5) -> List[Dict]:
         """Genera ejercicios para un tema específico"""
         try:
@@ -197,8 +252,6 @@ class AIService:
             """
             
             response = self.model.generate_content(prompt)
-            # Intentar parsear JSON
-            import json
             try:
                 exercises = json.loads(response.text)
                 # Agregar IDs únicos

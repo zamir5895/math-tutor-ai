@@ -10,7 +10,7 @@ from schemas import (
     ExerciseRequest, ExerciseResponse, DifficultyLevel, SessionHistoryResponse, 
     SessionSummaryStats, ReactivateSessionRequest, SessionChatMessage, ProgressAnalysis,
     PersonalizedAdvice, TopicRecommendation, UserRecommendations, AdaptiveExerciseRequest,
-    ExerciseCompletion, ConceptLearning, SessionExercisesResponse, ConversationExercisesResponse
+    ExerciseCompletion, SessionExercisesResponse, ConversationExercisesResponse
 )
 from datetime import datetime
 import uuid
@@ -166,28 +166,27 @@ async def root():
         "version": "4.0.0",
         "description": "Sistema completo de tutoría matemática con IA que adapta ejercicios, analiza progreso y proporciona recomendaciones personalizadas",
         "features": [
-            "🧠 Chat general para consultas y orientación matemática",
-            "📚 Sesiones de aprendizaje especializadas con chat propio", 
-            "🎯 Generación de ejercicios SOLO en sesiones: 10 por set (3 fáciles, 4 intermedios, 3 difíciles)",
-            "📊 Análisis completo de progreso y debilidades",
-            "💡 Recomendaciones personalizadas con IA",
-            "🔄 Seguimiento continuo en Qdrant Vector DB",
-            "🎨 Dashboard completo para estudiantes",
-            "💬 Separación clara: chat general vs chat de sesión",
-            "📄 Reportes PDF detallados de aprendizaje",
+            "   Chat general para consultas y orientación matemática",
+            "   Sesiones de aprendizaje especializadas con chat propio", 
+            "   Generación de ejercicios SOLO en sesiones: 10 por set (3 fáciles, 4 intermedios, 3 difíciles)",
+            "   Análisis completo de progreso y debilidades",
+            "   Recomendaciones personalizadas con IA",
+            "   Seguimiento continuo en Qdrant Vector DB",
+            "   Dashboard completo para estudiantes",
+            "   Separación clara: chat general vs chat de sesión",
+            "   Reportes PDF detallados de aprendizaje",
             "⚡ API bien estructurada con responsabilidades claras"
         ],
         "api_sections": {
-            "🎯 Tutor IA Completo": {
+            " Tutor IA Completo": {
                 "dashboard": "/tutor/dashboard/{user_id}",
                 "analisis_progreso": "/tutor/progress/{user_id}",
                 "recomendaciones": "/tutor/recommendations/{user_id}",
                 "ejercicios_adaptativos": "/tutor/exercises/adaptive",
                 "siguiente_lote": "/tutor/exercises/{user_id}/next-batch",
-                "completar_ejercicio": "/tutor/exercise/complete",
-                "aprender_concepto": "/tutor/concept/learn"
+                "completar_ejercicio": "/tutor/exercise/complete"
             },
-            "📚 Sesiones de Aprendizaje": {
+            " Sesiones de Aprendizaje": {
                 "crear_sesion": "/learning/session/create",
                 "chat_en_sesion": "/learning/session/{session_id}/chat",
                 "historial_completo": "/learning/session/{session_id}/history",
@@ -195,30 +194,30 @@ async def root():
                 "reactivar": "/learning/session/{session_id}/reactivate",
                 "sesiones_activas": "/learning/sessions/{user_id}/active"
             },
-            "📄 Reportes y Análisis": {
+            " Reportes y Análisis": {
                 "reporte_pdf": "/learning/session/{session_id}/pdf-report",
                 "ejercicios_pdf": "/learning/session/{session_id}/pdf-exercises",
                 "conversaciones": "/conversations/{user_id}"
             },
-            "💬 Chat General": {
+            " Chat General": {
                 "chat_consultas": "/chat-stream (solo consultas y orientación)",
                 "eliminar_conversacion": "/conversation/{user_id}/{conversation_id}"
             },
-            "🎯 Chat de Sesiones": {
+            " Chat de Sesiones": {
                 "chat_con_ejercicios": "/learning/session/{session_id}/chat (genera ejercicios)",
                 "obtener_ejercicios": "/learning/session/{session_id}/exercises"
             }
         },
         "frontend_integration": {
             "flujo_completo": [
-                "1. 📊 Obtener dashboard: GET /tutor/dashboard/{user_id}",
-                "2. 🎯 Ver recomendaciones: GET /tutor/recommendations/{user_id}",
-                "3. 📚 Crear/reactivar sesión según recomendación",
-                "4. 💬 Chatear en la sesión libremente", 
-                "5. 📝 Solicitar ejercicios adaptativos",
-                "6. ✅ Completar ejercicios con tracking automático",
-                "7. 📈 Ver progreso actualizado en tiempo real",
-                "8. 📄 Generar reportes PDF cuando se desee"
+                "1.  Obtener dashboard: GET /tutor/dashboard/{user_id}",
+                "2.  Ver recomendaciones: GET /tutor/recommendations/{user_id}",
+                "3.  Crear/reactivar sesión según recomendación",
+                "4.  Chatear en la sesión libremente", 
+                "5.  Solicitar ejercicios adaptativos",
+                "6.  Completar ejercicios con tracking automático",
+                "7.  Ver progreso actualizado en tiempo real",
+                "8.  Generar reportes PDF cuando se desee"
             ],
             "llamadas_principales": {
                 "obtener_ejercicios": "POST /tutor/exercises/adaptive",
@@ -228,13 +227,15 @@ async def root():
             }
         },
         "ai_capabilities": [
-            "🎯 Detección automática de intenciones en el chat (ejercicios, conceptos, sesiones)",
-            "📊 Análisis de patrones de aprendizaje individualizados",
-            "🎨 Generación inteligente de sets de 10 ejercicios (3-4-3 por dificultad)",
-            "💡 Consejos adaptativos basados en errores y progreso",
-            "🔄 Seguimiento de progreso en vector database",
-            "🎓 Recomendaciones de temas siguientes personalizadas",
-            "❤️ Motivación y retroalimentación personalizada"
+            " Detección automática de intenciones en el chat de sesiones",
+            " Extracción automática de conceptos matemáticos de las conversaciones",
+            " Análisis de patrones de aprendizaje individualizados",
+            " Generación inteligente de sets de 10 ejercicios (3-4-3 por dificultad)",
+            " Consejos adaptativos basados en errores y progreso",
+            " Seguimiento automático de progreso en vector database",
+            " Recomendaciones de temas siguientes personalizadas",
+            " Registro inteligente de conceptos aprendidos sin intervención manual",
+            " Motivación y retroalimentación personalizada"
         ],
         "documentation": "/docs", 
         "ejemplo_uso_simplificado": {
@@ -570,16 +571,12 @@ Solo dime qué prefieres y profundizaremos en ello."""
                 )
             
             else:
-                # Respuesta general con contexto de la sesión
                 response_text = ai.generate_contextual_response(message.message, session)
             
-            # SIEMPRE guardar la respuesta del asistente
             mongo.save_message(message.user_id, conversation_id, "assistant", response_text)
             
-            # Enviar respuesta al frontend
             yield f"data: {json.dumps({'text': response_text, 'session_id': session_id, 'topic': session['topic'], 'exercises_generated': len(exercises_generated)})}\n\n"
             
-            # Guardar interacciones en el historial de la sesión
             learning_service.add_session_interaction(
                 session_id, 
                 "question", 
@@ -594,7 +591,6 @@ Solo dime qué prefieres y profundizaremos en ello."""
                 {"response_type": intent.get("intent", "general"), "exercises_count": len(exercises_generated)}
             )
             
-            # Actualizar contexto en Qdrant
             interaction_text = f"P: {message.message}\nR: {response_text}"
             qdrant.upsert_context(
                 user_id=message.user_id,
@@ -610,7 +606,6 @@ Solo dime qué prefieres y profundizaremos en ello."""
                 }
             )
             
-            # Si se generaron ejercicios, registrar cada uno en el historial
             if exercises_generated:
                 for ex in exercises_generated:
                     learning_service.add_session_interaction(
@@ -625,12 +620,23 @@ Solo dime qué prefieres y profundizaremos en ello."""
                         }
                     )
             
-            # Actualizar conceptos de la sesión
+            # Registro automático e inteligente de conceptos aprendidos
             if len(message.message) > 10:  # Solo si es una pregunta sustancial
-                learning_service.update_session_concepts(
-                    session_id,
-                    [f"Discusión: {message.message[:50]}..."]
-                )
+                # Extraer conceptos clave de la pregunta usando IA
+                key_concepts = ai.extract_math_concepts(message.message, session["topic"])
+                
+                if key_concepts:
+                    # Registrar conceptos específicos identificados
+                    learning_service.update_session_concepts(
+                        session_id,
+                        [f"Concepto aprendido: {concept}" for concept in key_concepts]
+                    )
+                else:
+                    # Fallback: registrar como discusión general
+                    learning_service.update_session_concepts(
+                        session_id,
+                        [f"Discusión: {message.message[:50]}..."]
+                    )
 
         return StreamingResponse(event_stream(), media_type="text/event-stream")
         
@@ -812,26 +818,6 @@ async def complete_exercise_with_tracking(completion: ExerciseCompletion):
             
     except Exception as e:
         logger.error(f"Error completing exercise: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/tutor/concept/learn")
-async def learn_concept_with_tracking(learning: ConceptLearning):
-    """Aprende un concepto con seguimiento de progreso"""
-    try:
-        learning_service.learn_concept_with_tracking(
-            learning.user_id,
-            learning.session_id,
-            learning.concept,
-            learning.explanation
-        )
-        
-        return {
-            "message": f"Concepto '{learning.concept}' aprendido y registrado",
-            "session_id": learning.session_id,
-            "progress_updated": True
-        }
-    except Exception as e:
-        logger.error(f"Error learning concept: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/tutor/dashboard/{user_id}")
