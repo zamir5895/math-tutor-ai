@@ -27,7 +27,6 @@ class ConversationSummary(BaseModel):
     last_message: str
     updated_at: str
 
-# Nuevos schemas para sesiones de aprendizaje
 class LearningSessionType(str, Enum):
     TEACHING = "teaching"
     PRACTICE = "practice"
@@ -40,7 +39,7 @@ class LearningSession(BaseModel):
     subtopic: Optional[str] = None
     session_type: LearningSessionType
     concepts_covered: List[str] = []
-    status: str = "active"  # active, completed, paused
+    status: str = "active"  
     created_at: datetime
     updated_at: datetime
 
@@ -48,9 +47,8 @@ class CreateLearningSessionRequest(BaseModel):
     user_id: str
     topic: str
     subtopic: Optional[str] = None
-    level: str = "basico"  # basico, intermedio, avanzado
+    level: str = "basico"  
 
-# Schemas para ejercicios
 class DifficultyLevel(str, Enum):
     FACIL = "facil"
     INTERMEDIO = "intermedio"
@@ -83,7 +81,6 @@ class ExerciseResponse(BaseModel):
     es_correcto: bool
     tiempo_respuesta: Optional[int] = None
 
-# Schemas para reportes
 class LearningReport(BaseModel):
     user_id: str
     session_id: str
@@ -93,10 +90,9 @@ class LearningReport(BaseModel):
     accuracy_rate: float
     generated_at: datetime
 
-# Nuevos schemas para sesiones extendidas
 class SessionInteraction(BaseModel):
     timestamp: datetime
-    type: str  # "question", "explanation", "exercise", "answer", "concept"
+    type: str 
     content: str
     metadata: Optional[Dict] = {}
 
@@ -129,7 +125,6 @@ class SessionChatMessage(BaseModel):
     session_id: str
     message: str
 
-# Schemas para análisis de progreso y recomendaciones
 class ProgressAnalysis(BaseModel):
     nivel_actual: str
     areas_fuertes: List[str]
