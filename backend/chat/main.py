@@ -463,68 +463,334 @@ async def learning_session_chat(session_id: str, message: UserMessage):
         def event_stream():
             exercises_generated = []
             
-            if intent.get("intent") == "pedir_ejercicios":
-                # Generar ejercicios inteligentemente basados en la sesión
-                topic = session["topic"]
-                subtopic = session.get("subtopic")
-                level = session.get("level", "basico")
+            # NUEVA LÓGICA: Detectar cuando el usuario quiere trabajar en un ejercicio específico
+            import re
+            exercise_request_pattern = r'(?:ejercicio|exercise)\s*(\d+)|(?:ayuda|help).*(?:ejercicio|exercise)\s*(\d+)|(?:^|\s)(\d+)(?:\s*$|\s+(?:por favor|please))'
+            exercise_match = re.search(exercise_request_pattern, message.message.lower())
+            
+            # Detectar si el usuario está proporcionando una respuesta
+            response_pattern = r'(?:mi\s+respuesta\s+es|respuesta|la\s+respuesta\s+es|creo\s+que\s+es|es):?\s*(.+)|^[+-]?\d*\.?\d+$|^[+-]?\d+/\d+$'
+            answer_match = re.search(response_pattern, message.message.lower().strip())
+            
+            # Detectar solicitudes de pistas o ayuda
+            hint_pattern = r'(?:pista|hint|ayuda|help|dame una pista|necesito ayuda|no entiendo|explica)'
+            hint_match = re.search(hint_pattern, message.message.lower())
+            
+            if exercise_match:
+                # El usuario está pidiendo un ejercicio específico
+                exercise_num = int(exercise_match.group(1) or exercise_match.group(2) or exercise_match.group(3))
                 
-                # Mapear nivel de sesión a dificultades
-                difficulty_map = {"basico": "facil", "intermedio": "intermedio", "avanzado": "dificil"}
+                # Buscar el ejercicio específico por número
+                existing_exercises = learning_service.get_exercises_by_session(session_id)
                 
-                # Generar 10 ejercicios: 3 fáciles, 4 intermedios, 3 difíciles
-                all_exercises = []
-                
-                # 3 ejercicios fáciles
-                easy_exercises = ai.generate_exercises(
-                    topic=topic,
-                    subtopic=subtopic,
-                    nivel="facil",
-                    cantidad=3
-                )
-                all_exercises.extend(easy_exercises)
-                
-                # 4 ejercicios intermedios
-                medium_exercises = ai.generate_exercises(
-                    topic=topic,
-                    subtopic=subtopic,
-                    nivel="intermedio",
-                    cantidad=4
-                )
-                all_exercises.extend(medium_exercises)
-                
-                # 3 ejercicios difíciles
-                hard_exercises = ai.generate_exercises(
-                    topic=topic,
-                    subtopic=subtopic,
-                    nivel="dificil",
-                    cantidad=3
-                )
-                all_exercises.extend(hard_exercises)
-                
-                # Guardar todos los ejercicios en la base de datos con metadatos de la sesión
-                for ex in all_exercises:
-                    ex["session_id"] = session_id
-                    ex["conversation_id"] = conversation_id
-                    ex["generated_at"] = datetime.utcnow()
-                    exercise_id = learning_service.save_exercise(ex)
-                    ex["exercise_id"] = exercise_id
-                    exercises_generated.append(ex)
-                
-                # Respuesta del chat SIN mostrar los ejercicios
-                response_text = f"""¡Perfecto! He generado un set completo de ejercicios de **{topic}** para ti.
+                if existing_exercises and len(existing_exercises) >= exercise_num > 0:
+                    target_exercise = None
+                    for ex in existing_exercises:
+                        if ex.get('exercise_number') == exercise_num:
+                            target_exercise = ex
+                            break
+                    
+                    if target_exercise:
+                        # Marcar ejercicio como "en progreso" si no está completado
+                        if target_exercise.get('status') == 'assigned':
+                            learning_service.update_exercise_status(target_exercise['_id'], 'in_progress')
+                        
+                        # Generar respuesta para el ejercicio específico
+                        exercise_help = ai.generate_exercise_help(
+                            exercise=target_exercise,
+                            user_message=message.message,
+                            session_context=session
+                        )
+                        
+                        response_text = f"""📝 **Ejercicio {exercise_num}** (Nivel: {target_exercise.get('nivel', 'intermedio')})
 
-**Detalles del set generado:**
-- Tema: {topic}
-- Subtema: {subtopic if subtopic else "General"}
-- **Total: 10 ejercicios**
-  - 🟢 3 ejercicios fáciles
-  - 🟡 4 ejercicios intermedios  
-  - 🔴 3 ejercicios difíciles
+**Enunciado:**
+{target_exercise.get('pregunta', 'Ejercicio no disponible')}
 
-Los ejercicios están listos y organizados por dificultad. Puedes verlos usando el endpoint `/learning/session/{session_id}/exercises` y empezar con los que prefieras.
+**¿Cómo te ayudo?**
+{exercise_help}
 
-¿Te gustaría que te explique algún concepto antes de empezar, o prefieres ir directo a practicar?"""
+**Opciones:**
+- 💡 **"Dame una pista"** - Te doy una pista para empezar
+- 🔍 **"Explica el concepto"** - Te explico la teoría necesaria
+- ✏️ **"Resuelvo paso a paso"** - Trabajamos juntos en la solución
+- ✅ **"Mi respuesta es: [tu solución]"** - Para verificar tu respuesta
+
+¿Qué prefieres?"""
+                        
+                        mongo.save_message(message.user_id, conversation_id, "assistant", response_text)
+                        yield f"data: {json.dumps({'text': response_text, 'exercise_number': exercise_num, 'exercise_status': target_exercise.get('status')})}\n\n"
+                        
+                        # Registrar interacción
+                        learning_service.add_session_interaction(
+                            session_id, 
+                            "exercise_request", 
+                            message.message,
+                            {"exercise_number": exercise_num, "exercise_id": str(target_exercise['_id'])}
+                        )
+                        
+                        return
+                    else:
+                        response_text = f"❌ No encontré el ejercicio número {exercise_num}. Verifica que el número sea correcto."
+                        mongo.save_message(message.user_id, conversation_id, "assistant", response_text)
+                        yield f"data: {json.dumps({'text': response_text, 'error': 'exercise_not_found'})}\n\n"
+                        return
+                else:
+                    total_exercises = len(existing_exercises) if existing_exercises else 0
+                    response_text = f"❌ No tienes ejercicios asignados todavía. Pídeme que genere ejercicios primero con: **'Quiero ejercicios'** o **'Generar ejercicios'**."
+                    if total_exercises > 0:
+                        response_text = f"❌ El ejercicio {exercise_num} no existe. Tienes {total_exercises} ejercicios disponibles (números 1 al {total_exercises})."
+                    
+                    mongo.save_message(message.user_id, conversation_id, "assistant", response_text)
+                    yield f"data: {json.dumps({'text': response_text, 'available_exercises': total_exercises})}\n\n"
+                    return
+            
+            elif answer_match and not exercise_match:
+                # El usuario está proporcionando una respuesta, probablemente a un ejercicio reciente
+                # Buscar el último ejercicio que el usuario estaba trabajando
+                existing_exercises = learning_service.get_exercises_by_session(session_id)
+                
+                # Encontrar ejercicios en progreso o el último asignado
+                current_exercise = None
+                for ex in existing_exercises:
+                    if ex.get('status') == 'in_progress':
+                        current_exercise = ex
+                        break
+                
+                if not current_exercise and existing_exercises:
+                    # Si no hay ejercicios en progreso, tomar el último modificado
+                    current_exercise = max(existing_exercises, key=lambda x: x.get('updated_at', x.get('generated_at', datetime.min)))
+                
+                if current_exercise:
+                    user_answer = answer_match.group(1) if answer_match.group(1) else message.message.strip()
+                    
+                    # Evaluar la respuesta del usuario
+                    evaluation = ai.evaluate_exercise_answer(
+                        exercise=current_exercise,
+                        user_answer=user_answer,
+                        session_context=session
+                    )
+                    
+                    is_correct = evaluation.get('is_correct', False)
+                    
+                    # Guardar la respuesta del usuario
+                    learning_service.save_exercise_response(
+                        user_id=message.user_id,
+                        exercise_id=str(current_exercise['_id']),
+                        respuesta_usuario=user_answer,
+                        es_correcto=is_correct
+                    )
+                    
+                    # Actualizar estado del ejercicio
+                    new_status = 'completed' if is_correct else 'needs_review'
+                    learning_service.update_exercise_status(current_exercise['_id'], new_status)
+                    
+                    # Generar respuesta de retroalimentación
+                    if is_correct:
+                        response_text = f"""✅ **¡Excelente!** Tu respuesta es correcta.
+
+**Tu respuesta:** {user_answer}
+**Ejercicio:** {current_exercise.get('exercise_number', 'N/A')} - {current_exercise.get('pregunta', 'N/A')[:100]}...
+
+{evaluation.get('feedback', '¡Muy bien! Has demostrado una buena comprensión del concepto.')}
+
+**¿Qué sigue?**
+- 📝 **"Ejercicio {current_exercise.get('exercise_number', 0) + 1}"** - Continuar con el siguiente
+- 📊 **"Ver mi progreso"** - Revisar tu avance
+- 🎯 **"Más ejercicios"** - Generar ejercicios adicionales
+
+¿Qué prefieres hacer ahora?"""
+                    else:
+                        response_text = f"""❌ **No es correcto, pero ¡no te desanimes!**
+
+**Tu respuesta:** {user_answer}
+**Ejercicio:** {current_exercise.get('exercise_number', 'N/A')} - {current_exercise.get('pregunta', 'N/A')[:100]}...
+
+{evaluation.get('feedback', 'La respuesta no es correcta. Te sugiero revisar el procedimiento.')}
+
+**¿Te ayudo?**
+- 💡 **"Dame una pista"** - Te doy una pista adicional
+- 🔍 **"Explícame el proceso"** - Te explico paso a paso
+- ✏️ **"Intentar de nuevo"** - Vuelves a intentar el ejercicio
+- ➡️ **"Siguiente ejercicio"** - Continuamos con otro
+
+¿Cómo prefieres continuar?"""
+                    
+                    mongo.save_message(message.user_id, conversation_id, "assistant", response_text)
+                    yield f"data: {json.dumps({'text': response_text, 'exercise_completed': is_correct, 'evaluation': evaluation})}\n\n"
+                    
+                    # Registrar la interacción
+                    learning_service.add_session_interaction(
+                        session_id,
+                        "exercise_answer",
+                        message.message,
+                        {
+                            "exercise_id": str(current_exercise['_id']),
+                            "exercise_number": current_exercise.get('exercise_number'),
+                            "user_answer": user_answer,
+                            "is_correct": is_correct,
+                            "evaluation": evaluation
+                        }
+                    )
+                    
+                    return
+                else:
+                    response_text = "❓ Parece que estás proporcionando una respuesta, pero no tengo claro a qué ejercicio te refieres. ¿Podrías especificar el número del ejercicio? Por ejemplo: **'Mi respuesta al ejercicio 3 es...'**"
+                    mongo.save_message(message.user_id, conversation_id, "assistant", response_text)
+                    yield f"data: {json.dumps({'text': response_text, 'context_needed': True})}\n\n"
+                    return
+            
+            elif hint_match and not exercise_match and not answer_match:
+                # El usuario pide ayuda/pista sin especificar ejercicio
+                existing_exercises = learning_service.get_exercises_by_session(session_id)
+                
+                # Buscar ejercicio actual (en progreso o último asignado)
+                current_exercise = None
+                for ex in existing_exercises:
+                    if ex.get('status') == 'in_progress':
+                        current_exercise = ex
+                        break
+                
+                if not current_exercise and existing_exercises:
+                    # Si no hay ejercicios en progreso, sugerir el primero asignado
+                    current_exercise = min(existing_exercises, key=lambda x: x.get('exercise_number', 999))
+                
+                if current_exercise:
+                    # Generar pista contextualizada
+                    hint_response = ai.generate_exercise_hint(
+                        exercise=current_exercise,
+                        user_question=message.message,
+                        session_context=session
+                    )
+                    
+                    response_text = f"""💡 **Pista para el Ejercicio {current_exercise.get('exercise_number', '?')}**
+
+**Ejercicio:** {current_exercise.get('pregunta', 'Ejercicio no disponible')[:150]}...
+
+**Pista:**
+{hint_response}
+
+**¿Te ayuda esta pista?**
+- ✏️ **"Mi respuesta es: [tu solución]"** - Para entregar tu respuesta
+- 💡 **"Otra pista"** - Si necesitas más ayuda
+- 🔍 **"Explica el concepto"** - Para entender la teoría
+- ➡️ **"Siguiente ejercicio"** - Si prefieres otro ejercicio
+
+¿Cómo prefieres continuar?"""
+                    
+                    # Marcar como en progreso si no lo estaba
+                    if current_exercise.get('status') == 'assigned':
+                        learning_service.update_exercise_status(current_exercise['_id'], 'in_progress')
+                    
+                    mongo.save_message(message.user_id, conversation_id, "assistant", response_text)
+                    yield f"data: {json.dumps({'text': response_text, 'hint_provided': True, 'exercise_number': current_exercise.get('exercise_number')})}\n\n"
+                    
+                    # Registrar interacción
+                    learning_service.add_session_interaction(
+                        session_id,
+                        "hint_request",
+                        message.message,
+                        {
+                            "exercise_id": str(current_exercise['_id']),
+                            "exercise_number": current_exercise.get('exercise_number'),
+                            "hint_provided": True
+                        }
+                    )
+                    
+                    return
+                else:
+                    response_text = """❓ **¿En qué te puedo ayudar?**
+                    
+No tienes ejercicios asignados aún. 
+
+**¿Qué te gustaría hacer?**
+- 🎯 **"Quiero ejercicios"** - Te asigno 10 ejercicios adaptativos
+- 📚 **"Explícame [tema]"** - Te explico conceptos de matemáticas
+- 📊 **"Ver mi progreso"** - Revisamos tu avance en la sesión
+
+¿Qué prefieres?"""
+                    
+                    mongo.save_message(message.user_id, conversation_id, "assistant", response_text)
+                    yield f"data: {json.dumps({'text': response_text, 'no_exercises': True})}\n\n"
+                    return
+            
+            elif intent.get("intent") == "pedir_ejercicios":
+                # Verificar si ya hay ejercicios asignados
+                existing_exercises = learning_service.get_exercises_by_session(session_id)
+                
+                if existing_exercises and len(existing_exercises) > 0:
+                    response_text = f"""Ya tienes **{len(existing_exercises)} ejercicios asignados** para esta sesión de **{session['topic']}**.
+
+**¿Qué te gustaría hacer?**
+- 📝 **"Ejercicio 1"** - Para trabajar en el primer ejercicio
+- 📝 **"Ejercicio 5"** - Para cualquier ejercicio específico (1-{len(existing_exercises)})
+- 🔄 **"Nuevos ejercicios"** - Para generar ejercicios adicionales
+- 📊 **"Ver mis ejercicios"** - Para ver un resumen de tus ejercicios asignados
+
+¿Con cuál ejercicio quieres empezar? Solo dime el número y te ayudo a resolverlo paso a paso."""
+                else:
+                    # Generar nuevos ejercicios internamente
+                    topic = session["topic"]
+                    subtopic = session.get("subtopic")
+                    
+                    # Generar 10 ejercicios: 3 fáciles, 4 intermedios, 3 difíciles
+                    all_exercises = []
+                    
+                    # 3 ejercicios fáciles
+                    easy_exercises = ai.generate_exercises(
+                        topic=topic,
+                        subtopic=subtopic,
+                        nivel="facil",
+                        cantidad=3
+                    )
+                    all_exercises.extend(easy_exercises)
+                    
+                    # 4 ejercicios intermedios
+                    medium_exercises = ai.generate_exercises(
+                        topic=topic,
+                        subtopic=subtopic,
+                        nivel="intermedio",
+                        cantidad=4
+                    )
+                    all_exercises.extend(medium_exercises)
+                    
+                    # 3 ejercicios difíciles
+                    hard_exercises = ai.generate_exercises(
+                        topic=topic,
+                        subtopic=subtopic,
+                        nivel="dificil",
+                        cantidad=3
+                    )
+                    all_exercises.extend(hard_exercises)
+                    
+                    # Guardar ejercicios con numeración secuencial
+                    for i, ex in enumerate(all_exercises, 1):
+                        ex["session_id"] = session_id
+                        ex["conversation_id"] = conversation_id
+                        ex["exercise_number"] = i  # Número secuencial para referencia
+                        ex["generated_at"] = datetime.utcnow()
+                        ex["status"] = "assigned"  # Estado: assigned, in_progress, completed
+                        exercise_id = learning_service.save_exercise(ex)
+                        ex["exercise_id"] = exercise_id
+                        exercises_generated.append(ex)
+                    
+                    # Respuesta informando la asignación (SIN mostrar los ejercicios)
+                    response_text = f"""🎯 **¡Te he asignado 10 ejercicios de {topic}!**
+
+**Ejercicios preparados para ti:**
+- 🟢 Ejercicios 1-3: Nivel básico 
+- 🟡 Ejercicios 4-7: Nivel intermedio
+- 🔴 Ejercicios 8-10: Nivel avanzado
+
+**¿Cómo empezar?**
+Simplemente dime: **"Ejercicio 1"**, **"Ejercicio 3"** o cualquier número del 1 al 10.
+
+**Ejemplos:**
+- *"Ejercicio 1"* → Te muestro el primer ejercicio y te ayudo
+- *"Ejercicio 5"* → Trabajamos juntos en el ejercicio 5
+- *"Ayuda con ejercicio 2"* → Te doy pistas para el ejercicio 2
+
+¡Estoy aquí para guiarte paso a paso! ¿Con cuál ejercicio empezamos?"""
                 
             elif intent.get("intent") == "continuar_leccion":
                 concepts = session.get("concepts_covered", [])

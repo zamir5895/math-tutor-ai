@@ -657,4 +657,166 @@ class AIService:
                 "dificultad_estimada": "facil"
             }
 
+    def generate_exercise_help(self, exercise: dict, user_message: str, session_context: dict) -> str:
+        """Genera ayuda contextualizada para un ejercicio específico basado en la solicitud del usuario"""
+        try:
+            help_prompt = f"""
+            CONTEXTO DE LA SESIÓN:
+            - Tema: {session_context.get('topic')}
+            - Subtema: {session_context.get('subtopic', 'N/A')}
+            - Nivel: {session_context.get('level', 'intermedio')}
+            
+            EJERCICIO:
+            - Pregunta: {exercise.get('pregunta')}
+            - Nivel: {exercise.get('nivel')}
+            - Tema: {exercise.get('tema')}
+            - Respuesta correcta: {exercise.get('respuesta_correcta', 'No disponible')}
+            - Pistas: {exercise.get('pistas', [])}
+            
+            SOLICITUD DEL USUARIO: "{user_message}"
+            
+            Basándote en la solicitud del usuario, genera una respuesta de ayuda apropiada:
+            
+            - Si pide una pista: Da una pista específica sin revelar la respuesta completa
+            - Si quiere explicación del concepto: Explica la teoría necesaria
+            - Si quiere resolverlo paso a paso: Ofrece comenzar un proceso colaborativo
+            - Si presenta una respuesta: Evalúa si está correcta y da retroalimentación
+            
+            INSTRUCCIONES:
+            - Sé pedagógico y alentador
+            - Adapta tu nivel de explicación al nivel del ejercicio
+            - No reveles la respuesta completa inmediatamente
+            - Motiva al estudiante a pensar críticamente
+            - Usa ejemplos similares si es necesario
+            
+            Responde de manera directa y útil, enfocándote en ayudar al aprendizaje:
+            """
+            
+            response = self.model.generate_content(help_prompt)
+            return response.text.strip()
+            
+        except Exception as e:
+            print(f"Error generando ayuda para ejercicio: {e}")
+            return f"""📚 **Ayuda para el ejercicio:**
+
+¡Perfecto! Estoy aquí para ayudarte con este ejercicio de **{exercise.get('tema', 'matemáticas')}**.
+
+**Vamos paso a paso:**
+1. 📖 Lee el enunciado cuidadosamente
+2. 🤔 Identifica qué te están pidiendo
+3. 🧮 Piensa en qué conceptos necesitas aplicar
+4. ✏️ Empieza a resolver paso a paso
+
+**¿Qué necesitas específicamente?**
+- Una pista para empezar
+- Explicación de algún concepto
+- Revisión de tu solución
+- Trabajo paso a paso juntos
+
+¡Dime cómo prefieres continuar!"""
+
+    def evaluate_exercise_answer(self, exercise: dict, user_answer: str, session_context: dict) -> dict:
+        """Evalúa la respuesta del usuario a un ejercicio específico"""
+        try:
+            evaluation_prompt = f"""
+            EVALÚA LA RESPUESTA DEL ESTUDIANTE:
+            
+            EJERCICIO:
+            - Pregunta: {exercise.get('pregunta')}
+            - Respuesta correcta: {exercise.get('respuesta_correcta')}
+            - Nivel: {exercise.get('nivel')}
+            - Tema: {exercise.get('tema')}
+            - Pistas disponibles: {exercise.get('pistas', [])}
+            
+            RESPUESTA DEL ESTUDIANTE: "{user_answer}"
+            
+            CONTEXTO:
+            - Tema de la sesión: {session_context.get('topic')}
+            - Nivel del estudiante: {session_context.get('level', 'intermedio')}
+            
+            INSTRUCCIONES:
+            1. Determina si la respuesta del estudiante es correcta
+            2. Considera diferentes formas válidas de expresar la misma respuesta
+            3. Para matemáticas, considera equivalencias (ej: 1/2 = 0.5 = 50%)
+            4. Si es incorrecta, identifica el tipo de error
+            5. Proporciona retroalimentación constructiva
+            
+            Responde con JSON en este formato exacto:
+            {{
+                "is_correct": true/false,
+                "confidence": 0.95,
+                "feedback": "Retroalimentación específica y constructiva",
+                "error_type": "conceptual|procedural|cálculo|ninguno",
+                "hints_for_improvement": ["sugerencia1", "sugerencia2"],
+                "equivalent_forms": ["otras formas válidas de la respuesta"]
+            }}
+            """
+            
+            response = self.model.generate_content(evaluation_prompt)
+            result = json.loads(response.text)
+            
+            # Validar estructura del resultado
+            if not isinstance(result, dict) or 'is_correct' not in result:
+                raise ValueError("Respuesta de evaluación inválida")
+                
+            return result
+            
+        except Exception as e:
+            print(f"Error evaluando respuesta del ejercicio: {e}")
+            # Fallback a evaluación simple por comparación de strings
+            correct_answer = str(exercise.get('respuesta_correcta', '')).strip().lower()
+            user_answer_clean = str(user_answer).strip().lower()
+            
+            is_correct = correct_answer == user_answer_clean
+            
+            return {
+                "is_correct": is_correct,
+                "confidence": 0.8 if is_correct else 0.3,
+                "feedback": "¡Correcto!" if is_correct else "No es la respuesta esperada. Revisa el procedimiento y vuelve a intentar.",
+                "error_type": "ninguno" if is_correct else "desconocido",
+                "hints_for_improvement": [] if is_correct else ["Revisa los pasos del procedimiento", "Verifica tus cálculos"],
+                "equivalent_forms": [correct_answer] if is_correct else []
+            }
+
+    def generate_exercise_hint(self, exercise: dict, user_question: str, session_context: dict) -> str:
+        """Genera una pista específica para un ejercicio"""
+        try:
+            hint_prompt = f"""
+            CONTEXTO DEL EJERCICIO:
+            - Pregunta: {exercise.get('pregunta')}
+            - Tema: {exercise.get('tema')}
+            - Nivel: {exercise.get('nivel')}
+            - Pistas predefinidas: {exercise.get('pistas', [])}
+            
+            SESIÓN:
+            - Tema general: {session_context.get('topic')}
+            - Nivel del estudiante: {session_context.get('level', 'intermedio')}
+            
+            SOLICITUD DEL ESTUDIANTE: "{user_question}"
+            
+            INSTRUCCIONES:
+            1. Genera una pista útil pero no reveladora de la respuesta completa
+            2. Enfócate en guiar el pensamiento del estudiante
+            3. Usa analogías o ejemplos simples si es apropiado
+            4. Sugiere el primer paso o concepto clave a considerar
+            5. Mantén un tono alentador y pedagógico
+            6. No des la respuesta directa, solo orienta el proceso
+            
+            Genera una pista clara y motivadora que ayude al estudiante a progresar:
+            """
+            
+            response = self.model.generate_content(hint_prompt)
+            return response.text.strip()
+            
+        except Exception as e:
+            print(f"Error generando pista para ejercicio: {e}")
+            return f"""🤔 **Piensa en esto:**
+
+1. **Lee el problema cuidadosamente** - ¿Qué información te dan?
+2. **Identifica qué te piden** - ¿Cuál es el objetivo?
+3. **Recuerda conceptos clave** - ¿Qué fórmulas o métodos podrías usar?
+4. **Empieza paso a paso** - No trates de resolver todo de una vez
+
+¡Tú puedes! Empieza con el primer paso y verás que el resto fluye naturalmente."""
+
 ai = AIService()

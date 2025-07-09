@@ -353,4 +353,45 @@ class LearningService:
             "generated_at": datetime.utcnow()
         }
 
+    def get_exercises_by_session(self, session_id: str):
+        """Obtiene todos los ejercicios de una sesión específica"""
+        try:
+            exercises = list(self.exercises.find({"session_id": session_id}).sort("exercise_number", 1))
+            for ex in exercises:
+                ex["_id"] = str(ex["_id"])  # Convertir ObjectId a string
+            return exercises
+        except Exception as e:
+            print(f"Error obteniendo ejercicios de sesión {session_id}: {e}")
+            return []
+
+    def update_exercise_status(self, exercise_id: str, new_status: str):
+        """Actualiza el estado de un ejercicio específico"""
+        try:
+            from bson import ObjectId
+            result = self.exercises.update_one(
+                {"_id": ObjectId(exercise_id)},
+                {
+                    "$set": {
+                        "status": new_status,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            print(f"Error actualizando estado del ejercicio {exercise_id}: {e}")
+            return False
+
+    def get_exercise_by_id(self, exercise_id: str):
+        """Obtiene un ejercicio específico por su ID"""
+        try:
+            from bson import ObjectId
+            exercise = self.exercises.find_one({"_id": ObjectId(exercise_id)})
+            if exercise:
+                exercise["_id"] = str(exercise["_id"])
+            return exercise
+        except Exception as e:
+            print(f"Error obteniendo ejercicio {exercise_id}: {e}")
+            return None
+
 learning_service = LearningService()

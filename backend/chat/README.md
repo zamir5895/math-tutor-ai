@@ -978,4 +978,58 @@ const conversation = await fetch(`/learning/session/${sessionId}/conversation`);
 // → Historial completo de chat de la sesión
 ```
 
-## 📝 Changelog
+### Sistema de Ejercicios Inteligente
+
+#### Flujo de Ejercicios Paso a Paso
+
+1. **Generación de Ejercicios:**
+   ```bash
+   POST /learning/session/{session_id}/chat
+   Body: {"user_id": "user123", "message": "Quiero ejercicios"}
+   ```
+   
+   **Respuesta:** "¡Te he asignado 10 ejercicios! Para empezar, dime: 'Ejercicio 1', 'Ejercicio 5' o cualquier número del 1 al 10."
+
+2. **Trabajar en un Ejercicio Específico:**
+   ```bash
+   POST /learning/session/{session_id}/chat
+   Body: {"user_id": "user123", "message": "Ejercicio 3"}
+   ```
+   
+   **Respuesta:** Muestra el ejercicio 3 completo con opciones de ayuda.
+
+3. **Solicitar Pistas:**
+   ```bash
+   POST /learning/session/{session_id}/chat
+   Body: {"user_id": "user123", "message": "Dame una pista"}
+   ```
+   
+   **Respuesta:** Proporciona una pista contextualizada sin revelar la respuesta.
+
+4. **Enviar Respuesta:**
+   ```bash
+   POST /learning/session/{session_id}/chat
+   Body: {"user_id": "user123", "message": "Mi respuesta es: 42"}
+   ```
+   
+   **Respuesta:** Evalúa la respuesta y proporciona retroalimentación detallada.
+
+#### Patrones de Reconocimiento Inteligente
+
+El sistema reconoce automáticamente diferentes tipos de mensajes:
+
+| Patrón del Usuario | Respuesta del Sistema |
+|---|---|
+| `"Ejercicio 1"`, `"Ejercicio 5"` | Muestra el ejercicio específico |
+| `"Ayuda con ejercicio 2"` | Ayuda contextualizada para ese ejercicio |
+| `"Dame una pista"` | Pista para el ejercicio actual |
+| `"Mi respuesta es: 15"` | Evaluación de la respuesta |
+| `"Respuesta: x = 3"` | Evaluación automática |
+| `"42"` (solo número) | Interpreta como respuesta al ejercicio actual |
+
+#### Estados de Ejercicios
+
+- **assigned**: Ejercicio generado pero no iniciado
+- **in_progress**: Usuario está trabajando en él
+- **completed**: Respondido correctamente
+- **needs_review**: Respuesta incorrecta, necesita revisión

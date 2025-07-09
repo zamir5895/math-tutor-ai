@@ -1,0 +1,369 @@
+===============================================
+ ESQUEMAS DE BASE DE DATOS - MATEMIX AI
+===============================================
+Base de datos: MongoDB
+Fecha: 8 de Julio, 2025
+
+COLECCIONES PRINCIPALES:
+1. conversations
+2. learning_sessions  
+3. exercises
+4. exercise_responses
+5. qdrant_vectors (Vector Database)
+
+===============================================
+ 1. COLECCIÓN: conversations
+===============================================
+Propósito: Almacena conversaciones del chat general (NO sesiones de aprendizaje)
+
+ESTRUCTURA DEL DOCUMENTO:
+{
+  "_id": ObjectId,
+  "user_id": "string - ID único del usuario",
+  "conversation_id": "string - UUID de la conversación",
+  "title": "string - Título generado automáticamente",
+  "messages": [
+    {
+      "role": "string - user|assistant",
+      "content": "string - Contenido del mensaje",
+      "timestamp": "datetime - Momento del mensaje"
+    }
+  ],
+  "created_at": "datetime - Momento de creación",
+  "updated_at": "datetime - Última actualización"
+}
+
+ÍNDICES:
+- user_id (ascendente)
+- conversation_id (ascendente)
+- user_id + updated_at (compuesto, updated_at descendente)
+
+EJEMPLO DE CONTENIDO:
+{
+  "user_id": "user_12345",
+  "conversation_id": "conv_abc123",
+  "title": "Explicación de Álgebra Básica",
+  "messages": [
+    {
+      "role": "user",
+      "content": "¿Qué es una ecuación lineal?",
+      "timestamp": "2025-07-08T10:30:00Z"
+    },
+    {
+      "role": "assistant", 
+      "content": "Una ecuación lineal es una expresión algebraica...",
+      "timestamp": "2025-07-08T10:30:15Z"
+    }
+  ],
+  "created_at": "2025-07-08T10:30:00Z",
+  "updated_at": "2025-07-08T10:30:15Z"
+}
+
+===============================================
+ 2. COLECCIÓN: learning_sessions
+===============================================
+Propósito: Almacena sesiones de aprendizaje estructuradas con ejercicios
+
+ESTRUCTURA DEL DOCUMENTO:
+{
+  "_id": ObjectId,
+  "session_id": "string - UUID único de la sesión",
+  "user_id": "string - ID del usuario propietario",
+  "topic": "string - Tema principal (ej: Álgebra básica)",
+  "subtopic": "string|null - Subtema específico",
+  "level": "string - basico|intermedio|avanzado",
+  "session_type": "string - teaching|practice|review",
+  "concepts_covered": [
+    "string - Lista de conceptos aprendidos"
+  ],
+  "session_history": [
+    {
+      "timestamp": "datetime - Momento de la interacción",
+      "type": "string - question|answer|exercise_generated|concept|etc",
+      "content": "string - Contenido de la interacción",
+      "metadata": {
+        "exercise_id": "string - ID del ejercicio si aplica",
+        "intent": "string - Intención detectada",
+        "response_type": "string - Tipo de respuesta"
+      }
+    }
+  ],
+  "exercises_completed": [
+    {
+      "exercise_id": "string - ID del ejercicio",
+      "question": "string - Pregunta del ejercicio",
+      "correct_answer": "string - Respuesta correcta",
+      "user_answer": "string - Respuesta del usuario",
+      "is_correct": "boolean - Si fue correcta",
+      "topic": "string - Tema del ejercicio",
+      "subtopic": "string - Subtema",
+      "difficulty": "string - facil|intermedio|dificil",
+      "completed_at": "datetime - Momento de completar"
+    }
+  ],
+  "questions_asked": [
+    {
+      "question": "string - Pregunta libre del usuario",
+      "answer": "string - Respuesta del asistente",
+      "concepts_extracted": ["string - Conceptos identificados"],
+      "asked_at": "datetime - Momento de la pregunta"
+    }
+  ],
+  "status": "string - active|completed|paused",
+  "created_at": "datetime - Momento de creación",
+  "updated_at": "datetime - Última actualización",
+  "last_accessed": "datetime - Último acceso",
+  "completed_at": "datetime|null - Momento de completar"
+}
+
+ÍNDICES:
+- user_id (ascendente)
+- session_id (ascendente)
+- user_id + status (compuesto)
+
+EJEMPLO DE CONTENIDO:
+{
+  "session_id": "sess_xyz789",
+  "user_id": "user_12345",
+  "topic": "Álgebra básica",
+  "subtopic": "Ecuaciones lineales",
+  "level": "basico",
+  "session_type": "teaching",
+  "concepts_covered": [
+    "Variables y constantes",
+    "Resolución de ecuaciones de primer grado",
+    "Concepto aprendido: despeje de variables"
+  ],
+  "session_history": [
+    {
+      "timestamp": "2025-07-08T11:00:00Z",
+      "type": "question",
+      "content": "Quiero ejercicios de álgebra",
+      "metadata": {"intent": "pedir_ejercicios"}
+    }
+  ],
+  "exercises_completed": [],
+  "questions_asked": [],
+  "status": "active",
+  "created_at": "2025-07-08T11:00:00Z",
+  "updated_at": "2025-07-08T11:15:00Z",
+  "last_accessed": "2025-07-08T11:15:00Z"
+}
+
+===============================================
+ 3. COLECCIÓN: exercises
+===============================================
+Propósito: Almacena ejercicios generados para las sesiones
+
+ESTRUCTURA DEL DOCUMENTO:
+{
+  "_id": ObjectId,
+  "exercise_id": "string - UUID único del ejercicio",
+  "session_id": "string - ID de la sesión propietaria",
+  "conversation_id": "string - ID de conversación (learning_sessionid)",
+  "exercise_number": "number - Número secuencial (1-10)",
+  "pregunta": "string - Enunciado del ejercicio",
+  "respuesta_correcta": "string - Respuesta correcta",
+  "tema": "string - Tema del ejercicio",
+  "subtema": "string - Subtema específico",
+  "nivel": "string - facil|intermedio|dificil",
+  "es_multiple_choice": "boolean - Si es opción múltiple",
+  "opciones": ["string - Opciones si es multiple choice"],
+  "solucion": ["string - Pasos de la solución"],
+  "pistas": ["string - Pistas para ayudar"],
+  "concepto_principal": "string - Concepto matemático principal",
+  "status": "string - assigned|in_progress|completed|needs_review",
+  "generated_at": "datetime - Momento de generación",
+  "created_at": "datetime - Momento de creación en DB",
+  "updated_at": "datetime - Última actualización"
+}
+
+ÍNDICES:
+- exercise_id (ascendente)
+- tema + nivel (compuesto)
+- session_id (ascendente)
+
+EJEMPLO DE CONTENIDO:
+{
+  "exercise_id": "ex_abc123",
+  "session_id": "sess_xyz789",
+  "conversation_id": "learning_sess_xyz789",
+  "exercise_number": 1,
+  "pregunta": "Resuelve la ecuación: 2x + 5 = 13",
+  "respuesta_correcta": "x = 4",
+  "tema": "Álgebra básica",
+  "subtema": "Ecuaciones lineales",
+  "nivel": "facil",
+  "es_multiple_choice": false,
+  "opciones": null,
+  "solucion": [
+    "2x + 5 = 13",
+    "2x = 13 - 5", 
+    "2x = 8",
+    "x = 8/2",
+    "x = 4"
+  ],
+  "pistas": [
+    "Primero aísla el término con x",
+    "Recuerda que lo que haces a un lado, debes hacerlo al otro"
+  ],
+  "concepto_principal": "Resolución de ecuaciones lineales",
+  "status": "assigned",
+  "generated_at": "2025-07-08T11:05:00Z",
+  "created_at": "2025-07-08T11:05:00Z",
+  "updated_at": "2025-07-08T11:05:00Z"
+}
+
+===============================================
+ 4. COLECCIÓN: exercise_responses
+===============================================
+Propósito: Almacena las respuestas de los usuarios a los ejercicios
+
+ESTRUCTURA DEL DOCUMENTO:
+{
+  "_id": ObjectId,
+  "user_id": "string - ID del usuario",
+  "exercise_id": "string - ID del ejercicio respondido",
+  "respuesta_usuario": "string - Respuesta proporcionada",
+  "es_correcto": "boolean - Si la respuesta fue correcta",
+  "tiempo_respuesta": "number|null - Tiempo en segundos (opcional)",
+  "timestamp": "datetime - Momento de la respuesta"
+}
+
+ÍNDICES:
+- user_id + exercise_id (compuesto, único)
+- user_id (ascendente)
+
+EJEMPLO DE CONTENIDO:
+{
+  "user_id": "user_12345",
+  "exercise_id": "ex_abc123",
+  "respuesta_usuario": "x = 4",
+  "es_correcto": true,
+  "tiempo_respuesta": 45,
+  "timestamp": "2025-07-08T11:10:00Z"
+}
+
+===============================================
+ 5. QDRANT VECTOR DATABASE
+===============================================
+Propósito: Almacena embeddings para búsqueda semántica y contexto
+
+ESTRUCTURA DE VECTORES:
+{
+  "id": "string - UUID único",
+  "vector": [float - Array de embeddings (1536 dimensiones)],
+  "payload": {
+    "user_id": "string - ID del usuario",
+    "text": "string - Texto original",
+    "conversation_id": "string - ID de conversación",
+    "context_type": "string - conversation|learning_progress|general",
+    "metadata": {
+      "type": "string - general_math_chat|learning_interaction|progress",
+      "topic": "string - Tema si aplica",
+      "session_id": "string - ID de sesión si aplica",
+      "timestamp": "string - Momento de creación"
+    }
+  }
+}
+
+COLECCIONES EN QDRANT:
+- user_contexts: Contextos generales y de conversación
+- learning_metrics: Métricas de aprendizaje y progreso
+
+EJEMPLO DE CONTENIDO:
+{
+  "id": "vec_123abc",
+  "vector": [0.123, -0.456, 0.789, ...], // 1536 dimensiones
+  "payload": {
+    "user_id": "user_12345",
+    "text": "P: ¿Cómo resuelvo 2x+5=13? R: Para resolver esta ecuación...",
+    "conversation_id": "learning_sess_xyz789",
+    "context_type": "conversation",
+    "metadata": {
+      "type": "learning_interaction",
+      "topic": "Álgebra básica",
+      "session_id": "sess_xyz789",
+      "exercises_generated": 0,
+      "timestamp": "2025-07-08T11:05:00Z"
+    }
+  }
+}
+
+===============================================
+ RELACIONES ENTRE COLECCIONES
+===============================================
+
+1. CONVERSATIONS ←→ QDRANT
+   - conversation_id conecta mensajes con vectores de contexto
+   - Usado para chat general (sin ejercicios)
+
+2. LEARNING_SESSIONS ←→ EXERCISES
+   - session_id conecta sesiones con sus ejercicios
+   - Una sesión puede tener múltiples ejercicios (hasta 10)
+
+3. EXERCISES ←→ EXERCISE_RESPONSES  
+   - exercise_id conecta ejercicios con respuestas de usuarios
+   - Un ejercicio puede tener múltiples respuestas (intentos)
+
+4. LEARNING_SESSIONS ←→ QDRANT
+   - session_id conecta sesiones con vectores de progreso
+   - conversation_id = "learning_{session_id}"
+
+5. USERS (implícito)
+   - user_id conecta todas las colecciones
+   - Un usuario puede tener múltiples conversaciones y sesiones
+
+===============================================
+ ESTADÍSTICAS Y MÉTRICAS
+===============================================
+
+TIPOS DE DATOS RASTREADOS:
+- Precisión por usuario y tema
+- Tiempo de estudio por sesión
+- Conceptos aprendidos
+- Patrones de errores
+- Progreso temporal
+- Ejercicios completados por dificultad
+- Frecuencia de uso de pistas
+
+CAMPOS CALCULADOS:
+- accuracy_rate: correct_exercises / total_exercises
+- study_time: last_accessed - created_at
+- progress_percentage: concepts_learned / total_concepts
+- difficulty_trend: análisis de ejercicios por nivel
+
+===============================================
+ ÍNDICES Y OPTIMIZACIONES
+===============================================
+
+ÍNDICES PRINCIPALES:
+1. conversations: user_id, conversation_id, user_id+updated_at
+2. learning_sessions: user_id, session_id, user_id+status  
+3. exercises: exercise_id, tema+nivel, session_id
+4. exercise_responses: user_id+exercise_id (único), user_id
+5. qdrant: automático por vector similarity
+
+CONSULTAS FRECUENTES OPTIMIZADAS:
+- Buscar conversaciones por usuario (user_id)
+- Buscar sesiones activas por usuario (user_id+status)  
+- Buscar ejercicios de una sesión (session_id)
+- Buscar respuestas de un usuario (user_id)
+- Búsqueda semántica por contexto (vector similarity)
+
+===============================================
+ FLUJO DE DATOS PRINCIPAL
+===============================================
+
+1. Usuario inicia chat general → conversations
+2. Usuario crea sesión → learning_sessions  
+3. Usuario pide ejercicios → exercises (10 generados)
+4. Usuario trabaja ejercicio → exercise_responses
+5. Sistema actualiza progreso → qdrant vectors
+6. Sistema genera recomendaciones → analysis en tiempo real
+
+SEPARACIÓN CLARA:
+- Chat general: conversations + qdrant (contexto)
+- Sesiones de aprendizaje: learning_sessions + exercises + responses + qdrant (progreso)
+
+===============================================
